@@ -1,6 +1,6 @@
 # BayMcBackUp (Paper / Folia)
 
-玩家背包备份插件，备份范围：背包（含盔甲/副手）+ 末影箱
+我的世界服务器玩家背包备份插件（背包含盔甲/副手 + 末影箱）
 
 ## 功能
 
@@ -29,17 +29,18 @@
    - 自行构建:
      - Windows: `./gradlew.bat clean build`
      - Linux: `./gradlew clean build`
-2. 自行构建产物位置: `build/libs/BayMcBackUp-1.0.jar`
+2. 自行构建产物位置: `build/libs/BayMcBackUp-*.jar`
 3. 放入服务器 `plugins/`, 启动生成配置: `plugins/BayMcBackUp/config.yml`
 
 ## 配置
 
-常用配置项位于 `plugins/BayMcBackUp/config.yml`:
+常用配置 `plugins/BayMcBackUp/config.yml`:
 
 - `language`: 语言文件名 (位于 `plugins/BayMcBackUp/lang/`), 修改后可 `/bmbackup reload`
 - `backup.interval-minutes`: 自动备份间隔 (分钟, 0 = 关闭自动备份)
 - `backup.jitter-seconds`: 错峰秒数
 - `backup.keep-per-player`: 每玩家保留最近 N 份 (0 = 不清理)
+- `backup.keep-days`: 每玩家保留最近 N 天 (0 = 不清理)
 - `backup.triggers.*`: 事件触发备份开关
 - `backup.excluded-worlds`: 排除世界 (定时/事件触发都会跳过)
 - `storage.type`: `sqlite` | `local` | `mysql` | `h2`
@@ -48,9 +49,15 @@
 - `storage.mysql.*`: MySQL/MariaDB 连接配置 (支持 `url` 或 `host/port/database` 拼接)
 - `storage.h2.*`: H2 文件数据库配置 (支持 `url` 或 `file` 拼接)
 - `performance.queue-limit` / `performance.max-writes-per-second`: I/O 队列与写入速率限制
-- `gui.mode`: `auto` | `bukkit` | `packet`
+- `gui.mode`: `auto` | `bukkit` | `packet` GUI 界面的生成方式
 - `gui.list-page-size`: GUI 列表每页数量
 - `sounds.gui.*`: GUI 点击音效
+
+### 保留策略
+
+- `backup.keep-per-player` 与 `backup.keep-days` 可同时启用
+- 置顶显示的备份不会被自动清理
+- 存在待投递物品的备份不会被自动清理
 
 ### GUI 模式
 
@@ -81,8 +88,6 @@
 - `lock`/`unlock`/`note`: 置顶显示与备注
 - `status`, `reload`
 
-控制台执行命令时通常不需要前导 `/`，例如 `bmbackup nowall`
-
 ## 权限
 
 - `baymcbackup.admin`: 全部权限 (默认 OP)
@@ -100,14 +105,8 @@
   - `baymcbackup.lock`
 - `baymcbackup.backup.exempt`: 玩家免于自动备份 (定时/事件触发)
 
-## 说明
+## 备份说明
 
 - "置顶显示" 的备份不会参与自动清理，并在列表顶部显示
 - 在线模式服务器（`online-mode=true`）：目标离线时只能使用 UUID 或服务器已缓存的离线名，未缓存请使用 UUID
 - 离线模式服务器（`online-mode=false`）：目标离线时可直接使用名字
-
-## 构建与发布
-
-- GitHub Actions：
-  - push / PR：自动构建并上传产物（Actions 产物）
-  - tag（`1.0` 或 `v1.0`）：自动构建并上传 JAR 到 Release

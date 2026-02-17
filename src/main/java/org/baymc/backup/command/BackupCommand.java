@@ -644,6 +644,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 Placeholder.unparsed("interval", String.valueOf(cfg.backupInterval().toMinutes())),
                 Placeholder.unparsed("jitter", String.valueOf(cfg.jitter().toSeconds())),
                 Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())),
+                Placeholder.unparsed("keep_days", String.valueOf(cfg.keepDuration().toDays())),
                 Placeholder.unparsed("storage_name", storageName),
                 Placeholder.unparsed("storage_path", storagePath),
                 Placeholder.unparsed("label", label)
@@ -889,6 +890,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             );
         }
         Chat.plain(sender, "status.keep", Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())));
+        Chat.plain(sender, "status.keep-days", Placeholder.unparsed("days", String.valueOf(cfg.keepDuration().toDays())));
         Chat.plain(
                 sender,
                 "status.io-queue",

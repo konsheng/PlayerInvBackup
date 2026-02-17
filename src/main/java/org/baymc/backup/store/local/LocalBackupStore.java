@@ -300,8 +300,8 @@ public final class LocalBackupStore implements BackupStore {
     }
 
     @Override
-    public void purgeBackups(UUID playerUuid, int keepPerPlayer) throws IOException {
-        if (keepPerPlayer <= 0) {
+    public void purgeBackups(UUID playerUuid, int keepPerPlayer, long keepAfterMillis) throws IOException {
+        if (keepPerPlayer <= 0 && keepAfterMillis <= 0) {
             return;
         }
         Path playerDir = backupsDir.resolve(playerUuid.toString());
@@ -322,12 +322,17 @@ public final class LocalBackupStore implements BackupStore {
                 .filter(meta -> meta != null && !meta.locked())
                 .sorted(Comparator.comparingLong(BackupMeta::createdAtMillis).reversed())
                 .toList();
-        if (unlocked.size() <= keepPerPlayer) {
+        if (keepAfterMillis <= 0 && keepPerPlayer > 0 && unlocked.size() <= keepPerPlayer) {
             return;
         }
 
-        for (int i = keepPerPlayer; i < unlocked.size(); i++) {
+        for (int i = 0; i < unlocked.size(); i++) {
             BackupMeta meta = unlocked.get(i);
+            boolean deleteByCount = keepPerPlayer > 0 && i >= keepPerPlayer;
+            boolean deleteByAge = keepAfterMillis > 0 && meta.createdAtMillis() < keepAfterMillis;
+            if (!deleteByCount && !deleteByAge) {
+                continue;
+            }
             Path claimDir = claimsDir.resolve(meta.backupId());
             if (hasUndeliveredClaims(claimDir)) {
                 continue;

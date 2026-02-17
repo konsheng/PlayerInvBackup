@@ -20,6 +20,7 @@ public record PluginConfig(
         Duration backupInterval,
         Duration jitter,
         int keepPerPlayer,
+        Duration keepDuration,
         StorageType storageType,
         Path localBasePath,
         Path sqliteFile,
@@ -42,6 +43,8 @@ public record PluginConfig(
         var intervalMinutes = Math.max(0, config.getLong("backup.interval-minutes", 30));
         var jitterSeconds = Math.max(0, config.getLong("backup.jitter-seconds", 300));
         var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 50));
+        var keepDays = Math.max(0, config.getLong("backup.keep-days", 0));
+        var keepDuration = Duration.ofDays(keepDays);
 
         String languageFile = config.getString("language", "zh_CN.yml");
         if (languageFile == null || languageFile.isBlank()) {
@@ -112,6 +115,7 @@ public record PluginConfig(
                 Duration.ofMinutes(intervalMinutes),
                 Duration.ofSeconds(jitterSeconds),
                 keepPerPlayer,
+                keepDuration,
                 storageType,
                 localBasePath,
                 sqliteFile,

@@ -56,7 +56,7 @@ public interface BackupStore extends AutoCloseable {
 
     boolean setBackupNote(UUID playerUuid, String backupId, String note) throws Exception;
 
-    void purgeBackups(UUID playerUuid, int keepPerPlayer) throws Exception;
+    void purgeBackups(UUID playerUuid, int keepPerPlayer, long keepAfterMillis) throws Exception;
 
     @Override
     void close() throws Exception;

@@ -15,6 +15,10 @@ backup:
   # 每玩家保留最近 N 份备份 (0 = 不清理, 建议大服不要设置为 0)
   keep-per-player: 50
 
+  # 每玩家保留最近 N 天备份 (0 = 不清理)
+  # 与 keep-per-player 可同时使用
+  keep-days: 0
+
   # 事件触发器: 启用后, 会在对应事件发生时自动备份一次
   triggers:
     join: true

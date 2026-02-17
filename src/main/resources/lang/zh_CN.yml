@@ -6,7 +6,7 @@ help:
     - "<prefix><#B0BEC5>权限: </#B0BEC5><white><perm></white><#B0BEC5>(默认 OP)</#B0BEC5>"
     - "<prefix><#B0BEC5>配置文件: </#B0BEC5><white><config></white>"
     - "<prefix><#B0BEC5>备份范围: </#B0BEC5><white>背包(含盔甲/副手)+ 末影箱</white>"
-    - "<prefix><#B0BEC5>当前配置: </#B0BEC5><white><interval></white><#B0BEC5> 分钟(0=关闭), 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒, 保留 </#B0BEC5><white><keep></white><#B0BEC5> 份/人</#B0BEC5>"
+    - "<prefix><#B0BEC5>当前配置: </#B0BEC5><white><interval></white><#B0BEC5> 分钟(0=关闭), 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒, 保留 </#B0BEC5><white><keep></white><#B0BEC5> 份/人, 保留天数 </#B0BEC5><white><keep_days></white><#B0BEC5> 天</#B0BEC5>"
     - "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
     - "<prefix><#90A4AE>提示: 目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名; 离线模式服务器可直接使用名字</#90A4AE>"
     - "<prefix><#90A4AE>提示: GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#90A4AE>"
@@ -121,6 +121,7 @@ status:
   auto-enabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><white><interval></white><#B0BEC5> 分钟 / 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒</#B0BEC5>"
   auto-disabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><#FFA726>已关闭</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"
   keep: "<prefix><#B0BEC5>保留策略: </#B0BEC5><white>每玩家保留最近 <keep> 份</white><#B0BEC5>(0=不清理)</#B0BEC5>"
+  keep-days: "<prefix><#B0BEC5>保留天数: </#B0BEC5><white><days></white><#B0BEC5> 天(0=不清理)</#B0BEC5>"
   io-queue: "<prefix><#B0BEC5>I/O 队列: </#B0BEC5><white><size></white><#B0BEC5>/</#B0BEC5><white><limit></white><#B0BEC5>(剩余容量 </#B0BEC5><white><remaining></white><#B0BEC5>)</#B0BEC5>"
   sqlite-file: "<prefix><#B0BEC5>SQLite 文件: </#B0BEC5><white><path></white>"
   sqlite-size: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5>"
@@ -324,7 +325,7 @@ console:
   startup:
     storage: "存储后端: <storage>"
     schedule: "自动备份间隔: <interval> 分钟, 错峰: <jitter> 秒"
-    retention: "保留策略: 每玩家保留最近 <keep> 份, I/O 队列上限: <queue_limit>, 最大写入/秒: <max_writes>"
+    retention: "保留策略: 每玩家保留最近 <keep> 份, 保留天数: <keep_days> 天, I/O 队列上限: <queue_limit>, 最大写入/秒: <max_writes>"
 
   backup:
     encode-failed: "编码备份快照失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"

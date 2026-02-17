@@ -1,6 +1,7 @@
 package org.baymc.backup.app;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.UUID;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.baymc.backup.BayMcBackUpPlugin;
@@ -63,7 +64,15 @@ public final class BackupService {
                         ""
                 );
                 store.saveBackup(new BackupRecord(meta, snapshotBytes));
-                store.purgeBackups(playerUuid, config.keepPerPlayer());
+                long keepAfterMillis = 0L;
+                Duration keepDuration = config.keepDuration();
+                if (keepDuration != null) {
+                    long millis = keepDuration.toMillis();
+                    if (millis > 0) {
+                        keepAfterMillis = Math.max(0L, now - millis);
+                    }
+                }
+                store.purgeBackups(playerUuid, config.keepPerPlayer(), keepAfterMillis);
             } catch (IOException e) {
                 plugin.getLogger().severe(plugin.lang().plain(
                         "console.backup.encode-failed",

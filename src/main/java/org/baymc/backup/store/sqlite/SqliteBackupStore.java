@@ -9,8 +9,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.baymc.backup.domain.BackupMeta;
 import org.baymc.backup.domain.BackupRecord;
@@ -319,27 +321,52 @@ public final class SqliteBackupStore implements BackupStore {
     }
 
     @Override
-    public void purgeBackups(UUID playerUuid, int keepPerPlayer) throws Exception {
-        if (keepPerPlayer <= 0) {
+    public void purgeBackups(UUID playerUuid, int keepPerPlayer, long keepAfterMillis) throws Exception {
+        if (keepPerPlayer <= 0 && keepAfterMillis <= 0) {
             return;
         }
         synchronized (lock) {
             connection.setAutoCommit(false);
             try {
-                List<String> toDelete = new ArrayList<>();
-                String selectSql = """
-                        SELECT backup_id
-                        FROM backups
-                        WHERE player_uuid=? AND locked=0
-                        ORDER BY created_at DESC
-                        LIMIT -1 OFFSET ?
-                        """;
-                try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
-                    ps.setString(1, playerUuid.toString());
-                    ps.setInt(2, keepPerPlayer);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            toDelete.add(rs.getString(1));
+                Set<String> toDelete = new LinkedHashSet<>();
+                if (keepAfterMillis > 0) {
+                    String selectOldSql = """
+                            SELECT backup_id
+                            FROM backups
+                            WHERE player_uuid=? AND locked=0 AND created_at < ?
+                            """;
+                    try (PreparedStatement ps = connection.prepareStatement(selectOldSql)) {
+                        ps.setString(1, playerUuid.toString());
+                        ps.setLong(2, keepAfterMillis);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                String id = rs.getString(1);
+                                if (id != null && !id.isBlank()) {
+                                    toDelete.add(id);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (keepPerPlayer > 0) {
+                    String selectSql = """
+                            SELECT backup_id
+                            FROM backups
+                            WHERE player_uuid=? AND locked=0
+                            ORDER BY created_at DESC
+                            LIMIT -1 OFFSET ?
+                            """;
+                    try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
+                        ps.setString(1, playerUuid.toString());
+                        ps.setInt(2, keepPerPlayer);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                String id = rs.getString(1);
+                                if (id != null && !id.isBlank()) {
+                                    toDelete.add(id);
+                                }
+                            }
                         }
                     }
                 }

@@ -338,8 +338,8 @@ public final class MysqlBackupStore implements BackupStore {
     }
 
     @Override
-    public void purgeBackups(UUID playerUuid, int keepPerPlayer) throws Exception {
-        if (keepPerPlayer <= 0) {
+    public void purgeBackups(UUID playerUuid, int keepPerPlayer, long keepAfterMillis) throws Exception {
+        if (keepPerPlayer <= 0 && keepAfterMillis <= 0) {
             return;
         }
         synchronized (lock) {
@@ -347,7 +347,7 @@ public final class MysqlBackupStore implements BackupStore {
             try {
                 List<String> toDelete = new ArrayList<>();
                 String selectSql = """
-                        SELECT backup_id
+                        SELECT backup_id, created_at
                         FROM backups
                         WHERE player_uuid=? AND locked=0
                         ORDER BY created_at DESC
@@ -358,10 +358,16 @@ public final class MysqlBackupStore implements BackupStore {
                         int idx = 0;
                         while (rs.next()) {
                             idx++;
-                            if (idx <= keepPerPlayer) {
+                            String backupId = rs.getString(1);
+                            if (backupId == null || backupId.isBlank()) {
                                 continue;
                             }
-                            toDelete.add(rs.getString(1));
+                            long createdAt = rs.getLong(2);
+                            boolean deleteByCount = keepPerPlayer > 0 && idx > keepPerPlayer;
+                            boolean deleteByAge = keepAfterMillis > 0 && createdAt < keepAfterMillis;
+                            if (deleteByCount || deleteByAge) {
+                                toDelete.add(backupId);
+                            }
                         }
                     }
                 }

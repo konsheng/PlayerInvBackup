@@ -402,6 +402,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         getLogger().info(lang.plain(
                 "console.startup.retention",
                 Placeholder.unparsed("keep", String.valueOf(pluginConfig.keepPerPlayer())),
+                Placeholder.unparsed("keep_days", String.valueOf(pluginConfig.keepDuration().toDays())),
                 Placeholder.unparsed("queue_limit", String.valueOf(pluginConfig.queueLimit())),
                 Placeholder.unparsed("max_writes", String.valueOf(pluginConfig.maxWritesPerSecond()))
         ));
