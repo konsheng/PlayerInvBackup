@@ -891,6 +891,11 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         }
         Chat.plain(sender, "status.keep", Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())));
         Chat.plain(sender, "status.keep-days", Placeholder.unparsed("days", String.valueOf(cfg.keepDuration().toDays())));
+        String yesText = plugin.lang().raw("common.yes_text");
+        String noText = plugin.lang().raw("common.no_text");
+        Chat.plain(sender, "status.audit-enabled", Placeholder.unparsed("enabled", cfg.auditEnabled() ? yesText : noText));
+        Chat.plain(sender, "status.audit-console", Placeholder.unparsed("enabled", cfg.auditConsole() ? yesText : noText));
+        Chat.plain(sender, "status.audit-keep-days", Placeholder.unparsed("days", String.valueOf(cfg.auditKeepDays())));
         Chat.plain(
                 sender,
                 "status.io-queue",

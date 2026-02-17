@@ -140,6 +140,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         }
 
         this.pluginConfig = PluginConfig.from(this, this.lang, getConfig());
+        auditService.reload(pluginConfig);
         applyGuiMode();
 
         try {

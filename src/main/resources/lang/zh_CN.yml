@@ -122,6 +122,9 @@ status:
   auto-disabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><#FFA726>已关闭</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"
   keep: "<prefix><#B0BEC5>保留策略: </#B0BEC5><white>每玩家保留最近 <keep> 份</white><#B0BEC5>(0=不清理)</#B0BEC5>"
   keep-days: "<prefix><#B0BEC5>保留天数: </#B0BEC5><white><days></white><#B0BEC5> 天(0=不清理)</#B0BEC5>"
+  audit-enabled: "<prefix><#B0BEC5>审计功能: </#B0BEC5><white><enabled></white>"
+  audit-console: "<prefix><#B0BEC5>审计控制台: </#B0BEC5><white><enabled></white>"
+  audit-keep-days: "<prefix><#B0BEC5>审计保留天数: </#B0BEC5><white><days></white><#B0BEC5> 天(0=不清理)</#B0BEC5>"
   io-queue: "<prefix><#B0BEC5>I/O 队列: </#B0BEC5><white><size></white><#B0BEC5>/</#B0BEC5><white><limit></white><#B0BEC5>(剩余容量 </#B0BEC5><white><remaining></white><#B0BEC5>)</#B0BEC5>"
   sqlite-file: "<prefix><#B0BEC5>SQLite 文件: </#B0BEC5><white><path></white>"
   sqlite-size: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5>"
@@ -333,7 +336,10 @@ console:
 
   audit:
     line: "[审计] 操作=<action>, 操作者=<actor>, 目标=<target>, 备份编号=<backup_id>"
-    write-failed: "写入审计日志失败: <reason>"
+    write-failed: "写入审计日志失败: file=<file>, reason=<reason>"
+    rotate-failed: "压缩审计日志失败: file=<file>, reason=<reason>"
+    cleanup-failed: "清理审计日志失败: file=<file>, reason=<reason>"
+    maintenance-failed: "审计日志维护失败: <reason>"
 
   command:
     reload-failed: "重载失败: <reason>"

@@ -52,6 +52,9 @@
 - `gui.mode`: `auto` | `bukkit` | `packet` GUI 界面的生成方式
 - `gui.list-page-size`: GUI 列表每页数量
 - `sounds.gui.*`: GUI 点击音效
+- `audit.enabled`: 是否启用操作审计
+- `audit.console`: 是否在控制台输出每条审计记录
+- `audit.keep-days`: 审计日志保留天数 (0 = 不清理)
 
 ### 保留策略
 
@@ -64,6 +67,12 @@
 - `gui.mode=auto`（默认）: 自动切换，有 ProtocolLib 则使用 Packet GUI，否则使用原生 GUI
 - `gui.mode=bukkit`: 强制使用原生 Bukkit Inventory GUI
 - `gui.mode=packet`: 强制使用 Packet GUI，需要 ProtocolLib，缺失或初始化失败会自动降级为原生 GUI
+
+### 审计日志
+
+- 位置: `plugins/BayMcBackUp/logs/`
+- 文件: 按天切分 `audit-YYYY-MM-DD.log`，旧文件会自动压缩为 `.log.gz`
+- 清理: `audit.keep-days` 控制保留天数，超过天数的文件会自动删除
 
 ## 语言文件
 

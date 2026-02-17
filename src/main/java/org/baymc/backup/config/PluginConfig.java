@@ -21,6 +21,9 @@ public record PluginConfig(
         Duration jitter,
         int keepPerPlayer,
         Duration keepDuration,
+        boolean auditEnabled,
+        boolean auditConsole,
+        int auditKeepDays,
         StorageType storageType,
         Path localBasePath,
         Path sqliteFile,
@@ -45,6 +48,10 @@ public record PluginConfig(
         var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 50));
         var keepDays = Math.max(0, config.getLong("backup.keep-days", 0));
         var keepDuration = Duration.ofDays(keepDays);
+
+        boolean auditEnabled = config.getBoolean("audit.enabled", true);
+        boolean auditConsole = config.getBoolean("audit.console", true);
+        int auditKeepDays = Math.max(0, config.getInt("audit.keep-days", 30));
 
         String languageFile = config.getString("language", "zh_CN.yml");
         if (languageFile == null || languageFile.isBlank()) {
@@ -116,6 +123,9 @@ public record PluginConfig(
                 Duration.ofSeconds(jitterSeconds),
                 keepPerPlayer,
                 keepDuration,
+                auditEnabled,
+                auditConsole,
+                auditKeepDays,
                 storageType,
                 localBasePath,
                 sqliteFile,

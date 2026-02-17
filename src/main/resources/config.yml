@@ -29,6 +29,18 @@ backup:
   # 自动备份排除世界 (定时/事件触发都会跳过)
   excluded-worlds: []
 
+audit:
+  # 是否启用操作审计
+  # 启用后会把关键操作写入 plugins/BayMcBackUp/logs
+  # 日志按天切分, 旧文件会自动压缩为 .gz
+  enabled: true
+
+  # 是否在控制台输出每条审计记录
+  console: true
+
+  # 审计日志保留天数 (0 = 不清理)
+  keep-days: 30
+
 storage:
   # 存储后端: local | sqlite | mysql | h2
   type: sqlite
