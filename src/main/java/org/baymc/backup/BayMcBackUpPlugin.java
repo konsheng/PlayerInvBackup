@@ -59,7 +59,6 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        saveResource("lang/zh_CN.yml", false);
         this.auditService = new AuditService(this);
         this.bStatsService = new BStatsService(this);
         this.restoreService = new RestoreService(this);
@@ -247,6 +246,17 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
 
         String fileName = languageFile == null || languageFile.isBlank() ? "zh_CN.yml" : languageFile.trim();
         Path requested = langDir.resolve(fileName);
+
+        // 如果用户指定了语言文件且本地不存在, 尝试从插件 Jar 内复制一份默认模板出来
+        if (!Files.exists(requested)) {
+            String resourcePath = "lang/" + fileName;
+            try (InputStream ignored = getResource(resourcePath)) {
+                if (ignored != null) {
+                    saveResource(resourcePath, false);
+                }
+            } catch (Exception ignored) {
+            }
+        }
 
         String selectedName = fileName;
         Path selected = requested;

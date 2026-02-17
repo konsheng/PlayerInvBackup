@@ -77,6 +77,7 @@
 ## 语言文件
 
 - 默认语言文件: `plugins/BayMcBackUp/lang/zh_CN.yml`
+- 内置英文语言文件: `plugins/BayMcBackUp/lang/en_US.yml`，在配置 `language` 中设置为 `en_US.yml` 即可
 - 所有游戏内提示与控制台提示均从语言文件读取（例如 `console.*`），需要修改提示文本时直接编辑该文件
 - 修改后执行 `/bmbackup reload` 立即生效
 - 插件会自动补全缺失的语言键，减少升级后出现“语言文件缺少键”的情况

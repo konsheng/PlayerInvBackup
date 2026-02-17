@@ -1,0 +1,368 @@
+prefix: "<#FFB300>[BayMcBackUp]</#FFB300> <#90A4AE>»</#90A4AE> "
+
+help:
+  header: "<prefix><#FFB300>BayMcBackUp Help</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
+  lines:
+    - "<prefix><#B0BEC5>Permission: </#B0BEC5><white><perm></white><#B0BEC5>(default OP)</#B0BEC5>"
+    - "<prefix><#B0BEC5>Config: </#B0BEC5><white><config></white>"
+    - "<prefix><#B0BEC5>Backup scope: </#B0BEC5><white>Inventory (armor/offhand) + Ender Chest</white>"
+    - "<prefix><#B0BEC5>Current config: </#B0BEC5><white><interval></white><#B0BEC5> min (0=off), jitter </#B0BEC5><white><jitter></white><#B0BEC5> sec, keep </#B0BEC5><white><keep></white><#B0BEC5> per player, keep days </#B0BEC5><white><keep_days></white><#B0BEC5> days</#B0BEC5>"
+    - "<prefix><#B0BEC5>Storage: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
+    - "<prefix><#90A4AE>Tip: When the target is offline, online-mode servers require UUID or cached name; offline-mode servers can use the name directly</#90A4AE>"
+    - "<prefix><#90A4AE>Tip: Click a slot in GUI to claim the whole stack; full inventory goes to pending (/<label> pending)</#90A4AE>"
+    - "<prefix><#90A4AE>Tip: Backup ID is shown on the paper item in 'Backup List' under 'ID'; restore is recommended via GUI 'Restore to player' with confirmation</#90A4AE>"
+    - "<prefix><#90A4AE>Tip: On Folia, restore only supports online players</#90A4AE>"
+    - "<prefix><#FFA726>Warning: Restore overwrites the target's inventory and ender chest (only unclaimed slots are restored)</#FFA726>"
+    - "<prefix><#90A4AE>Console usage: No leading / needed (e.g., <white>bmbackup nowall</white>)</#90A4AE>"
+    - "<prefix><#90A4AE>Console tip: open/pending are GUI or inventory actions and only work in game</#90A4AE>"
+  commands:
+    - "<prefix><#FFD54F>/<label> open [name|UUID]</#FFD54F> <#B0BEC5>Open backup list GUI</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> list [name|UUID] [page]</#FFD54F> <#B0BEC5>List backups (console friendly)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> info [name|UUID] [backup id]</#FFD54F> <#B0BEC5>Show backup details</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> lock [name|UUID] [backup id] [note]</#FFD54F> <#B0BEC5>Pin a backup (not auto purged)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> unlock [name|UUID] [backup id]</#FFD54F> <#B0BEC5>Unpin a backup</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> note [name|UUID] [backup id] [note]</#FFD54F> <#B0BEC5>Set or clear backup note</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> now [online name|UUID]</#FFD54F> <#B0BEC5>Create a backup now</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> backup</#FFD54F> <#B0BEC5>Create a backup for yourself</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> nowall</#FFD54F> <#B0BEC5>Backup all online players (alias backupall)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> pending</#FFD54F> <#B0BEC5>Deliver pending items into inventory</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> restore [online name|UUID] [backup id]</#FFD54F> <#B0BEC5>Restore the backup (claimed slots excluded)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> status</#FFD54F> <#B0BEC5>Show status</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> reload</#FFD54F> <#B0BEC5>Reload config and language</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> help</#FFD54F> <#B0BEC5>Show this help</#B0BEC5>"
+  example: "<prefix><#90A4AE>Example: </#90A4AE><#FFD54F>/<label> open Steve</#FFD54F><#90A4AE> | </#90A4AE><#FFD54F>/<label> open [uuid]</#FFD54F>"
+
+errors:
+  no-permission: "<prefix><#EF5350>You do not have permission (requires <#FFD54F><perm></#FFD54F>)</#EF5350>"
+  console-no-gui: "<prefix><#EF5350>Console cannot open GUI, run this command in game</#EF5350>"
+  gui-requires-protocollib: "<prefix><#EF5350>GUI is unavailable, ProtocolLib is required</#EF5350>"
+  reload-failed: "<prefix><#EF5350>Reload failed, check console logs</#EF5350>"
+  store-unavailable: "<prefix><#EF5350>Storage is unavailable, fix config then run <#FFD54F>/<label> reload</#FFD54F></#EF5350>"
+  console-no-inventory: "<prefix><#EF5350>Console has no inventory, run this command in game</#EF5350>"
+  backup-queue-full: "<prefix><#EF5350>Backup queue is full or unavailable, try again later</#EF5350>"
+  usage-open: "<prefix><#EF5350>Usage: <#FFD54F>/<label> open [name|UUID]</#FFD54F></#EF5350>"
+  usage-now: "<prefix><#EF5350>Usage: <#FFD54F>/<label> now [online name|UUID]</#FFD54F></#EF5350>"
+  usage-restore: "<prefix><#EF5350>Usage: <#FFD54F>/<label> restore [online name|UUID] [backup id]</#FFD54F></#EF5350>"
+  usage-list: "<prefix><#EF5350>Usage: <#FFD54F>/<label> list [name|UUID] [page]</#FFD54F></#EF5350>"
+  usage-info: "<prefix><#EF5350>Usage: <#FFD54F>/<label> info [name|UUID] [backup id]</#FFD54F></#EF5350>"
+  usage-lock: "<prefix><#EF5350>Usage: <#FFD54F>/<label> lock [name|UUID] [backup id] [note]</#FFD54F></#EF5350>"
+  usage-unlock: "<prefix><#EF5350>Usage: <#FFD54F>/<label> unlock [name|UUID] [backup id]</#FFD54F></#EF5350>"
+  usage-note: "<prefix><#EF5350>Usage: <#FFD54F>/<label> note [name|UUID] [backup id] [note]</#FFD54F></#EF5350>"
+  note-too-long: "<prefix><#EF5350>Note is too long (max <#FFD54F><max></#FFD54F> chars)</#EF5350>"
+  offline-not-cached: "<prefix><#EF5350>Player is offline and server has no cache, use UUID</#EF5350>"
+  open-offline-not-cached: "<prefix><#EF5350>Player is offline and server has no cache, use UUID (/<label> open [uuid])</#EF5350>"
+  player-not-online: "<prefix><#EF5350>Target player is not online</#EF5350>"
+  target-offline: "<prefix><#EF5350>Target player is offline</#EF5350>"
+  restore-target-offline: "<prefix><#EF5350>Target player is not online (Folia only supports online restore)</#EF5350>"
+  unknown-subcommand: "<prefix><#EF5350>Unknown subcommand: <#FFD54F><sub></#FFD54F></#EF5350>"
+  backup-not-found: "<prefix><#EF5350>Backup not found: <#FFD54F><backup_id></#FFD54F></#EF5350>"
+  load-failed: "<prefix><#EF5350>Load failed, check console logs</#EF5350>"
+  read-failed: "<prefix><#EF5350>Read failed, check console logs</#EF5350>"
+  snapshot-invalid: "<prefix><#EF5350>Backup data is corrupted or cannot be parsed, check console logs</#EF5350>"
+  lang-key-missing: "<prefix><#EF5350>Missing language text: <key></#EF5350>"
+  restore-failed: "<prefix><#EF5350>Restore failed, check console logs</#EF5350>"
+  claim-failed: "<prefix><#EF5350>Claim failed, check console logs</#EF5350>"
+  already-claimed: "<prefix><#FFA726>This item has already been claimed</#FFA726>"
+  deliver-mark-failed-rollback: "<prefix><#EF5350>Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
+  claim-mark-failed-rollback: "<prefix><#EF5350>Give failed (database update failed), item rolled back, retry with <#FFD54F>/<label> pending</#FFD54F></#EF5350>"
+  inventory-full-pending: "<prefix><#FFA726>Inventory is full, item moved to pending: <#FFD54F>/<label> pending</#FFD54F></#FFA726>"
+  deliver-inventory-full: "<prefix><#FFA726>Inventory is full, remaining pending: <#FFD54F><remaining></#FFD54F></#FFA726>"
+  already-first-page: "<prefix><#FFA726>Already on the first page</#FFA726>"
+  no-next-page: "<prefix><#FFA726>No next page</#FFA726>"
+  no-online-players: "<prefix><#FFA726>No players online</#FFA726>"
+
+  snapshot-hash-mismatch: "<prefix><#EF5350>Backup is corrupted (SHA256 mismatch), restore blocked: <#FFD54F><backup_id></#FFD54F></#EF5350>"
+
+info:
+  checking-pending: "<prefix><#B0BEC5>Checking pending items...</#B0BEC5>"
+  restoring-loading: "<prefix><#B0BEC5>Loading backup and preparing to restore...</#B0BEC5>"
+  backupall-start: "<prefix><#B0BEC5>Submitting backup tasks: <#FFD54F><total></#FFD54F> online players</#B0BEC5>"
+  search-backup-id-prompt: "<prefix><#B0BEC5>Enter backup ID (e.g., <#FFD54F>1730000000000-abc12345</#FFD54F>), type <#FFD54F><cancel></#FFD54F> to cancel</#B0BEC5>"
+  title: "<prefix><#FFB300>Backup Info</#FFB300><#90A4AE>: <target>(<id>)</#90A4AE>"
+  lines:
+    - "<prefix><#B0BEC5>Time: </#B0BEC5><white><time></white>"
+    - "<prefix><#B0BEC5>Trigger: </#B0BEC5><white><trigger></white>"
+    - "<prefix><#B0BEC5>Size: </#B0BEC5><white><size></white><#B0BEC5> bytes</#B0BEC5>"
+    - "<prefix><#B0BEC5>SHA256: </#B0BEC5><white><sha256></white>"
+    - "<prefix><#B0BEC5>Schema: </#B0BEC5><white><schema></white>"
+    - "<prefix><#B0BEC5>Claimed slots: </#B0BEC5><white><claimed></white>"
+    - "<prefix><#B0BEC5>Pinned: </#B0BEC5><white><locked></white>"
+    - "<prefix><#B0BEC5>Note: </#B0BEC5><white><note></white>"
+
+success:
+  reloaded: "<prefix><#66BB6A>Config and language reloaded</#66BB6A>"
+  backup-queued: "<prefix><#66BB6A>Added to backup queue: <#FFD54F><player></#FFD54F></#66BB6A>"
+  backup-locked: "<prefix><#66BB6A>Backup pinned: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  backup-unlocked: "<prefix><#66BB6A>Backup unpinned: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  backup-note-set: "<prefix><#66BB6A>Note updated: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  pending-none: "<prefix><#66BB6A>No pending items</#66BB6A>"
+  pending-delivered: "<prefix><#66BB6A>Delivered: <#FFD54F><count></#FFD54F> items</#66BB6A>"
+  claim-success: "<prefix><#66BB6A>Claimed this slot (amount: <#FFD54F><amount></#FFD54F>)</#66BB6A>"
+  restore-success: "<prefix><#66BB6A>Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
+  backupall-submitted: "<prefix><#66BB6A>Backup tasks submitted: queued <#FFD54F><queued></#FFD54F>, skipped <#FFD54F><skipped></#FFD54F> (queue full or unavailable)</#66BB6A>"
+
+warn:
+  auto-backup-before-restore-failed: "<prefix><#FFA726>Auto backup before restore failed (queue full), continuing restore</#FFA726>"
+  backupall-timeout-summary: "<prefix><#FFA726>Backup tasks summary (timeout): queued <#FFD54F><queued></#FFD54F>, skipped <#FFD54F><skipped></#FFD54F>, not executed <#FFD54F><not_executed></#FFD54F> (offline or canceled)</#FFA726>"
+  no-more-backups-back: "<prefix><#FFA726>No more backups, returned to previous page</#FFA726>"
+  restored-notify-target: "<prefix><#FFA726>An admin restored your inventory and ender chest</#FFA726>"
+  search-backup-id-empty: "<prefix><#FFA726>Please enter a backup ID, or type <#FFD54F><cancel></#FFD54F> to cancel</#FFA726>"
+
+list:
+  title: "<prefix><#FFB300>Backup List</#FFB300><#90A4AE>: <target> Page <page></#90A4AE>"
+  empty: "<prefix><#B0BEC5>No backups</#B0BEC5>"
+  line: "<prefix><#90A4AE>- </#90A4AE><#FFD54F><time></#FFD54F> <#B0BEC5>ID: </#B0BEC5><white><id></white> <#B0BEC5>Trigger: </#B0BEC5><white><trigger></white> <#B0BEC5>Size: </#B0BEC5><white><size></white><#B0BEC5> bytes</#B0BEC5> <#B0BEC5>Pinned: </#B0BEC5><white><locked></white> <#B0BEC5>Note: </#B0BEC5><white><note></white>"
+
+status:
+  title: "<prefix><#FFB300>Status</#FFB300>"
+  gui-mode: "<prefix><#B0BEC5>GUI mode: </#B0BEC5><white><mode></white><#B0BEC5> Current: </#B0BEC5><white><active></white>"
+  storage: "<prefix><#B0BEC5>Storage: </#B0BEC5><white><storage_name></white>"
+  store-unavailable: "<prefix><#EF5350>Storage unavailable, backup and restore are paused, reason: <reason></#EF5350>"
+  auto-enabled: "<prefix><#B0BEC5>Auto backup: </#B0BEC5><white><interval></white><#B0BEC5> min / jitter </#B0BEC5><white><jitter></white><#B0BEC5> sec</#B0BEC5>"
+  auto-disabled: "<prefix><#B0BEC5>Auto backup: </#B0BEC5><#FFA726>disabled</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"
+  keep: "<prefix><#B0BEC5>Retention: </#B0BEC5><white>keep last <keep> per player</white><#B0BEC5>(0=off)</#B0BEC5>"
+  keep-days: "<prefix><#B0BEC5>Keep days: </#B0BEC5><white><days></white><#B0BEC5> days(0=off)</#B0BEC5>"
+  audit-enabled: "<prefix><#B0BEC5>Audit: </#B0BEC5><white><enabled></white>"
+  audit-console: "<prefix><#B0BEC5>Audit console: </#B0BEC5><white><enabled></white>"
+  audit-keep-days: "<prefix><#B0BEC5>Audit keep days: </#B0BEC5><white><days></white><#B0BEC5> days(0=off)</#B0BEC5>"
+  io-queue: "<prefix><#B0BEC5>I/O queue: </#B0BEC5><white><size></white><#B0BEC5>/</#B0BEC5><white><limit></white><#B0BEC5>(remaining </#B0BEC5><white><remaining></white><#B0BEC5>)</#B0BEC5>"
+  sqlite-file: "<prefix><#B0BEC5>SQLite file: </#B0BEC5><white><path></white>"
+  sqlite-size: "<prefix><#B0BEC5>Database size: </#B0BEC5><white><size></white><#B0BEC5> bytes</#B0BEC5>"
+  sqlite-size-unknown: "<prefix><#B0BEC5>Database size: </#B0BEC5><white>unknown</white>"
+  local-dir: "<prefix><#B0BEC5>Local dir: </#B0BEC5><white><path></white>"
+  mysql: "<prefix><#B0BEC5>MySQL: </#B0BEC5><white><host>: <port>/<database></white>"
+  h2-file: "<prefix><#B0BEC5>H2 file: </#B0BEC5><white><path></white>"
+  h2-size: "<prefix><#B0BEC5>Database size: </#B0BEC5><white><size></white><#B0BEC5> bytes</#B0BEC5>"
+  h2-size-unknown: "<prefix><#B0BEC5>Database size: </#B0BEC5><white>unknown</white>"
+
+gui:
+  loading:
+    item-name: "<#B0BEC5>Loading...</#B0BEC5>"
+    item-lore:
+      - "<#90A4AE>Please wait</#90A4AE>"
+  backup-list:
+    loading-title: "<#B0BEC5>Loading backup list...</#B0BEC5>"
+    title: "<#FFB300>Backup List</#FFB300><#90A4AE>: <target></#90A4AE>"
+    empty:
+      name: "<#EF5350>No backups</#EF5350>"
+      lore:
+        - "<#90A4AE>Wait for auto backup or use /bmbackup now [player]</#90A4AE>"
+    entry:
+      name: "<#FFD54F>Backup <white><time></white></#FFD54F>"
+      lore:
+        - "<#90A4AE>ID: </#90A4AE><white><id></white>"
+        - "<#90A4AE>Trigger: </#90A4AE><white><trigger></white>"
+        - "<#90A4AE>Size: </#90A4AE><white><size></white><#90A4AE> bytes</#90A4AE>"
+        - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
+        - "<#90A4AE>Note: </#90A4AE><white><note></white>"
+        - "<#66BB6A>Click to open</#66BB6A>"
+    prev:
+      name: "<#FFD54F>Previous page</#FFD54F>"
+    next:
+      name: "<#FFD54F>Next page</#FFD54F>"
+    next-disabled:
+      name: "<#90A4AE>Next page</#90A4AE>"
+      lore:
+        - "<#90A4AE>No more backups</#90A4AE>"
+    filter-time:
+      name: "<#FFD54F>Time filter</#FFD54F>"
+      lore:
+        - "<#90A4AE>Current: </#90A4AE><white><value></white>"
+        - "<#90A4AE>Click to switch</#90A4AE>"
+      value:
+        all: "All"
+        24h: "Last 24 hours"
+        7d: "Last 7 days"
+        30d: "Last 30 days"
+    filter-trigger:
+      name: "<#FFD54F>Trigger filter</#FFD54F>"
+      lore:
+        - "<#90A4AE>Current: </#90A4AE><white><value></white>"
+        - "<#90A4AE>Click to switch</#90A4AE>"
+      value:
+        all: "All"
+    search:
+      name: "<#FFD54F>Search by ID</#FFD54F>"
+      lore:
+        - "<#90A4AE>Enter backup ID in chat</#90A4AE>"
+        - "<#90A4AE>Type <white><cancel></white> to cancel</#90A4AE>"
+    clear:
+      name: "<#FFD54F>Clear filters</#FFD54F>"
+      lore:
+        - "<#90A4AE>Reset to: all time + all triggers</#90A4AE>"
+    jump-back:
+      name: "<#FFD54F>Jump back 5 pages</#FFD54F>"
+      lore:
+        - "<#90A4AE>Jump to older backups</#90A4AE>"
+    jump-forward:
+      name: "<#FFD54F>Jump forward 5 pages</#FFD54F>"
+      lore:
+        - "<#90A4AE>Jump to newer backups</#90A4AE>"
+    refresh:
+      name: "<#FFD54F>Refresh</#FFD54F>"
+      lore:
+        - "<#90A4AE>Reload current page: <page></#90A4AE>"
+  backup-view:
+    loading-title: "<#B0BEC5>Loading backup...</#B0BEC5>"
+    title-inv: "<#FFB300>Inventory</#FFB300><#90A4AE>: <target></#90A4AE>"
+    title-ender: "<#FFB300>Ender Chest</#FFB300><#90A4AE>: <target></#90A4AE>"
+    claimed:
+      name: "<#EF5350>Claimed</#EF5350>"
+      lore:
+        - "<#90A4AE>This slot has been claimed by an admin</#90A4AE>"
+    processing:
+      name: "<#90A4AE>Processing...</#90A4AE>"
+    back:
+      name: "<#FFD54F>Back to list</#FFD54F>"
+    toggle:
+      name: "<#FFD54F>Switch view</#FFD54F>"
+      lore:
+        - "<#90A4AE>Inventory / Ender Chest</#90A4AE>"
+    restore:
+      name: "<#EF5350>Restore to player</#EF5350>"
+      lore:
+        - "<#90A4AE>Restore unclaimed slots to the player (online)</#90A4AE>"
+        - "<#FFA726>Click requires confirmation</#FFA726>"
+    restore-offline:
+      name: "<#EF5350>Target is offline</#EF5350>"
+      lore:
+        - "<#90A4AE>On Folia, only online restore is supported</#90A4AE>"
+    pending:
+      name: "<#FFD54F>Claim pending</#FFD54F>"
+      lore:
+        - "<#90A4AE>Items pending due to full inventory</#90A4AE>"
+    lock:
+      name: "<#FFD54F>Pin backup</#FFD54F>"
+      lore:
+        - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
+        - "<#90A4AE>Note: </#90A4AE><white><note></white>"
+        - "<#90A4AE>Pinned backups are not auto purged</#90A4AE>"
+        - "<#90A4AE>Pinned backups appear at the top of the list</#90A4AE>"
+        - "<#90A4AE>Click to toggle pin</#90A4AE>"
+        - "<#90A4AE>Tip: Use /bmbackup note to set or clear note</#90A4AE>"
+  restore-confirm:
+    title: "<#EF5350>Confirm restore</#EF5350><#90A4AE>: <target></#90A4AE>"
+    ok:
+      name: "<#66BB6A>Confirm restore</#66BB6A>"
+      lore:
+        - "<#90A4AE>This will restore the backup to the target player</#90A4AE>"
+        - "<#90A4AE>Only unclaimed slots will be restored</#90A4AE>"
+        - "<#EF5350>Will overwrite the player's current inventory and ender chest</#EF5350>"
+    info:
+      name: "<#FFD54F>Restore info</#FFD54F>"
+      lore:
+        - "<#90A4AE>Player: </#90A4AE><white><target></white>"
+        - "<#90A4AE>Backup ID: </#90A4AE><white><id></white>"
+    cancel:
+      name: "<#EF5350>Cancel</#EF5350>"
+      lore:
+        - "<#90A4AE>Back to backup preview</#90A4AE>"
+
+trigger:
+  timer: "Timer"
+  manual: "Manual"
+  join: "Join"
+  quit: "Quit"
+  death: "Death"
+  world-change: "World change"
+
+storage:
+  name:
+    sqlite: "SQLite"
+    local: "Local files"
+    mysql: "MySQL"
+    h2: "H2"
+
+common:
+  yes_text: "Yes"
+  no_text: "No"
+  none: "-"
+  gui_mode:
+    auto: "Auto"
+    bukkit: "Bukkit"
+    packet: "Packet"
+  cancel_keywords:
+    - "cancel"
+
+console:
+  plugin:
+    enabled: "BayMcBackUp enabled"
+    disabled: "BayMcBackUp disabled"
+
+  store:
+    init-failed: "Failed to initialize storage: <reason>"
+    unavailable-standby: "Storage unavailable, plugin stays enabled for config fix, run /bmbackup reload to retry"
+
+  dependency:
+    protocollib-missing: "ProtocolLib not detected, GUI will use Bukkit mode"
+    protocollib-missing-forced: "ProtocolLib not detected, Packet GUI is forced by config but cannot be enabled, falling back to Bukkit GUI"
+
+  config:
+    gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
+    defaults-resource-missing: "Default config resource not found: <resource>"
+    autofill-added: "Auto filled config keys: file=<file>, added=<added>"
+    autofill-failed: "Auto fill config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"
+
+  gui:
+    init-failed: "ProtocolLib enabled, but Packet GUI init failed, falling back to Bukkit GUI: <reason>"
+    list-load-failed: "Failed to load backup list: actor=<actor>(<actor_uuid>), target=<target_uuid>, page=<page>"
+    list-load-failed-query: "Failed to load backup list: actor=<actor>(<actor_uuid>), target=<target_uuid>, page=<page>, query=<query>"
+    backup-load-failed: "Failed to load backup: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>"
+    snapshot-invalid: "Backup data corrupted or cannot be parsed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>"
+    pending-load-failed: "Failed to read pending items: actor=<actor>(<actor_uuid>)"
+    pending-mark-delivered-failed: "Failed to mark delivered: <reason>"
+    lock-update-failed: "Failed to update pin state: target=<target_uuid>, backup_id=<backup_id>"
+    claim-failed: "Claim failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>"
+
+  packet-gui:
+    unsupported-size: "Unsupported GUI size: size=<size>, player=<player>"
+    menu-type-unresolved: "Failed to resolve menu type: key=<key>, player=<player>"
+    open-packet-failed: "Failed to send open GUI packet: player=<player>"
+    close-packet-failed: "Failed to send close GUI packet: player=<player>"
+    refresh-packet-failed: "Failed to send GUI refresh packet: player=<player>"
+
+  scheduler:
+    auto-disabled: "Auto backup disabled (backup.interval-minutes=0)"
+
+  startup:
+    storage: "Storage: <storage>"
+    schedule: "Auto backup interval: <interval> min, jitter: <jitter> sec"
+    retention: "Retention: keep last <keep> per player, keep days: <keep_days> days, queue limit: <queue_limit>, max writes/sec: <max_writes>"
+
+  backup:
+    encode-failed: "Failed to encode snapshot: player=<player>(<uuid>), backup_id=<backup_id>, reason=<reason>"
+    write-failed: "Failed to write backup: player=<player>(<uuid>), backup_id=<backup_id>, reason=<reason>"
+
+  audit:
+    line: "[Audit] action=<action>, actor=<actor>, target=<target>, backup_id=<backup_id>"
+    write-failed: "Failed to write audit log: file=<file>, reason=<reason>"
+    rotate-failed: "Failed to compress audit log: file=<file>, reason=<reason>"
+    cleanup-failed: "Failed to clean audit logs: file=<file>, reason=<reason>"
+    maintenance-failed: "Audit log maintenance failed: <reason>"
+
+  command:
+    reload-failed: "Reload failed: <reason>"
+    list-load-failed: "Failed to load backup list: uuid=<uuid>, page=<page>, reason=<reason>"
+    info-load-failed: "Failed to load backup info: uuid=<uuid>, backup_id=<backup_id>, reason=<reason>"
+    lock-failed: "Pin failed: uuid=<uuid>, backup_id=<backup_id>, reason=<reason>"
+    unlock-failed: "Unpin failed: uuid=<uuid>, backup_id=<backup_id>, reason=<reason>"
+    note-failed: "Set note failed: uuid=<uuid>, backup_id=<backup_id>, reason=<reason>"
+
+  restore:
+    read-failed: "Failed to read backup: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
+    sha-mismatch: "Backup verification failed (sha256 mismatch): actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, expected=<expected>, actual=<actual>"
+    snapshot-invalid: "Backup data corrupted or cannot be parsed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
+    apply-failed: "Restore failed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
+
+  sound:
+    invalid: "Invalid sound config: path=<path>, name=<name>, sound disabled"
+
+  lang:
+    fallback: "Language file not found: <requested>, falling back to default zh_CN.yml: <path>"
+    defaults-resource-missing: "Default language resource not found: <resource>"
+    autofill-added: "Auto filled language keys: file=<file>, added=<added>"
+    autofill-failed: "Auto fill language keys failed: file=<file>, defaults=<defaults>, reason=<reason>"
+    missing-key: "Language file missing key: <key> (<file>)"
+    missing-list-key: "Language file missing list key: <key> (<file>)"
+    autofill-write-failed: "Failed to write language file: key=<key>, file=<file>, reason=<reason>"
+    parse-failed: "Failed to parse language text: file=<file>, text=<text>"
