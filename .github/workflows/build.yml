@@ -1,0 +1,39 @@
+name: 构建并上传产物
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 构建
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: 构建
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: BayMcBackUp-${{ github.ref_name }}-${{ github.sha }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14
