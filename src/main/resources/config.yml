@@ -41,6 +41,10 @@ audit:
   # 审计日志保留天数 (0 = 不清理)
   keep-days: 30
 
+bstats:
+  # bStats 统计
+  enabled: true
+
 storage:
   # 存储后端: local | sqlite | mysql | h2
   type: sqlite

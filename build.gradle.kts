@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 group = "org.baymc"
@@ -15,6 +16,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
+    implementation("org.bstats:bstats-bukkit:3.1.0")
     implementation("org.xerial:sqlite-jdbc:3.45.3.0")
     implementation("com.mysql:mysql-connector-j:8.0.33")
     implementation("com.h2database:h2:2.2.224")
@@ -55,7 +57,16 @@ tasks.test {
 }
 
 tasks.jar {
+    enabled = false
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/INDEX.LIST")
+    relocate("org.bstats", "org.baymc.backup.libs.bstats")
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }

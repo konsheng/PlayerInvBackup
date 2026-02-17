@@ -18,6 +18,7 @@ import org.baymc.backup.gui.BukkitGuiListener;
 import org.baymc.backup.gui.GuiChatListener;
 import org.baymc.backup.gui.GuiService;
 import org.baymc.backup.gui.packet.PacketGuiManager;
+import org.baymc.backup.metrics.BStatsService;
 import org.baymc.backup.platform.PlayerLifecycleListener;
 import org.baymc.backup.restore.RestoreService;
 import org.baymc.backup.store.BackupStore;
@@ -47,6 +48,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
     private BackupService backupService;
     private BackupScheduler backupScheduler;
     private AuditService auditService;
+    private BStatsService bStatsService;
     private GuiService guiService;
     private RestoreService restoreService;
     private Lang lang;
@@ -59,6 +61,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         saveDefaultConfig();
         saveResource("lang/zh_CN.yml", false);
         this.auditService = new AuditService(this);
+        this.bStatsService = new BStatsService(this);
         this.restoreService = new RestoreService(this);
         this.guiService = new GuiService(this, restoreService);
         reload();
@@ -77,6 +80,10 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         shutdownPacketGui();
+        if (bStatsService != null) {
+            bStatsService.shutdown();
+            bStatsService = null;
+        }
         if (backupScheduler != null) {
             backupScheduler.stop();
             backupScheduler = null;
@@ -141,6 +148,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
 
         this.pluginConfig = PluginConfig.from(this, this.lang, getConfig());
         auditService.reload(pluginConfig);
+        bStatsService.reload(pluginConfig);
         applyGuiMode();
 
         try {
