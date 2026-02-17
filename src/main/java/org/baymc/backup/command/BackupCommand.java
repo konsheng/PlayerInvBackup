@@ -862,6 +862,17 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
         Chat.plain(sender, "status.title");
         Chat.plain(sender, "status.storage", Placeholder.unparsed("storage_name", storageName));
+        String guiModeKey = "common.gui_mode." + (cfg.guiMode() == null ? "auto" : cfg.guiMode().configValue());
+        String configuredGuiMode = plugin.lang().raw(guiModeKey);
+        String activeGuiMode = plugin.isPacketGuiEnabled()
+                ? plugin.lang().raw("common.gui_mode.packet")
+                : plugin.lang().raw("common.gui_mode.bukkit");
+        Chat.plain(
+                sender,
+                "status.gui-mode",
+                Placeholder.unparsed("mode", configuredGuiMode),
+                Placeholder.unparsed("active", activeGuiMode)
+        );
         if (!plugin.isStoreReady()) {
             String reason = plugin.storeInitFailedReason();
             String reasonText = reason == null || reason.isBlank() ? none : reason;

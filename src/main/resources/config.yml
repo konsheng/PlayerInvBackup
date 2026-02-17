@@ -66,6 +66,12 @@ performance:
   max-writes-per-second: 20
 
 gui:
+  # GUI 模式: auto | bukkit | packet
+  # auto: 自动切换, 有 ProtocolLib 时使用 packet, 否则使用 bukkit
+  # bukkit: 强制使用原生 Bukkit Inventory GUI
+  # packet: 强制使用 Packet GUI, 需要 ProtocolLib, 否则自动降级
+  mode: "auto"
+
   # 每页显示备份数量 (最大 45)
   list-page-size: 45
 

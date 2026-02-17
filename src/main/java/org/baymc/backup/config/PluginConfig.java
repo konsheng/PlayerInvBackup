@@ -5,6 +5,8 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Level;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.baymc.backup.text.Lang;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -26,6 +28,7 @@ public record PluginConfig(
         int queueLimit,
         double maxWritesPerSecond,
         int guiListPageSize,
+        GuiMode guiMode,
         String languageFile,
         boolean backupOnJoin,
         boolean backupOnQuit,
@@ -57,6 +60,24 @@ public record PluginConfig(
         var maxWritesPerSecond = Math.max(0.1, config.getDouble("performance.max-writes-per-second", 20));
 
         var guiListPageSize = Math.min(45, Math.max(9, config.getInt("gui.list-page-size", 45)));
+
+        String guiModeRaw = config.getString("gui.mode", "auto");
+        if (guiModeRaw != null) {
+            guiModeRaw = guiModeRaw.trim();
+        }
+        GuiMode guiMode = GuiMode.parseOrNull(guiModeRaw);
+        if (guiMode == null) {
+            guiMode = GuiMode.AUTO;
+            if (guiModeRaw != null && !guiModeRaw.isBlank()) {
+                plugin.getLogger().log(
+                        Level.WARNING,
+                        lang.plain(
+                                "console.config.gui-mode-invalid",
+                                Placeholder.unparsed("value", guiModeRaw)
+                        )
+                );
+            }
+        }
 
         boolean backupOnJoin = config.getBoolean("backup.triggers.join", true);
         boolean backupOnQuit = config.getBoolean("backup.triggers.quit", true);
@@ -99,6 +120,7 @@ public record PluginConfig(
                 queueLimit,
                 maxWritesPerSecond,
                 guiListPageSize,
+                guiMode,
                 languageFile,
                 backupOnJoin,
                 backupOnQuit,

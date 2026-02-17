@@ -132,6 +132,23 @@ public final class PacketGuiManager {
             protocolManager.removePacketListener(packetListener);
             packetListener = null;
         }
+
+        // 尽量关闭仍在查看的窗口, 避免客户端残留虚拟菜单
+        for (Map.Entry<UUID, Session> entry : sessions.entrySet()) {
+            UUID uuid = entry.getKey();
+            Session session = entry.getValue();
+            if (uuid == null || session == null) {
+                continue;
+            }
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
+            try {
+                sendCloseWindow(player, session.windowId);
+            } catch (Exception ignored) {
+            }
+        }
         sessions.clear();
         lastClicks.clear();
     }

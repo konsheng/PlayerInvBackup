@@ -12,7 +12,9 @@ import org.baymc.backup.app.BackupScheduler;
 import org.baymc.backup.app.BackupService;
 import org.baymc.backup.app.IoDispatcher;
 import org.baymc.backup.command.BackupCommand;
+import org.baymc.backup.config.GuiMode;
 import org.baymc.backup.config.PluginConfig;
+import org.baymc.backup.gui.BukkitGuiListener;
 import org.baymc.backup.gui.GuiChatListener;
 import org.baymc.backup.gui.GuiService;
 import org.baymc.backup.gui.packet.PacketGuiManager;
@@ -36,7 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * 1) 加载配置与语言文件
  * 2) 初始化存储后端与异步 I/O 队列
  * 3) 启动自动备份调度与事件触发备份
- * 4) 初始化 GUI 服务 (ProtocolLib 为可选依赖, 未安装时仅禁用 GUI)
+ * 4) 初始化 GUI 服务 (ProtocolLib 为可选依赖, 未安装时使用原生 GUI)
  */
 public final class BayMcBackUpPlugin extends JavaPlugin {
     private PluginConfig pluginConfig;
@@ -65,7 +67,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         }
 
         // 语言与配置在 reload() 里初始化, 事件监听与 GUI 依赖它们, 所以这里放到 reload() 之后
-        initPacketGuiIfAvailable();
+        getServer().getPluginManager().registerEvents(new BukkitGuiListener(guiService), this);
         getServer().getPluginManager().registerEvents(new GuiChatListener(guiService), this);
         getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this), this);
 
@@ -74,10 +76,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (packetGuiManager != null) {
-            packetGuiManager.shutdown();
-            packetGuiManager = null;
-        }
+        shutdownPacketGui();
         if (backupScheduler != null) {
             backupScheduler.stop();
             backupScheduler = null;
@@ -141,6 +140,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         }
 
         this.pluginConfig = PluginConfig.from(this, this.lang, getConfig());
+        applyGuiMode();
 
         try {
             if (store != null) {
@@ -451,15 +451,22 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         return lang;
     }
 
+    public boolean isPacketGuiEnabled() {
+        return packetGuiManager != null;
+    }
+
     /**
      * ProtocolLib 是可选依赖
-     * 未安装时不报错, 只禁用 GUI, 并在控制台提示需要安装依赖
+     * 支持自动切换与手动强制模式
+     *
+     * <p>gui.mode:
+     * auto: 自动切换, ProtocolLib 存在则启用发包 GUI, 否则使用原生 GUI
+     * bukkit: 强制使用原生 GUI
+     * packet: 强制使用发包 GUI, 需要 ProtocolLib, 否则自动降级
      */
-    private void initPacketGuiIfAvailable() {
-        // 避免重复初始化
-        if (packetGuiManager != null) {
-            return;
-        }
+    private void applyGuiMode() {
+        PluginConfig cfg = pluginConfig;
+        GuiMode mode = cfg == null ? GuiMode.AUTO : cfg.guiMode();
 
         boolean protocolLibEnabled;
         try {
@@ -468,8 +475,23 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
             protocolLibEnabled = false;
         }
 
+        boolean wantPacket = mode == GuiMode.PACKET || (mode == GuiMode.AUTO && protocolLibEnabled);
+        if (!wantPacket) {
+            shutdownPacketGui();
+            return;
+        }
+
         if (!protocolLibEnabled) {
-            getLogger().warning(lang.plain("console.dependency.protocollib-missing"));
+            shutdownPacketGui();
+            if (mode == GuiMode.PACKET) {
+                getLogger().warning(lang.plain("console.dependency.protocollib-missing-forced"));
+            } else {
+                getLogger().info(lang.plain("console.dependency.protocollib-missing"));
+            }
+            return;
+        }
+
+        if (packetGuiManager != null) {
             return;
         }
 
@@ -480,7 +502,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
             this.packetGuiManager = manager;
             this.guiService.setPacketGuiManager(manager);
         } catch (NoClassDefFoundError | Exception e) {
-            this.packetGuiManager = null;
+            shutdownPacketGui();
             getLogger().log(
                     Level.WARNING,
                     lang.plain(
@@ -489,6 +511,24 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
                     ),
                     e
             );
+        }
+    }
+
+    private void shutdownPacketGui() {
+        PacketGuiManager manager = packetGuiManager;
+        if (manager == null) {
+            if (guiService != null) {
+                guiService.setPacketGuiManager(null);
+            }
+            return;
+        }
+        try {
+            manager.shutdown();
+        } catch (Exception ignored) {
+        }
+        packetGuiManager = null;
+        if (guiService != null) {
+            guiService.setPacketGuiManager(null);
         }
     }
 }

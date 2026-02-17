@@ -39,6 +39,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.meta.ItemMeta;
 
 /**
@@ -47,7 +48,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * <p>负责:
  * 1) 构建备份列表/备份预览/恢复确认等界面
  * 2) 处理按钮点击并进行原地刷新(仅在需要改标题时重开 GUI)
- * 3) 协调 PacketGuiManager 的打开/刷新/关闭
+ * 3) 协调 PacketGuiManager 或原生 GUI 的打开/刷新/关闭
  */
 public final class GuiService {
     private static final DateTimeFormatter TIME_FORMAT =
@@ -100,8 +101,8 @@ public final class GuiService {
             return store;
         }
         if (player != null) {
-            if (closeMenu && packetGuiManager != null) {
-                packetGuiManager.closeMenu(player);
+            if (closeMenu) {
+                closeMenu(player);
             }
             Chat.error(player, "errors.store-unavailable", Placeholder.unparsed("label", MAIN_LABEL));
         }
@@ -109,10 +110,6 @@ public final class GuiService {
     }
 
     public void openBackupList(Player admin, UUID targetUuid, String targetName, int page) {
-        if (packetGuiManager == null) {
-            Chat.error(admin, "errors.gui-requires-protocollib");
-            return;
-        }
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -131,7 +128,7 @@ public final class GuiService {
         );
         Component loadingTitle = lang.msg("gui.backup-list.loading-title");
         runOnPlayer(admin, () -> {
-            packetGuiManager.openMenu(admin, createLoading(loadingTitle), loadingTitle);
+            openMenu(admin, createLoading(loadingTitle), loadingTitle);
         });
 
         int limit = plugin.pluginConfig().guiListPageSize();
@@ -154,9 +151,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.load-failed");
                 });
                 return;
@@ -176,16 +171,12 @@ public final class GuiService {
                 Inventory inv = createBackupListInventory(targetUuid, targetName, safePage, backups, hasNextPage);
                 String name = targetName == null ? targetUuid.toString() : targetName;
                 Component title = backupListTitle(plugin.lang(), name, safePage);
-                packetGuiManager.openMenu(admin, inv, title);
+                openMenu(admin, inv, title);
             });
         });
     }
 
     public void openBackupList(Player admin, UUID targetUuid, String targetName, int page, BackupQuery query) {
-        if (packetGuiManager == null) {
-            Chat.error(admin, "errors.gui-requires-protocollib");
-            return;
-        }
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -208,7 +199,7 @@ public final class GuiService {
         );
         Component loadingTitle = lang.msg("gui.backup-list.loading-title");
         runOnPlayer(admin, () -> {
-            packetGuiManager.openMenu(admin, createLoading(loadingTitle), loadingTitle);
+            openMenu(admin, createLoading(loadingTitle), loadingTitle);
         });
 
         int limit = plugin.pluginConfig().guiListPageSize();
@@ -233,9 +224,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.load-failed");
                 });
                 return;
@@ -254,7 +243,7 @@ public final class GuiService {
                 Inventory inv = createBackupListInventory(targetUuid, targetName, safePage, safeQuery, backups, hasNextPage);
                 String name = targetName == null ? targetUuid.toString() : targetName;
                 Component title = backupListTitle(plugin.lang(), name, safePage);
-                packetGuiManager.openMenu(admin, inv, title);
+                openMenu(admin, inv, title);
             });
         });
     }
@@ -302,7 +291,7 @@ public final class GuiService {
             if (backups.isEmpty() && safePage > 0) {
                 runOnPlayer(admin, () -> {
                     Inventory top = holder.getInventory();
-                    if (packetGuiManager == null || top == null || !packetGuiManager.isViewing(admin, top)) {
+                    if (top == null || !isViewing(admin, top)) {
                         return;
                     }
                     if (!holder.isRefreshSeqCurrent(refreshSeq)) {
@@ -317,7 +306,7 @@ public final class GuiService {
             boolean hasNextPage = backups.size() >= limit;
             runOnPlayer(admin, () -> {
                 Inventory top = holder.getInventory();
-                if (packetGuiManager == null || top == null || !packetGuiManager.isViewing(admin, top)) {
+                if (top == null || !isViewing(admin, top)) {
                     return;
                 }
                 if (!holder.isRefreshSeqCurrent(refreshSeq)) {
@@ -329,15 +318,15 @@ public final class GuiService {
                 holder.setBackups(backups);
 
                 Component desiredTitle = backupListTitle(plugin.lang(), targetName, safePage);
-                Component currentTitle = packetGuiManager.currentTitle(admin);
+                Component currentTitle = currentTitle(admin);
                 if (!desiredTitle.equals(currentTitle)) {
                     Inventory nextInv = createBackupListInventory(targetUuid, targetName, safePage, safeQuery, backups, hasNextPage);
-                    packetGuiManager.openMenu(admin, nextInv, desiredTitle);
+                    openMenu(admin, nextInv, desiredTitle);
                     return;
                 }
 
                 renderBackupListInventory(top, holder, hasNextPage);
-                packetGuiManager.syncIfViewing(admin, top);
+                syncIfViewing(admin, top);
             });
         });
     }
@@ -351,10 +340,6 @@ public final class GuiService {
             String backupId,
             GuiView view
     ) {
-        if (packetGuiManager == null) {
-            Chat.error(admin, "errors.gui-requires-protocollib");
-            return;
-        }
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -376,7 +361,7 @@ public final class GuiService {
         );
         Component loadingTitle = lang.msg("gui.backup-view.loading-title");
         runOnPlayer(admin, () -> {
-            packetGuiManager.openMenu(admin, createLoading(loadingTitle), loadingTitle);
+            openMenu(admin, createLoading(loadingTitle), loadingTitle);
         });
 
         Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
@@ -405,9 +390,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.load-failed");
                 });
                 return;
@@ -429,9 +412,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.snapshot-invalid");
                 });
                 return;
@@ -448,9 +429,6 @@ public final class GuiService {
             }
 
             runOnPlayer(admin, () -> {
-                if (packetGuiManager == null) {
-                    return;
-                }
                 Inventory inv = createBackupViewInventory(
                         targetUuid,
                         targetName,
@@ -466,16 +444,12 @@ public final class GuiService {
                 );
                 String name = targetName == null ? targetUuid.toString() : targetName;
                 Component title = backupViewTitle(plugin.lang(), name, view);
-                packetGuiManager.openMenu(admin, inv, title);
+                openMenu(admin, inv, title);
             });
         });
     }
 
     public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {
-        if (packetGuiManager == null) {
-            Chat.error(admin, "errors.gui-requires-protocollib");
-            return;
-        }
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -494,7 +468,7 @@ public final class GuiService {
         );
         Component loadingTitle = lang.msg("gui.backup-view.loading-title");
         runOnPlayer(admin, () -> {
-            packetGuiManager.openMenu(admin, createLoading(loadingTitle), loadingTitle);
+            openMenu(admin, createLoading(loadingTitle), loadingTitle);
         });
 
         Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
@@ -523,9 +497,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.load-failed");
                 });
                 return;
@@ -547,9 +519,7 @@ public final class GuiService {
                         e
                 );
                 runOnPlayer(admin, () -> {
-                    if (packetGuiManager != null) {
-                        packetGuiManager.closeMenu(admin);
-                    }
+                    closeMenu(admin);
                     Chat.error(admin, "errors.snapshot-invalid");
                 });
                 return;
@@ -566,9 +536,6 @@ public final class GuiService {
             }
 
             runOnPlayer(admin, () -> {
-                if (packetGuiManager == null) {
-                    return;
-                }
                 Inventory inv = createBackupViewInventory(
                         targetUuid,
                         targetName,
@@ -583,7 +550,7 @@ public final class GuiService {
                 );
                 String name = targetName == null ? targetUuid.toString() : targetName;
                 Component title = backupViewTitle(plugin.lang(), name, view);
-                packetGuiManager.openMenu(admin, inv, title);
+                openMenu(admin, inv, title);
             });
         });
     }
@@ -794,9 +761,6 @@ public final class GuiService {
         if (slot == SLOT_VIEW_TOGGLE) {
             GuiView next = holder.view() == GuiView.INVENTORY ? GuiView.ENDER_CHEST : GuiView.INVENTORY;
             runOnPlayer(admin, () -> {
-                if (packetGuiManager == null) {
-                    return;
-                }
                 Inventory inv = createBackupViewInventory(
                         holder.targetUuid(),
                         holder.targetName(),
@@ -812,7 +776,7 @@ public final class GuiService {
                 );
                 String name = holder.targetName() == null ? holder.targetUuid().toString() : holder.targetName();
                 Component title = backupViewTitle(plugin.lang(), name, next);
-                packetGuiManager.openMenu(admin, inv, title);
+                openMenu(admin, inv, title);
             });
             return;
         }
@@ -885,12 +849,12 @@ public final class GuiService {
 
                 runOnPlayer(admin, () -> {
                     Inventory top = holder.getInventory();
-                    if (packetGuiManager == null || top == null || !packetGuiManager.isViewing(admin, top)) {
+                    if (top == null || !isViewing(admin, top)) {
                         return;
                     }
                     holder.setLocked(nextLocked);
                     renderBackupViewLockItem(top, holder);
-                    packetGuiManager.syncIfViewing(admin, top);
+                    syncIfViewing(admin, top);
                 });
             });
             return;
@@ -951,9 +915,7 @@ public final class GuiService {
             return;
         }
 
-        if (packetGuiManager != null) {
-            packetGuiManager.closeMenu(admin);
-        }
+        closeMenu(admin);
         restoreService.restoreToPlayer(admin, target, holder.backupId());
     }
 
@@ -981,9 +943,7 @@ public final class GuiService {
                 plugin.lang().msg("gui.backup-view.processing.name"),
                 List.of()
         ));
-        if (packetGuiManager != null) {
-            packetGuiManager.syncIfViewing(admin, inv);
-        }
+        syncIfViewing(admin, inv);
 
         UUID actorUuid = admin.getUniqueId();
         String actorName = admin.getName();
@@ -1113,7 +1073,7 @@ public final class GuiService {
 
     private void refreshSingleSlot(Player admin, BackupViewHolder holder, SlotType slotType, int slotIndex, boolean claimed) {
         Inventory inv = holder.getInventory();
-        if (packetGuiManager == null || inv == null || !packetGuiManager.isViewing(admin, inv)) {
+        if (inv == null || !isViewing(admin, inv)) {
             return;
         }
         if (slotType == SlotType.INV && slotIndex >= 0 && slotIndex < holder.claimedInv().length) {
@@ -1127,7 +1087,7 @@ public final class GuiService {
                 lang.msg("gui.backup-view.claimed.name"),
                 lang.msgList("gui.backup-view.claimed.lore")
         ));
-        packetGuiManager.syncIfViewing(admin, inv);
+        syncIfViewing(admin, inv);
     }
 
     // 只重绘列表 GUI 的内容, 不重新打开 Inventory
@@ -1499,15 +1459,13 @@ public final class GuiService {
             ));
             inv.setItem(CONFIRM_CANCEL, namedItem(Material.RED_CONCRETE, lang.msg("gui.restore-confirm.cancel.name"), lang.msgList("gui.restore-confirm.cancel.lore")));
 
-            if (packetGuiManager != null) {
-                packetGuiManager.openMenu(admin, inv, title);
-            }
+            openMenu(admin, inv, title);
         });
     }
 
     private void restoreOriginalSlot(Player admin, BackupViewHolder holder, SlotType slotType, int slotIndex) {
         Inventory inv = holder.getInventory();
-        if (packetGuiManager == null || inv == null || !packetGuiManager.isViewing(admin, inv)) {
+        if (inv == null || !isViewing(admin, inv)) {
             return;
         }
 
@@ -1522,12 +1480,12 @@ public final class GuiService {
                         lang.msg("gui.backup-view.claimed.name"),
                         lang.msgList("gui.backup-view.claimed.lore")
                 ));
-                packetGuiManager.syncIfViewing(admin, inv);
+                syncIfViewing(admin, inv);
                 return;
             }
             byte[] itemBytes = holder.parts().inventorySlotBytes()[slotIndex];
             inv.setItem(slotIndex, toPreviewItem(itemBytes));
-            packetGuiManager.syncIfViewing(admin, inv);
+            syncIfViewing(admin, inv);
             return;
         }
 
@@ -1541,12 +1499,12 @@ public final class GuiService {
                     lang.msg("gui.backup-view.claimed.name"),
                     lang.msgList("gui.backup-view.claimed.lore")
             ));
-            packetGuiManager.syncIfViewing(admin, inv);
+            syncIfViewing(admin, inv);
             return;
         }
         byte[] itemBytes = holder.parts().enderChestSlotBytes()[slotIndex];
         inv.setItem(slotIndex, toPreviewItem(itemBytes));
-        packetGuiManager.syncIfViewing(admin, inv);
+        syncIfViewing(admin, inv);
     }
 
     /**
@@ -1580,9 +1538,7 @@ public final class GuiService {
                 admin.getUniqueId(),
                 new BackupIdSearchSession(holder.targetUuid(), holder.targetName(), holder.page(), holder.query())
         );
-        if (packetGuiManager != null) {
-            packetGuiManager.closeMenu(admin);
-        }
+        closeMenu(admin);
         Lang lang = plugin.lang();
         Chat.info(
                 admin,
@@ -1825,6 +1781,151 @@ public final class GuiService {
             }
         }
         return false;
+    }
+
+    private static boolean isGuiHolder(Object holder) {
+        return holder instanceof BackupListHolder
+                || holder instanceof BackupViewHolder
+                || holder instanceof RestoreConfirmHolder
+                || holder instanceof LoadingHolder;
+    }
+
+    /**
+     * 打开 GUI
+     *
+     * <p>优先使用 PacketGuiManager, 没有 ProtocolLib 时自动使用 Bukkit Inventory GUI
+     */
+    private void openMenu(Player player, Inventory inventory, Component title) {
+        if (player == null || inventory == null || title == null) {
+            return;
+        }
+        if (!player.isOnline()) {
+            return;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            manager.openMenu(player, inventory, title);
+            return;
+        }
+
+        try {
+            player.openInventory(inventory);
+        } catch (Exception ignored) {
+        }
+    }
+
+    /**
+     * 关闭当前正在查看的插件 GUI
+     *
+     * <p>只会关闭本插件的 GUI, 避免误关玩家正在使用的其他容器
+     */
+    private void closeMenu(Player player) {
+        if (player == null) {
+            return;
+        }
+        if (!player.isOnline()) {
+            return;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            manager.closeMenu(player);
+            return;
+        }
+
+        try {
+            InventoryView view = player.getOpenInventory();
+            Inventory top = view == null ? null : view.getTopInventory();
+            if (top == null || !isGuiHolder(top.getHolder())) {
+                return;
+            }
+            player.closeInventory();
+        } catch (Exception ignored) {
+        }
+    }
+
+    /**
+     * 判断玩家是否正在查看指定 GUI 实例
+     *
+     * <p>Packet GUI 使用会话匹配, Bukkit GUI 使用当前打开的 TopInventory 引用匹配
+     */
+    private boolean isViewing(Player player, Inventory inventory) {
+        if (player == null || inventory == null) {
+            return false;
+        }
+        if (!player.isOnline()) {
+            return false;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            return manager.isViewing(player, inventory);
+        }
+
+        try {
+            InventoryView view = player.getOpenInventory();
+            if (view == null) {
+                return false;
+            }
+            return view.getTopInventory() == inventory;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * 获取玩家当前 GUI 标题
+     *
+     * <p>用于原地刷新时判断标题是否需要变化, 标题变化时会重新打开 GUI
+     */
+    private Component currentTitle(Player player) {
+        if (player == null) {
+            return null;
+        }
+        if (!player.isOnline()) {
+            return null;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            return manager.currentTitle(player);
+        }
+
+        try {
+            InventoryView view = player.getOpenInventory();
+            return view == null ? null : view.title();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * 同步界面内容
+     *
+     * <p>Packet GUI 会重发窗口内容, Bukkit GUI 使用 updateInventory 刷新客户端显示
+     */
+    private void syncIfViewing(Player player, Inventory inventory) {
+        if (player == null || inventory == null) {
+            return;
+        }
+        if (!player.isOnline()) {
+            return;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            manager.syncIfViewing(player, inventory);
+            return;
+        }
+
+        if (!isViewing(player, inventory)) {
+            return;
+        }
+        try {
+            player.updateInventory();
+        } catch (Exception ignored) {
+        }
     }
 
     private void runOnPlayer(Player player, Runnable runnable) {

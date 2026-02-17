@@ -1,6 +1,6 @@
-# BayMcBackUp (Folia)
+# BayMcBackUp (Paper / Folia)
 
-面向 Folia 的玩家背包备份插件. 备份范围: 玩家背包 (含盔甲/副手) + 末影箱.
+玩家背包备份插件，备份范围：背包（含盔甲/副手）+ 末影箱
 
 ## 功能
 
@@ -13,21 +13,23 @@
 ## 环境
 
 - Minecraft: 1.21.x (api-version: 1.21)
-- 服务端: Paper (Folia)
+- 服务端: Paper 或 Folia
 - Java: 21
 - 构建: Gradle
 
 ### 可选依赖
 
-- ProtocolLib: GUI 的纯发包虚拟菜单需要 ProtocolLib.
-  - 未安装时插件仍可正常启用, 但 GUI 功能不可用, 相关命令会提示需要安装依赖.
+- ProtocolLib: 提供 Packet GUI（纯发包，可选）
+  - 未安装时插件仍可正常启用，GUI 自动使用原生 Bukkit Inventory GUI
 
 ## 安装
 
-1. 构建:
-   - Windows: `./gradlew.bat clean build`
-   - Linux: `./gradlew clean build`
-2. 产物位置: `build/libs/BayMcBackUp-1.0.jar`
+1. 获取插件:
+   - Release: 下载 JAR
+   - 自行构建:
+     - Windows: `./gradlew.bat clean build`
+     - Linux: `./gradlew clean build`
+2. 自行构建产物位置: `build/libs/BayMcBackUp-1.0.jar`
 3. 放入服务器 `plugins/`, 启动生成配置: `plugins/BayMcBackUp/config.yml`
 
 ## 配置
@@ -46,23 +48,30 @@
 - `storage.mysql.*`: MySQL/MariaDB 连接配置 (支持 `url` 或 `host/port/database` 拼接)
 - `storage.h2.*`: H2 文件数据库配置 (支持 `url` 或 `file` 拼接)
 - `performance.queue-limit` / `performance.max-writes-per-second`: I/O 队列与写入速率限制
+- `gui.mode`: `auto` | `bukkit` | `packet`
 - `gui.list-page-size`: GUI 列表每页数量
 - `sounds.gui.*`: GUI 点击音效
+
+### GUI 模式
+
+- `gui.mode=auto`（默认）: 自动切换，有 ProtocolLib 则使用 Packet GUI，否则使用原生 GUI
+- `gui.mode=bukkit`: 强制使用原生 Bukkit Inventory GUI
+- `gui.mode=packet`: 强制使用 Packet GUI，需要 ProtocolLib，缺失或初始化失败会自动降级为原生 GUI
 
 ## 语言文件
 
 - 默认语言文件: `plugins/BayMcBackUp/lang/zh_CN.yml`
-- 所有游戏内提示与控制台提示均从语言文件读取(例如 `console.*`), 需要修改提示文本时直接编辑该文件.
-- 修改后执行 `/bmbackup reload` 立即生效.
-- 插件会自动补全缺失的语言键, 减少升级后出现 "语言文件缺少键" 的情况.
+- 所有游戏内提示与控制台提示均从语言文件读取（例如 `console.*`），需要修改提示文本时直接编辑该文件
+- 修改后执行 `/bmbackup reload` 立即生效
+- 插件会自动补全缺失的语言键，减少升级后出现“语言文件缺少键”的情况
 
 ## 命令
 
-`/bmbackup help` 可查看完整帮助与示例.
+`/bmbackup help` 可查看完整帮助与示例
 
 常用子命令:
 
-- `open <玩家>`: 打开备份列表 GUI (需要 ProtocolLib)
+- `open <玩家>`: 打开备份列表 GUI
 - `list <玩家> [页码]`: 列出备份 (控制台友好)
 - `info <玩家> <备份编号>`: 查看备份详情
 - `backup`: 为自己立即备份
@@ -72,7 +81,7 @@
 - `lock`/`unlock`/`note`: 置顶显示与备注
 - `status`, `reload`
 
-控制台执行命令时通常不需要前导 `/`, 例如: `bmbackup nowall`.
+控制台执行命令时通常不需要前导 `/`，例如 `bmbackup nowall`
 
 ## 权限
 
@@ -93,6 +102,12 @@
 
 ## 说明
 
-- "置顶显示" 的备份不会参与自动清理, 并在列表顶部显示.
-- 在线模式服务器: 目标离线时, 离线名仅在服务器缓存存在时可用, 无缓存请使用 UUID
-- 离线模式服务器: 目标离线时可直接使用名字
+- "置顶显示" 的备份不会参与自动清理，并在列表顶部显示
+- 在线模式服务器（`online-mode=true`）：目标离线时只能使用 UUID 或服务器已缓存的离线名，未缓存请使用 UUID
+- 离线模式服务器（`online-mode=false`）：目标离线时可直接使用名字
+
+## 构建与发布
+
+- GitHub Actions：
+  - push / PR：自动构建并上传产物（Actions 产物）
+  - tag（`1.0` 或 `v1.0`）：自动构建并上传 JAR 到 Release

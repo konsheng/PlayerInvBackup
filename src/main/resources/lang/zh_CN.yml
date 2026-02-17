@@ -115,6 +115,7 @@ list:
 
 status:
   title: "<prefix><#FFB300>状态信息</#FFB300>"
+  gui-mode: "<prefix><#B0BEC5>GUI 模式: </#B0BEC5><white><mode></white><#B0BEC5> 当前: </#B0BEC5><white><active></white>"
   storage: "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white>"
   store-unavailable: "<prefix><#EF5350>存储不可用, 已暂停备份与恢复功能, 原因: <reason></#EF5350>"
   auto-enabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><white><interval></white><#B0BEC5> 分钟 / 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒</#B0BEC5>"
@@ -272,6 +273,10 @@ common:
   yes_text: "是"
   no_text: "否"
   none: "-"
+  gui_mode:
+    auto: "自动"
+    bukkit: "原生"
+    packet: "发包"
   cancel_keywords:
     - "cancel"
     - "取消"
@@ -286,11 +291,18 @@ console:
     unavailable-standby: "存储不可用, 插件将保持启用以便修正配置, 修正后执行 /bmbackup reload 重试"
 
   dependency:
-    protocollib-missing: "未检测到 ProtocolLib, GUI 功能不可用, 请安装 ProtocolLib 后重启服务器"
+    protocollib-missing: "未检测到 ProtocolLib, GUI 将使用原生方案"      
+    protocollib-missing-forced: "未检测到 ProtocolLib, 已按配置强制 Packet GUI 但无法启用, 已降级为原生 GUI"
+
+  config:
+    gui-mode-invalid: "gui.mode 配置无效, 已使用自动模式: <value>"
+    defaults-resource-missing: "配置默认资源不存在: <resource>"
+    autofill-added: "已自动补全配置键: file=<file>, added=<added>"
+    autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"
 
   gui:
-    init-failed: "ProtocolLib 已启用, 但 GUI 初始化失败, 已禁用 GUI: <reason>"
-    list-load-failed: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>"
+    init-failed: "ProtocolLib 已启用, 但 Packet GUI 初始化失败, 已降级为原生 GUI: <reason>"                  
+    list-load-failed: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>"                           
     list-load-failed-query: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>, 查询=<query>"
     backup-load-failed: "加载备份失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>"
     snapshot-invalid: "备份数据损坏/无法解析: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>"
@@ -338,11 +350,6 @@ console:
 
   sound:
     invalid: "声音配置无效: path=<path>, name=<name>, 已禁用该音效"
-
-  config:
-    defaults-resource-missing: "配置默认资源不存在: <resource>"
-    autofill-added: "已自动补全配置键: file=<file>, added=<added>"
-    autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"
 
   lang:
     fallback: "语言文件不存在, 将回退到默认 zh_CN.yml: <path>"
