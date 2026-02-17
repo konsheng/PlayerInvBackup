@@ -64,6 +64,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         OPEN("open", Permissions.OPEN, true, true),
         NOW("now", Permissions.NOW, false, true),
         NOWALL("nowall", Permissions.NOWALL, false, false, "backupall"),
+        BACKUP("backup", Permissions.SELF_BACKUP, true, false, "self"),
         RESTORE("restore", Permissions.RESTORE, false, true),
         PENDING("pending", Permissions.PENDING, true, false),
         LIST("list", Permissions.LIST, false, true),
@@ -168,6 +169,33 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             case STATUS -> {
                 if (ensurePermission(sender, Permissions.STATUS)) {
                     sendStatus(sender);
+                }
+            }
+            case BACKUP -> {
+                if (ensurePermission(sender, Permissions.SELF_BACKUP)) {
+                    if (!(sender instanceof Player player)) {
+                        Chat.error(sender, "errors.console-no-inventory");
+                        break;
+                    }
+                    if (!ensureStoreReady(player, label)) {
+                        break;
+                    }
+
+                    player.getScheduler().run(plugin, ignored -> {
+                        var backupService = plugin.backupService();
+                        if (!plugin.isStoreReady() || backupService == null) {
+                            runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
+                            return;
+                        }
+                        boolean queued = backupService.requestBackup(player, TriggerType.MANUAL);
+                        if (queued) {
+                            runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", player.getName())));
+                            plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=true");
+                        } else {
+                            runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
+                            plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=false");
+                        }
+                    }, null);
                 }
             }
             case RELOAD -> {
@@ -659,6 +687,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         return Permissions.has(sender, Permissions.OPEN)
                 || Permissions.has(sender, Permissions.NOW)
                 || Permissions.has(sender, Permissions.NOWALL)
+                || Permissions.has(sender, Permissions.SELF_BACKUP)
                 || Permissions.has(sender, Permissions.RESTORE)
                 || Permissions.has(sender, Permissions.PENDING)
                 || Permissions.has(sender, Permissions.STATUS)

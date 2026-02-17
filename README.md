@@ -65,6 +65,7 @@
 - `open <玩家>`: 打开备份列表 GUI (需要 ProtocolLib)
 - `list <玩家> [页码]`: 列出备份 (控制台友好)
 - `info <玩家> <备份编号>`: 查看备份详情
+- `backup`: 为自己立即备份
 - `now <玩家>` / `nowall`: 立即备份
 - `restore <玩家> <备份编号>`: 恢复到玩家 (Folia 下仅支持在线恢复)
 - `pending`: 领取待投递物品
@@ -80,6 +81,7 @@
   - `baymcbackup.open`
   - `baymcbackup.now`
   - `baymcbackup.nowall`
+  - `baymcbackup.self`
   - `baymcbackup.restore`
   - `baymcbackup.pending`
   - `baymcbackup.status`

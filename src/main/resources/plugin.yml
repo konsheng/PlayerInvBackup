@@ -21,6 +21,7 @@ permissions:
       baymcbackup.open: true
       baymcbackup.now: true
       baymcbackup.nowall: true
+      baymcbackup.self: true
       baymcbackup.restore: true
       baymcbackup.pending: true
       baymcbackup.status: true
@@ -39,6 +40,10 @@ permissions:
 
   baymcbackup.nowall:
     description: 允许为所有在线玩家手动备份
+    default: false
+
+  baymcbackup.self:
+    description: 允许玩家为自己手动备份
     default: false
 
   baymcbackup.restore:

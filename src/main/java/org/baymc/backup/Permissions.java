@@ -17,6 +17,7 @@ public final class Permissions {
     public static final String OPEN = "baymcbackup.open";
     public static final String NOW = "baymcbackup.now";
     public static final String NOWALL = "baymcbackup.nowall";
+    public static final String SELF_BACKUP = "baymcbackup.self";
     public static final String RESTORE = "baymcbackup.restore";
     public static final String PENDING = "baymcbackup.pending";
     public static final String STATUS = "baymcbackup.status";

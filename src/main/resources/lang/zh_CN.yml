@@ -23,6 +23,7 @@ help:
     - "<prefix><#FFD54F>/<label> unlock [玩家名|UUID] [备份编号]</#FFD54F> <#B0BEC5>取消置顶显示</#B0BEC5>"
     - "<prefix><#FFD54F>/<label> note [玩家名|UUID] [备份编号] [备注]</#FFD54F> <#B0BEC5>设置/清除备份备注</#B0BEC5>"
     - "<prefix><#FFD54F>/<label> now [在线名|UUID]</#FFD54F> <#B0BEC5>立刻备份一次</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> backup</#FFD54F> <#B0BEC5>为自己立刻备份一次</#B0BEC5>"
     - "<prefix><#FFD54F>/<label> nowall</#FFD54F> <#B0BEC5>对所有在线玩家立刻备份一次(全服备份, 别名 backupall)</#B0BEC5>"
     - "<prefix><#FFD54F>/<label> pending</#FFD54F> <#B0BEC5>投递待领取物品到背包</#B0BEC5>"
     - "<prefix><#FFD54F>/<label> restore [在线名|UUID] [备份编号]</#FFD54F> <#B0BEC5>直接恢复该备份(会扣除已领取格子)</#B0BEC5>"
