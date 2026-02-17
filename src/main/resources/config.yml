@@ -1,0 +1,79 @@
+# BayMcBackUp 配置 (Folia 1.21.1+)
+# 备份范围: 仅玩家背包 (含盔甲/副手) + 末影箱
+
+# 语言文件 (位于 plugins/BayMcBackUp/lang/)
+# 修改后可使用 /bmbackup reload 重载生效
+language: "zh_CN.yml"
+
+backup:
+  # 自动备份间隔 (分钟, 0 = 关闭自动备份)
+  interval-minutes: 30
+
+  # 错峰秒数: 每个玩家每轮备份会加上随机延迟, 避免 200 人同一刻写入造成 I/O 峰值
+  jitter-seconds: 300
+
+  # 每玩家保留最近 N 份备份 (0 = 不清理, 建议大服不要设置为 0)
+  keep-per-player: 50
+
+  # 事件触发器: 启用后, 会在对应事件发生时自动备份一次
+  triggers:
+    join: true
+    quit: true
+    death: true
+    world-change: true
+
+  # 自动备份排除世界 (定时/事件触发都会跳过)
+  excluded-worlds: []
+
+storage:
+  # 存储后端: local | sqlite | mysql | h2
+  type: sqlite
+
+  local:
+    # 相对 plugins/BayMcBackUp/ 的路径
+    base-path: "data"
+
+  sqlite:
+    # 相对 plugins/BayMcBackUp/ 的路径
+    file: "data/backups.db"
+
+  mysql:
+    # 如果填写 url, 会优先使用 url
+    url: ""
+    host: "127.0.0.1"
+    port: 3306
+    database: "baymcbackup"
+    username: "root"
+    password: ""
+    # 额外参数, 以 & 连接. 例如: useSSL=false&serverTimezone=UTC
+    parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
+
+  h2:
+    # 如果填写 url, 会优先使用 url
+    url: ""
+    # 相对 plugins/BayMcBackUp/ 的路径, 不需要写 .mv.db 后缀
+    file: "data/backups_h2"
+    username: "sa"
+    password: ""
+    # 额外参数, 以 ; 连接. 例如: MODE=MySQL;DATABASE_TO_UPPER=false
+    parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
+
+performance:
+  # I/O 队列上限: 达到上限后将跳过新的备份请求 (避免拖垮服务器线程)
+  queue-limit: 500
+
+  # 最大写入/秒 (软限制, 尽量控制写入速度)
+  max-writes-per-second: 20
+
+gui:
+  # 每页显示备份数量 (最大 45)
+  list-page-size: 45
+
+sounds:
+  gui:
+    enabled: true
+    click:
+      # 设置为 "none" 表示关闭
+      name: "UI_BUTTON_CLICK"
+      volume: 1.0
+      pitch: 1.0

@@ -1,0 +1,354 @@
+prefix: "<#FFB300>[BayMcBackUp]</#FFB300> <#90A4AE>»</#90A4AE> "
+
+help:
+  header: "<prefix><#FFB300>BayMcBackUp 帮助</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
+  lines:
+    - "<prefix><#B0BEC5>权限: </#B0BEC5><white><perm></white><#B0BEC5>(默认 OP)</#B0BEC5>"
+    - "<prefix><#B0BEC5>配置文件: </#B0BEC5><white><config></white>"
+    - "<prefix><#B0BEC5>备份范围: </#B0BEC5><white>背包(含盔甲/副手)+ 末影箱</white>"
+    - "<prefix><#B0BEC5>当前配置: </#B0BEC5><white><interval></white><#B0BEC5> 分钟(0=关闭), 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒, 保留 </#B0BEC5><white><keep></white><#B0BEC5> 份/人</#B0BEC5>"
+    - "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
+    - "<prefix><#90A4AE>提示: 目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名; 离线模式服务器可直接使用名字</#90A4AE>"
+    - "<prefix><#90A4AE>提示: GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#90A4AE>"
+    - "<prefix><#90A4AE>提示: 备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#90A4AE>"
+    - "<prefix><#90A4AE>提示: Folia 下仅支持对在线玩家进行恢复</#90A4AE>"
+    - "<prefix><#FFA726>注意: 恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FFA726>"
+    - "<prefix><#90A4AE>控制台执行: 无需输入前导 /(例如: <white>bmbackup nowall</white>)</#90A4AE>"
+    - "<prefix><#90A4AE>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#90A4AE>"
+  commands:
+    - "<prefix><#FFD54F>/<label> open [玩家名|UUID]</#FFD54F> <#B0BEC5>打开备份列表 GUI</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> list [玩家名|UUID] [页码]</#FFD54F> <#B0BEC5>列出备份(控制台友好)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> info [玩家名|UUID] [备份编号]</#FFD54F> <#B0BEC5>查看备份详情</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> lock [玩家名|UUID] [备份编号] [备注]</#FFD54F> <#B0BEC5>置顶显示备份(不会被自动清理)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> unlock [玩家名|UUID] [备份编号]</#FFD54F> <#B0BEC5>取消置顶显示</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> note [玩家名|UUID] [备份编号] [备注]</#FFD54F> <#B0BEC5>设置/清除备份备注</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> now [在线名|UUID]</#FFD54F> <#B0BEC5>立刻备份一次</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> nowall</#FFD54F> <#B0BEC5>对所有在线玩家立刻备份一次(全服备份, 别名 backupall)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> pending</#FFD54F> <#B0BEC5>投递待领取物品到背包</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> restore [在线名|UUID] [备份编号]</#FFD54F> <#B0BEC5>直接恢复该备份(会扣除已领取格子)</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> status</#FFD54F> <#B0BEC5>查看运行状态</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> reload</#FFD54F> <#B0BEC5>重载配置/语言</#B0BEC5>"
+    - "<prefix><#FFD54F>/<label> help</#FFD54F> <#B0BEC5>查看本帮助</#B0BEC5>"
+  example: "<prefix><#90A4AE>示例: </#90A4AE><#FFD54F>/<label> open Steve</#FFD54F><#90A4AE> | </#90A4AE><#FFD54F>/<label> open [uuid]</#FFD54F>"
+
+errors:
+  no-permission: "<prefix><#EF5350>你没有权限(需要 <#FFD54F><perm></#FFD54F>)</#EF5350>"
+  console-no-gui: "<prefix><#EF5350>控制台无法打开 GUI, 请在游戏内执行该命令</#EF5350>"
+  gui-requires-protocollib: "<prefix><#EF5350>GUI 功能不可用, 需要安装 ProtocolLib</#EF5350>"
+  reload-failed: "<prefix><#EF5350>重载失败, 请查看控制台日志</#EF5350>"
+  store-unavailable: "<prefix><#EF5350>存储不可用, 请修正配置后执行 <#FFD54F>/<label> reload</#FFD54F></#EF5350>"
+  console-no-inventory: "<prefix><#EF5350>控制台没有背包, 无法执行该操作, 请在游戏内执行</#EF5350>"
+  backup-queue-full: "<prefix><#EF5350>备份队列已满或不可用, 请稍后再试</#EF5350>"
+  usage-open: "<prefix><#EF5350>用法: <#FFD54F>/<label> open [玩家名|UUID]</#FFD54F></#EF5350>"
+  usage-now: "<prefix><#EF5350>用法: <#FFD54F>/<label> now [在线名|UUID]</#FFD54F></#EF5350>"
+  usage-restore: "<prefix><#EF5350>用法: <#FFD54F>/<label> restore [在线名|UUID] [备份编号]</#FFD54F></#EF5350>"
+  usage-list: "<prefix><#EF5350>用法: <#FFD54F>/<label> list [玩家名|UUID] [页码]</#FFD54F></#EF5350>"
+  usage-info: "<prefix><#EF5350>用法: <#FFD54F>/<label> info [玩家名|UUID] [备份编号]</#FFD54F></#EF5350>"
+  usage-lock: "<prefix><#EF5350>用法: <#FFD54F>/<label> lock [玩家名|UUID] [备份编号] [备注]</#FFD54F></#EF5350>"
+  usage-unlock: "<prefix><#EF5350>用法: <#FFD54F>/<label> unlock [玩家名|UUID] [备份编号]</#FFD54F></#EF5350>"
+  usage-note: "<prefix><#EF5350>用法: <#FFD54F>/<label> note [玩家名|UUID] [备份编号] [备注]</#FFD54F></#EF5350>"
+  note-too-long: "<prefix><#EF5350>备注过长(最多 <#FFD54F><max></#FFD54F> 字符)</#EF5350>"
+  offline-not-cached: "<prefix><#EF5350>玩家不在线且服务器无缓存数据, 请使用 UUID</#EF5350>"
+  open-offline-not-cached: "<prefix><#EF5350>玩家不在线且服务器无缓存数据, 请使用 UUID(/<label> open [uuid])</#EF5350>"
+  player-not-online: "<prefix><#EF5350>目标玩家不在线</#EF5350>"
+  target-offline: "<prefix><#EF5350>目标玩家已离线</#EF5350>"
+  restore-target-offline: "<prefix><#EF5350>目标玩家不在线(Folia 下仅支持在线恢复)</#EF5350>"
+  unknown-subcommand: "<prefix><#EF5350>未知子命令: <#FFD54F><sub></#FFD54F></#EF5350>"
+  backup-not-found: "<prefix><#EF5350>备份不存在: <#FFD54F><backup_id></#FFD54F></#EF5350>"
+  load-failed: "<prefix><#EF5350>加载失败, 请查看控制台日志</#EF5350>"
+  read-failed: "<prefix><#EF5350>读取失败, 请查看控制台日志</#EF5350>"
+  snapshot-invalid: "<prefix><#EF5350>备份数据损坏/无法解析, 请查看控制台日志</#EF5350>"
+  lang-key-missing: "<prefix><#EF5350>语言文本缺失: <key></#EF5350>"
+  restore-failed: "<prefix><#EF5350>恢复失败, 请查看控制台日志</#EF5350>"
+  claim-failed: "<prefix><#EF5350>领取失败, 请查看控制台日志</#EF5350>"
+  already-claimed: "<prefix><#FFA726>该物品已被领取</#FFA726>"
+  deliver-mark-failed-rollback: "<prefix><#EF5350>投递失败(数据库更新失败), 已回滚该物品, 请稍后重试</#EF5350>"
+  claim-mark-failed-rollback: "<prefix><#EF5350>发放失败(数据库更新失败), 已回滚该物品, 请使用 <#FFD54F>/<label> pending</#FFD54F> 重试</#EF5350>"
+  inventory-full-pending: "<prefix><#FFA726>背包已满, 该物品已进入待投递队列: <#FFD54F>/<label> pending</#FFD54F></#FFA726>"
+  deliver-inventory-full: "<prefix><#FFA726>背包已满, 剩余待投递: <#FFD54F><remaining></#FFD54F></#FFA726>"
+  already-first-page: "<prefix><#FFA726>已经是第一页</#FFA726>"
+  no-next-page: "<prefix><#FFA726>没有下一页</#FFA726>"
+  no-online-players: "<prefix><#FFA726>当前没有在线玩家</#FFA726>"
+
+  snapshot-hash-mismatch: "<prefix><#EF5350>备份已损坏(SHA256 不匹配), 已阻止恢复: <#FFD54F><backup_id></#FFD54F></#EF5350>"
+
+info:
+  checking-pending: "<prefix><#B0BEC5>正在检查待投递物品...</#B0BEC5>"
+  restoring-loading: "<prefix><#B0BEC5>正在加载备份并准备恢复...</#B0BEC5>"
+  backupall-start: "<prefix><#B0BEC5>开始提交全服备份任务: 在线玩家 <#FFD54F><total></#FFD54F> 人</#B0BEC5>"
+  search-backup-id-prompt: "<prefix><#B0BEC5>请输入备份编号(例如 <#FFD54F>1730000000000-abc12345</#FFD54F>), 输入 <#FFD54F><cancel></#FFD54F> 取消</#B0BEC5>"
+  title: "<prefix><#FFB300>备份信息</#FFB300><#90A4AE>: <target>(<id>)</#90A4AE>"
+  lines:
+    - "<prefix><#B0BEC5>时间: </#B0BEC5><white><time></white>"
+    - "<prefix><#B0BEC5>触发: </#B0BEC5><white><trigger></white>"
+    - "<prefix><#B0BEC5>大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5>"
+    - "<prefix><#B0BEC5>SHA256: </#B0BEC5><white><sha256></white>"
+    - "<prefix><#B0BEC5>Schema: </#B0BEC5><white><schema></white>"
+    - "<prefix><#B0BEC5>已领取格子: </#B0BEC5><white><claimed></white>"
+    - "<prefix><#B0BEC5>置顶显示: </#B0BEC5><white><locked></white>"
+    - "<prefix><#B0BEC5>备注: </#B0BEC5><white><note></white>"
+
+success:
+  reloaded: "<prefix><#66BB6A>已重载配置与语言</#66BB6A>"
+  backup-queued: "<prefix><#66BB6A>已加入备份队列: <#FFD54F><player></#FFD54F></#66BB6A>"
+  backup-locked: "<prefix><#66BB6A>已置顶显示备份: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  backup-unlocked: "<prefix><#66BB6A>已取消置顶显示: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  backup-note-set: "<prefix><#66BB6A>已设置备注: <#FFD54F><backup_id></#FFD54F></#66BB6A>"
+  pending-none: "<prefix><#66BB6A>没有待投递物品</#66BB6A>"
+  pending-delivered: "<prefix><#66BB6A>已投递: <#FFD54F><count></#FFD54F> 个物品</#66BB6A>"
+  claim-success: "<prefix><#66BB6A>已领取该格物品(数量: <#FFD54F><amount></#FFD54F>)</#66BB6A>"
+  restore-success: "<prefix><#66BB6A>已恢复玩家背包/末影箱(已扣除已领取格子)</#66BB6A>"
+  backupall-submitted: "<prefix><#66BB6A>全服备份任务已提交: 成功 <#FFD54F><queued></#FFD54F> 人, 失败/跳过 <#FFD54F><skipped></#FFD54F> 人(队列满或不可用)</#66BB6A>"
+
+warn:
+  auto-backup-before-restore-failed: "<prefix><#FFA726>恢复前自动备份失败(队列满), 仍继续恢复</#FFA726>"
+  backupall-timeout-summary: "<prefix><#FFA726>全服备份任务汇总(超时): 成功 <#FFD54F><queued></#FFD54F> 人, 失败/跳过 <#FFD54F><skipped></#FFD54F> 人, 未执行 <#FFD54F><not_executed></#FFD54F> 人(玩家离线/任务取消)</#FFA726>"
+  no-more-backups-back: "<prefix><#FFA726>没有更多备份, 已返回上一页</#FFA726>"
+  restored-notify-target: "<prefix><#FFA726>管理员已恢复你的背包/末影箱</#FFA726>"
+  search-backup-id-empty: "<prefix><#FFA726>请输入备份编号, 或输入 <#FFD54F><cancel></#FFD54F> 取消</#FFA726>"
+
+list:
+  title: "<prefix><#FFB300>备份列表</#FFB300><#90A4AE>: <target> 第 <page> 页</#90A4AE>"
+  empty: "<prefix><#B0BEC5>暂无备份</#B0BEC5>"
+  line: "<prefix><#90A4AE>- </#90A4AE><#FFD54F><time></#FFD54F> <#B0BEC5>编号: </#B0BEC5><white><id></white> <#B0BEC5>触发: </#B0BEC5><white><trigger></white> <#B0BEC5>大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5> <#B0BEC5>置顶显示: </#B0BEC5><white><locked></white> <#B0BEC5>备注: </#B0BEC5><white><note></white>"
+
+status:
+  title: "<prefix><#FFB300>状态信息</#FFB300>"
+  storage: "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white>"
+  store-unavailable: "<prefix><#EF5350>存储不可用, 已暂停备份与恢复功能, 原因: <reason></#EF5350>"
+  auto-enabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><white><interval></white><#B0BEC5> 分钟 / 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒</#B0BEC5>"
+  auto-disabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><#FFA726>已关闭</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"
+  keep: "<prefix><#B0BEC5>保留策略: </#B0BEC5><white>每玩家保留最近 <keep> 份</white><#B0BEC5>(0=不清理)</#B0BEC5>"
+  io-queue: "<prefix><#B0BEC5>I/O 队列: </#B0BEC5><white><size></white><#B0BEC5>/</#B0BEC5><white><limit></white><#B0BEC5>(剩余容量 </#B0BEC5><white><remaining></white><#B0BEC5>)</#B0BEC5>"
+  sqlite-file: "<prefix><#B0BEC5>SQLite 文件: </#B0BEC5><white><path></white>"
+  sqlite-size: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5>"
+  sqlite-size-unknown: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white>未知</white>"
+  local-dir: "<prefix><#B0BEC5>本地目录: </#B0BEC5><white><path></white>"
+  mysql: "<prefix><#B0BEC5>MySQL: </#B0BEC5><white><host>: <port>/<database></white>"
+  h2-file: "<prefix><#B0BEC5>H2 文件: </#B0BEC5><white><path></white>"
+  h2-size: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white><size></white><#B0BEC5> 字节</#B0BEC5>"
+  h2-size-unknown: "<prefix><#B0BEC5>数据库大小: </#B0BEC5><white>未知</white>"
+
+gui:
+  loading:
+    item-name: "<#B0BEC5>加载中...</#B0BEC5>"
+    item-lore:
+      - "<#90A4AE>请稍候</#90A4AE>"
+  backup-list:
+    loading-title: "<#B0BEC5>正在加载备份列表...</#B0BEC5>"
+    title: "<#FFB300>备份列表</#FFB300><#90A4AE>: <target></#90A4AE>"
+    empty:
+      name: "<#EF5350>暂无备份</#EF5350>"
+      lore:
+        - "<#90A4AE>请等待自动备份或使用 /bmbackup now [玩家]</#90A4AE>"
+    entry:
+      name: "<#FFD54F>备份 <white><time></white></#FFD54F>"
+      lore:
+        - "<#90A4AE>编号: </#90A4AE><white><id></white>"
+        - "<#90A4AE>触发: </#90A4AE><white><trigger></white>"
+        - "<#90A4AE>大小: </#90A4AE><white><size></white><#90A4AE> 字节</#90A4AE>"
+        - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
+        - "<#90A4AE>备注: </#90A4AE><white><note></white>"
+        - "<#66BB6A>点击打开</#66BB6A>"
+    prev:
+      name: "<#FFD54F>上一页</#FFD54F>"
+    next:
+      name: "<#FFD54F>下一页</#FFD54F>"
+    next-disabled:
+      name: "<#90A4AE>下一页</#90A4AE>"
+      lore:
+        - "<#90A4AE>没有更多备份</#90A4AE>"
+    filter-time:
+      name: "<#FFD54F>时间筛选</#FFD54F>"
+      lore:
+        - "<#90A4AE>当前: </#90A4AE><white><value></white>"
+        - "<#90A4AE>点击切换</#90A4AE>"
+      value:
+        all: "全部"
+        24h: "近 24 小时"
+        7d: "近 7 天"
+        30d: "近 30 天"
+    filter-trigger:
+      name: "<#FFD54F>触发筛选</#FFD54F>"
+      lore:
+        - "<#90A4AE>当前: </#90A4AE><white><value></white>"
+        - "<#90A4AE>点击切换</#90A4AE>"
+      value:
+        all: "全部"
+    search:
+      name: "<#FFD54F>按编号搜索</#FFD54F>"
+      lore:
+        - "<#90A4AE>在聊天框输入备份编号</#90A4AE>"
+        - "<#90A4AE>输入 <white><cancel></white> 取消</#90A4AE>"
+    clear:
+      name: "<#FFD54F>清空筛选</#FFD54F>"
+      lore:
+        - "<#90A4AE>重置为: 全部时间 + 全部触发</#90A4AE>"
+    jump-back:
+      name: "<#FFD54F>快退 5 页</#FFD54F>"
+      lore:
+        - "<#90A4AE>向更旧的备份跳转</#90A4AE>"
+    jump-forward:
+      name: "<#FFD54F>快进 5 页</#FFD54F>"
+      lore:
+        - "<#90A4AE>向更新的备份跳转</#90A4AE>"
+    refresh:
+      name: "<#FFD54F>刷新</#FFD54F>"
+      lore:
+        - "<#90A4AE>重新加载当前页: <page></#90A4AE>"
+  backup-view:
+    loading-title: "<#B0BEC5>正在加载备份内容...</#B0BEC5>"
+    title-inv: "<#FFB300>背包</#FFB300><#90A4AE>: <target></#90A4AE>"
+    title-ender: "<#FFB300>末影箱</#FFB300><#90A4AE>: <target></#90A4AE>"
+    claimed:
+      name: "<#EF5350>已领取</#EF5350>"
+      lore:
+        - "<#90A4AE>该格物品已被管理员领取</#90A4AE>"
+    processing:
+      name: "<#90A4AE>处理中...</#90A4AE>"
+    back:
+      name: "<#FFD54F>返回列表</#FFD54F>"
+    toggle:
+      name: "<#FFD54F>切换视图</#FFD54F>"
+      lore:
+        - "<#90A4AE>背包 / 末影箱</#90A4AE>"
+    restore:
+      name: "<#EF5350>恢复到玩家</#EF5350>"
+      lore:
+        - "<#90A4AE>将未领取部分恢复到玩家(在线)</#90A4AE>"
+        - "<#FFA726>点击后需要二次确认</#FFA726>"
+    restore-offline:
+      name: "<#EF5350>目标不在线</#EF5350>"
+      lore:
+        - "<#90A4AE>Folia 下仅支持在线恢复</#90A4AE>"
+    pending:
+      name: "<#FFD54F>领取待投递</#FFD54F>"
+      lore:
+        - "<#90A4AE>背包满时的待领取物品</#90A4AE>"
+    lock:
+      name: "<#FFD54F>置顶显示</#FFD54F>"
+      lore:
+        - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
+        - "<#90A4AE>备注: </#90A4AE><white><note></white>"
+        - "<#90A4AE>置顶后, 不会被自动清理</#90A4AE>"
+        - "<#90A4AE>置顶显示的备份会排在列表顶部</#90A4AE>"
+        - "<#90A4AE>点击切换置顶状态</#90A4AE>"
+        - "<#90A4AE>提示: 使用 /bmbackup note 设置/清除备注</#90A4AE>"
+  restore-confirm:
+    title: "<#EF5350>确认恢复</#EF5350><#90A4AE>: <target></#90A4AE>"
+    ok:
+      name: "<#66BB6A>确认恢复</#66BB6A>"
+      lore:
+        - "<#90A4AE>将把该备份恢复到目标玩家</#90A4AE>"
+        - "<#90A4AE>仅恢复未领取格子</#90A4AE>"
+        - "<#EF5350>会覆盖玩家当前背包/末影箱</#EF5350>"
+    info:
+      name: "<#FFD54F>恢复信息</#FFD54F>"
+      lore:
+        - "<#90A4AE>玩家: </#90A4AE><white><target></white>"
+        - "<#90A4AE>备份编号: </#90A4AE><white><id></white>"
+    cancel:
+      name: "<#EF5350>取消</#EF5350>"
+      lore:
+        - "<#90A4AE>返回备份预览</#90A4AE>"
+
+trigger:
+  timer: "定时"
+  manual: "手动"
+  join: "上线"
+  quit: "下线"
+  death: "死亡"
+  world-change: "切换世界"
+
+storage:
+  name:
+    sqlite: "SQLite"
+    local: "本地文件"
+    mysql: "MySQL"
+    h2: "H2"
+
+common:
+  yes_text: "是"
+  no_text: "否"
+  none: "-"
+  cancel_keywords:
+    - "cancel"
+    - "取消"
+
+console:
+  plugin:
+    enabled: "BayMcBackUp 已启用"
+    disabled: "BayMcBackUp 已关闭"
+
+  store:
+    init-failed: "初始化存储失败: <reason>"
+    unavailable-standby: "存储不可用, 插件将保持启用以便修正配置, 修正后执行 /bmbackup reload 重试"
+
+  dependency:
+    protocollib-missing: "未检测到 ProtocolLib, GUI 功能不可用, 请安装 ProtocolLib 后重启服务器"
+
+  gui:
+    init-failed: "ProtocolLib 已启用, 但 GUI 初始化失败, 已禁用 GUI: <reason>"
+    list-load-failed: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>"
+    list-load-failed-query: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>, 查询=<query>"
+    backup-load-failed: "加载备份失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>"
+    snapshot-invalid: "备份数据损坏/无法解析: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>"
+    pending-load-failed: "读取待投递物品失败: 操作者=<actor>(<actor_uuid>)"
+    pending-mark-delivered-failed: "标记物品已投递失败: <reason>"
+    lock-update-failed: "更新置顶状态失败: 目标=<target_uuid>, 备份编号=<backup_id>"
+    claim-failed: "领取失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>"
+
+  packet-gui:
+    unsupported-size: "不支持的 GUI 大小: size=<size>, player=<player>"
+    menu-type-unresolved: "无法解析菜单类型, key=<key>, player=<player>"
+    open-packet-failed: "发送打开 GUI 包失败: player=<player>"
+    close-packet-failed: "发送关闭 GUI 包失败: player=<player>"
+    refresh-packet-failed: "发送 GUI 刷新包失败: player=<player>"
+
+  scheduler:
+    auto-disabled: "自动备份已关闭 (backup.interval-minutes=0)"
+
+  startup:
+    storage: "存储后端: <storage>"
+    schedule: "自动备份间隔: <interval> 分钟, 错峰: <jitter> 秒"
+    retention: "保留策略: 每玩家保留最近 <keep> 份, I/O 队列上限: <queue_limit>, 最大写入/秒: <max_writes>"
+
+  backup:
+    encode-failed: "编码备份快照失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"
+    write-failed: "写入备份失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"
+
+  audit:
+    line: "[审计] 操作=<action>, 操作者=<actor>, 目标=<target>, 备份编号=<backup_id>"
+    write-failed: "写入审计日志失败: <reason>"
+
+  command:
+    reload-failed: "重载失败: <reason>"
+    list-load-failed: "加载备份列表失败: 目标=<uuid>, 页码=<page>, 原因=<reason>"
+    info-load-failed: "加载备份信息失败: 目标=<uuid>, 备份编号=<backup_id>, 原因=<reason>"
+    lock-failed: "置顶显示失败: 目标=<uuid>, 备份编号=<backup_id>, 原因=<reason>"
+    unlock-failed: "取消置顶显示失败: 目标=<uuid>, 备份编号=<backup_id>, 原因=<reason>"
+    note-failed: "设置备注失败: 目标=<uuid>, 备份编号=<backup_id>, 原因=<reason>"
+
+  restore:
+    read-failed: "读取备份失败: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>"
+    sha-mismatch: "备份校验失败 (sha256 不匹配): 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>, expected=<expected>, actual=<actual>"
+    snapshot-invalid: "备份数据损坏/无法解析: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>"
+    apply-failed: "恢复失败: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>"
+
+  sound:
+    invalid: "声音配置无效: path=<path>, name=<name>, 已禁用该音效"
+
+  config:
+    defaults-resource-missing: "配置默认资源不存在: <resource>"
+    autofill-added: "已自动补全配置键: file=<file>, added=<added>"
+    autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"
+
+  lang:
+    fallback: "语言文件不存在, 将回退到默认 zh_CN.yml: <path>"
+    defaults-resource-missing: "语言默认资源不存在: <resource>"
+    autofill-added: "已自动补全语言键: file=<file>, added=<added>"
+    autofill-failed: "自动补全语言键失败: file=<file>, defaults=<defaults>, reason=<reason>"
+    missing-key: "语言文件缺少键: <key> (<file>)"
+    missing-list-key: "语言文件缺少列表键: <key> (<file>)"
+    autofill-write-failed: "写入语言文件失败: key=<key>, file=<file>, reason=<reason>"
+    parse-failed: "解析语言文本失败: file=<file>, text=<text>"
