@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
  * 4) Tab 补全
  */
 public final class BackupCommand implements CommandExecutor, TabCompleter {
-    private static final DateTimeFormatter TIME_FORMAT =
+    private static final DateTimeFormatter DEFAULT_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
     private static final int LIST_PAGE_SIZE = 10;
     private static final int MAX_NOTE_LENGTH = 120;
@@ -53,11 +53,14 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
     private final BayMcBackUpPlugin plugin;
     private final GuiService guiService;
     private final RestoreService restoreService;
+    private final DateTimeFormatter timeFormatter;
 
     public BackupCommand(BayMcBackUpPlugin plugin) {
         this.plugin = plugin;
         this.guiService = plugin.guiService();
         this.restoreService = plugin.restoreService();
+        var config = plugin.pluginConfig();
+        this.timeFormatter = config == null ? DEFAULT_TIME_FORMAT : config.backupTimeFormatter();
     }
 
     private enum Subcommand {
@@ -403,7 +406,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                                 return;
                             }
                             for (BackupMeta meta : backups) {
-                                String time = TIME_FORMAT.format(Instant.ofEpochMilli(meta.createdAtMillis()));
+                                String time = timeFormatter.format(Instant.ofEpochMilli(meta.createdAtMillis()));
                                 String locked = plugin.lang().raw(meta.locked() ? "common.yes_text" : "common.no_text");
                                 String note = meta.note() == null || meta.note().isBlank()
                                         ? plugin.lang().raw("common.none")
@@ -460,7 +463,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                         }
 
                         BackupMeta meta = record.meta();
-                        String time = TIME_FORMAT.format(Instant.ofEpochMilli(meta.createdAtMillis()));
+                        String time = timeFormatter.format(Instant.ofEpochMilli(meta.createdAtMillis()));
                         int claimedCount = claims == null ? 0 : claims.size();
                         String locked = plugin.lang().raw(meta.locked() ? "common.yes_text" : "common.no_text");
                         String note = meta.note() == null || meta.note().isBlank()

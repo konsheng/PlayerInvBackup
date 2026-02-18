@@ -2,6 +2,8 @@ package org.baymc.backup.config;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -34,6 +36,7 @@ public record PluginConfig(
         int guiListPageSize,
         GuiMode guiMode,
         String languageFile,
+        DateTimeFormatter backupTimeFormatter,
         boolean backupOnJoin,
         boolean backupOnQuit,
         boolean backupOnDeath,
@@ -58,6 +61,26 @@ public record PluginConfig(
             languageFile = "zh_CN.yml";
         } else {
             languageFile = languageFile.trim();
+        }
+
+        String backupTimeFormatRaw = config.getString("display.backup-time-format", "yyyy-MM-dd HH:mm:ss");
+        if (backupTimeFormatRaw == null || backupTimeFormatRaw.isBlank()) {
+            backupTimeFormatRaw = "yyyy-MM-dd HH:mm:ss";
+        } else {
+            backupTimeFormatRaw = backupTimeFormatRaw.trim();
+        }
+        DateTimeFormatter backupTimeFormatter;
+        try {
+            backupTimeFormatter = DateTimeFormatter.ofPattern(backupTimeFormatRaw).withZone(ZoneId.systemDefault());
+        } catch (IllegalArgumentException e) {
+            backupTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    lang.plain(
+                            "console.config.backup-time-format-invalid",
+                            Placeholder.unparsed("value", backupTimeFormatRaw)
+                    )
+            );
         }
 
         var storageType = StorageType.fromConfigValue(config.getString("storage.type", "sqlite"));
@@ -136,6 +159,7 @@ public record PluginConfig(
                 guiListPageSize,
                 guiMode,
                 languageFile,
+                backupTimeFormatter,
                 backupOnJoin,
                 backupOnQuit,
                 backupOnDeath,

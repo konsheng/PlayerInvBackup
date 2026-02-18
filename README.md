@@ -37,6 +37,7 @@
 常用配置 `plugins/PlayerInvBackup/config.yml`:
 
 - `language`: 语言文件名 (位于 `plugins/PlayerInvBackup/lang/`), 修改后可 `/bmbackup reload`
+- `display.backup-time-format`: 备份时间显示格式 (Java DateTimeFormatter pattern, 影响 GUI/命令里的时间展示)
 - `backup.interval-minutes`: 自动备份间隔 (分钟, 0 = 关闭自动备份)
 - `backup.jitter-seconds`: 错峰秒数
 - `backup.keep-per-player`: 每玩家保留最近 N 份 (0 = 不清理)

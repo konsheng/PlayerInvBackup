@@ -5,6 +5,11 @@
 # 修改后可使用 /bmbackup reload 重载生效
 language: "zh_CN.yml"
 
+display:
+  # 备份时间显示格式 (Java DateTimeFormatter pattern)
+  # 示例: "yyyy-MM-dd HH:mm:ss"
+  backup-time-format: "yyyy-MM-dd HH:mm:ss"
+
 backup:
   # 自动备份间隔 (分钟, 0 = 关闭自动备份)
   interval-minutes: 30

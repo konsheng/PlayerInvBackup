@@ -4,8 +4,8 @@ main: org.baymc.backup.BayMcBackUpPlugin
 api-version: "1.21"
 folia-supported: true
 softdepend: [ProtocolLib]
-authors: [BayMc]
-description: Folia 背包备份 (背包 + 末影箱) , 提供管理员 GUI
+authors: [Konsheng]
+description: Paper / Folia 背包备份 (玩家背包 + 末影箱)
 
 commands:
   bmbackup:

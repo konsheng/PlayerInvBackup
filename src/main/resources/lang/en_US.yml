@@ -299,6 +299,7 @@ console:
 
   config:
     gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
+    backup-time-format-invalid: "Invalid display.backup-time-format: <value>, using default yyyy-MM-dd HH:mm:ss"
     defaults-resource-missing: "Default config resource not found: <resource>"
     autofill-added: "Auto filled config keys: file=<file>, added=<added>"
     autofill-failed: "Auto fill config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"

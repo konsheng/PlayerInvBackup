@@ -51,7 +51,7 @@ import org.bukkit.inventory.meta.ItemMeta;
  * 3) 协调 PacketGuiManager 或原生 GUI 的打开/刷新/关闭
  */
 public final class GuiService {
-    private static final DateTimeFormatter TIME_FORMAT =
+    private static final DateTimeFormatter DEFAULT_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
     private static final String MAIN_LABEL = "bmbackup";
 
@@ -86,6 +86,11 @@ public final class GuiService {
     public GuiService(BayMcBackUpPlugin plugin, RestoreService restoreService) {
         this.plugin = plugin;
         this.restoreService = restoreService;
+    }
+
+    private DateTimeFormatter timeFormatter() {
+        var config = plugin.pluginConfig();
+        return config == null ? DEFAULT_TIME_FORMAT : config.backupTimeFormatter();
     }
 
     public void setPacketGuiManager(PacketGuiManager packetGuiManager) {
@@ -1114,7 +1119,7 @@ public final class GuiService {
 
         for (int i = 0; i < backups.size() && i < 45; i++) {
             BackupMeta meta = backups.get(i);
-            String time = TIME_FORMAT.format(Instant.ofEpochMilli(meta.createdAtMillis()));
+            String time = timeFormatter().format(Instant.ofEpochMilli(meta.createdAtMillis()));
             Material icon = meta.locked() ? Material.ENCHANTED_BOOK : Material.PAPER;
             String lockedText = lang.raw(meta.locked() ? "common.yes_text" : "common.no_text");
             String noteText = meta.note() == null || meta.note().isBlank()
@@ -1246,7 +1251,7 @@ public final class GuiService {
 
         for (int i = 0; i < backups.size() && i < 45; i++) {
             BackupMeta meta = backups.get(i);
-            String time = TIME_FORMAT.format(Instant.ofEpochMilli(meta.createdAtMillis()));
+            String time = timeFormatter().format(Instant.ofEpochMilli(meta.createdAtMillis()));
             Material icon = meta.locked() ? Material.ENCHANTED_BOOK : Material.PAPER;
             String lockedText = lang.raw(meta.locked() ? "common.yes_text" : "common.no_text");
             String noteText = meta.note() == null || meta.note().isBlank()
