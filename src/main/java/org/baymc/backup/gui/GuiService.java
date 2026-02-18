@@ -178,7 +178,7 @@ public final class GuiService {
         runOnPlayer(admin, () -> {
             BackupListHolder existing = findOpenBackupListHolder(admin, targetUuid);
             if (existing != null) {
-                existing.nextViewRefreshSeq(); // invalidate pending view loads
+                existing.nextViewRefreshSeq(); // 使正在进行的预览加载失效(避免异步结果覆盖当前界面)
                 existing.setViewHolder(null);
 
                 boolean same = safePage == existing.page() && safeQuery.equals(existing.query());
@@ -348,7 +348,7 @@ public final class GuiService {
                     return;
                 }
 
-                listHolder.nextRefreshSeq(); // invalidate pending list loads
+                listHolder.nextRefreshSeq(); // 使正在进行的列表加载失效(避免异步结果覆盖当前界面)
                 listHolder.setPage(safeListPage);
                 listHolder.setQuery(safeQuery);
                 listHolder.setViewHolder(null);

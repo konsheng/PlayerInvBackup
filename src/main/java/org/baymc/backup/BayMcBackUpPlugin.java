@@ -2,10 +2,15 @@ package org.baymc.backup;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.logging.Level;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.baymc.backup.audit.AuditService;
 import org.baymc.backup.app.BackupScheduler;
@@ -233,26 +238,45 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
 
     private Lang loadLang(String languageFile) {
         Path langDir = getDataFolder().toPath().resolve("lang");
-        Path defaultFile = langDir.resolve("zh_CN.yml");
 
         try {
             Files.createDirectories(langDir);
         } catch (Exception ignored) {
         }
 
+        Path normalizedLangDir;
+        try {
+            normalizedLangDir = langDir.toAbsolutePath().normalize();
+        } catch (Exception e) {
+            normalizedLangDir = langDir;
+        }
+
+        Path defaultFile = normalizedLangDir.resolve("zh_CN.yml");
+
+        extractBundledLangFiles(langDir);
+
         if (!Files.exists(defaultFile)) {
             saveResource("lang/zh_CN.yml", false);
         }
 
         String fileName = languageFile == null || languageFile.isBlank() ? "zh_CN.yml" : languageFile.trim();
-        Path requested = langDir.resolve(fileName);
+        if (!isSafeLangFileName(fileName)) {
+            getLogger().warning("language 配置不合法, 已回退到默认语言: " + languageFile);
+            fileName = "zh_CN.yml";
+        }
+
+        Path requested = normalizedLangDir.resolve(fileName).normalize();
+        if (!requested.startsWith(normalizedLangDir)) {
+            fileName = "zh_CN.yml";
+            requested = defaultFile;
+        }
 
         // 如果用户指定了语言文件且本地不存在, 尝试从插件 Jar 内复制一份默认模板出来
         if (!Files.exists(requested)) {
             String resourcePath = "lang/" + fileName;
-            try (InputStream ignored = getResource(resourcePath)) {
-                if (ignored != null) {
-                    saveResource(resourcePath, false);
+            try (InputStream in = getResource(resourcePath)) {
+                if (in != null) {
+                    Files.copy(in, requested);
                 }
             } catch (Exception ignored) {
             }
@@ -349,9 +373,109 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
     }
 
     /**
+     * 提取所有内置语言文件到 plugins/PlayerInvBackup/lang/ 目录 (仅在文件不存在时写入, 不覆盖修改).
+     */
+    private void extractBundledLangFiles(Path langDir) {
+        if (langDir == null) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(langDir);
+        } catch (Exception ignored) {
+        }
+
+        Path normalizedLangDir;
+        try {
+            normalizedLangDir = langDir.toAbsolutePath().normalize();
+        } catch (Exception e) {
+            normalizedLangDir = langDir;
+        }
+
+        // 兜底: 开发环境下可能无法扫描 jar, 这里确保常用语言文件至少会被提取出来
+        try {
+            saveResource("lang/zh_CN.yml", false);
+        } catch (Exception ignored) {
+        }
+        try {
+            saveResource("lang/en_US.yml", false);
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Path jarPath = pluginJarPath();
+            if (jarPath == null
+                    || !Files.isRegularFile(jarPath)
+                    || jarPath.getFileName() == null
+                    || !jarPath.getFileName().toString().toLowerCase().endsWith(".jar")) {
+                return;
+            }
+
+            try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if (entry == null || entry.isDirectory()) {
+                        continue;
+                    }
+                    String name = entry.getName();
+                    if (name == null || !name.startsWith("lang/") || !name.endsWith(".yml")) {
+                        continue;
+                    }
+                    String fileName = name.substring("lang/".length());
+                    // 安全: 只允许简单文件名(不含路径分隔符), 并校验 normalize 后仍位于 langDir 下, 避免路径穿越
+                    if (!isSafeLangFileName(fileName)) {
+                        continue;
+                    }
+                    Path target = normalizedLangDir.resolve(fileName).normalize();
+                    if (!target.startsWith(normalizedLangDir)) {
+                        continue;
+                    }
+                    if (Files.exists(target)) {
+                        continue;
+                    }
+                    try (InputStream in = jarFile.getInputStream(entry)) {
+                        Files.copy(in, target);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private Path pluginJarPath() {
+        try {
+            URL url = getClass().getProtectionDomain().getCodeSource().getLocation();
+            if (url == null) {
+                return null;
+            }
+            URI uri = url.toURI();
+            return uri == null ? null : Path.of(uri);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private boolean isSafeLangFileName(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+
+        String trimmed = fileName.trim();
+        if (trimmed.isBlank()) {
+            return false;
+        }
+        if (trimmed.contains("..")) {
+            return false;
+        }
+        return trimmed.matches("^[A-Za-z0-9][A-Za-z0-9._-]*\\.yml$");
+    }
+
+    /**
      * 自动补全语言文件缺失的键, 以减少升级后出现的 "missing:key" 警告
      *
-     * <p>注意: 这里使用 Bukkit 的 YamlConfiguration 保存文件, 可能会改变键的顺序并丢失注释
+     * <p>注意: 这里使用 Bukkit 的 YamlConfiguration 保存文件, 可能会改变键顺序并丢失注释
      */
     private LangAutoFillResult autoFillMissingLangKeys(Path file, String name) {
         if (file == null) {
