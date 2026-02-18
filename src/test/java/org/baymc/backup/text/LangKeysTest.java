@@ -47,8 +47,8 @@ final class LangKeysTest {
 
         Pattern[] patterns = new Pattern[]{
                 Pattern.compile("\\bChat\\.(?:plain|plainList|info|warn|success|error)\\(\\s*[^,]+,\\s*\"([^\"]+)\""),
-                Pattern.compile("\\.lang\\(\\)\\.(?:msg|msgList|plain|raw)\\(\\s*\"([^\"]+)\""),
-                Pattern.compile("\\blang\\.(?:msg|msgList|plain|raw)\\(\\s*\"([^\"]+)\""),
+                Pattern.compile("\\.lang\\(\\)\\.(?:msg|msgNoPrefix|msgList|plain|raw)\\(\\s*\"([^\"]+)\""),
+                Pattern.compile("\\blang\\.(?:msg|msgNoPrefix|msgList|plain|raw)\\(\\s*\"([^\"]+)\""),
         };
 
         try (Stream<Path> stream = Files.walk(javaRoot)) {

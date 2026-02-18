@@ -204,6 +204,7 @@ gui:
         - "<#90A4AE>Reload current page: <page></#90A4AE>"
   backup-view:
     loading-title: "<#B0BEC5>Loading backup...</#B0BEC5>"
+    title: "<#FFB300>Backup Preview</#FFB300><#90A4AE>: <target></#90A4AE>"
     title-inv: "<#FFB300>Inventory</#FFB300><#90A4AE>: <target></#90A4AE>"
     title-ender: "<#FFB300>Ender Chest</#FFB300><#90A4AE>: <target></#90A4AE>"
     claimed:

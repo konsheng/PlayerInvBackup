@@ -14,13 +14,24 @@ import org.bukkit.inventory.InventoryHolder;
  * <p>用于在 GUI 刷新与点击处理时保存上下文(目标玩家, 页码, 筛选条件, 以及异步刷新序列号)
  */
 public final class BackupListHolder implements InventoryHolder {
+    public enum Screen {
+        LIST,
+        LIST_LOADING,
+        VIEW,
+        VIEW_LOADING
+    }
+
     private final UUID targetUuid;
     private final String targetName;
     // 用于原地刷新时的序列号, 避免异步加载结果乱序覆盖当前界面
     private final AtomicLong refreshSeq = new AtomicLong();
+    private final AtomicLong viewRefreshSeq = new AtomicLong();
     private int page;
     private BackupQuery query;
     private List<BackupMeta> backups;
+    private volatile boolean listLoaded;
+    private volatile Screen screen = Screen.LIST;
+    private BackupViewHolder viewHolder;
     private Inventory inventory;
 
     public BackupListHolder(UUID targetUuid, String targetName, int page, BackupQuery query, List<BackupMeta> backups) {
@@ -69,6 +80,38 @@ public final class BackupListHolder implements InventoryHolder {
 
     public boolean isRefreshSeqCurrent(long seq) {
         return refreshSeq.get() == seq;
+    }
+
+    public boolean isListLoaded() {
+        return listLoaded;
+    }
+
+    public void setListLoaded(boolean listLoaded) {
+        this.listLoaded = listLoaded;
+    }
+
+    public long nextViewRefreshSeq() {
+        return viewRefreshSeq.incrementAndGet();
+    }
+
+    public boolean isViewRefreshSeqCurrent(long seq) {
+        return viewRefreshSeq.get() == seq;
+    }
+
+    public Screen screen() {
+        return screen;
+    }
+
+    public void setScreen(Screen screen) {
+        this.screen = screen == null ? Screen.LIST : screen;
+    }
+
+    public BackupViewHolder viewHolder() {
+        return viewHolder;
+    }
+
+    public void setViewHolder(BackupViewHolder viewHolder) {
+        this.viewHolder = viewHolder;
     }
 
     public void setInventory(Inventory inventory) {

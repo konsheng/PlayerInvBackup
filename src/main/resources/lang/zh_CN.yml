@@ -204,6 +204,7 @@ gui:
         - "<#90A4AE>重新加载当前页: <page></#90A4AE>"
   backup-view:
     loading-title: "<#B0BEC5>正在加载备份内容...</#B0BEC5>"
+    title: "<#FFB300>备份预览</#FFB300><#90A4AE>: <target></#90A4AE>"
     title-inv: "<#FFB300>背包</#FFB300><#90A4AE>: <target></#90A4AE>"
     title-ender: "<#FFB300>末影箱</#FFB300><#90A4AE>: <target></#90A4AE>"
     claimed:

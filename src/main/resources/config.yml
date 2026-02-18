@@ -1,7 +1,8 @@
-# PlayerInvBackup 配置 (Folia 1.21.1+)
+# PlayerInvBackup 配置 (Paper / Folia 1.21.1+)
 # 备份范围: 仅玩家背包 (含盔甲/副手) + 末影箱
 
 # 语言文件 (位于 plugins/PlayerInvBackup/lang/)
+# 可通文件 "zh_CH.yml, en_US.yml"
 # 修改后可使用 /pib reload 重载生效
 language: "zh_CN.yml"
 
@@ -26,18 +27,23 @@ backup:
 
   # 事件触发器: 启用后, 会在对应事件发生时自动备份一次
   triggers:
+    # 加入游戏
     join: true
+    # 离开游戏
     quit: true
+    # 死亡
     death: true
+    # 切换世界
     world-change: true
 
   # 自动备份排除世界 (定时/事件触发都会跳过)
+  # 玩家在这些世界内时不会进行任何备份操作
   excluded-worlds: []
 
 audit:
   # 是否启用操作审计
-  # 启用后会把关键操作写入 plugins/PlayerInvBackup/logs
-  # 日志按天切分, 旧文件会自动压缩为 .gz
+  # 启用后会把关键操作写入 logs 文件夹内
+  # 日志自动按天切分, 旧文件会自动压缩为 .gz
   enabled: true
 
   # 是否在控制台输出每条审计记录
@@ -67,7 +73,7 @@ storage:
     url: ""
     host: "127.0.0.1"
     port: 3306
-    database: "baymcbackup"
+    database: "playerinvbackup"
     username: "root"
     password: ""
     # 额外参数, 以 & 连接. 例如: useSSL=false&serverTimezone=UTC

@@ -18,7 +18,8 @@ public final class BackupViewHolder implements InventoryHolder {
     private final String backupId;
     private final int listPage;
     private final BackupQuery listQuery;
-    private final GuiView view;
+    // 视图在 GUI 内可切换, 需要原地更新
+    private GuiView view;
     private final SnapshotParts parts;
     private final boolean[] claimedInv;
     private final boolean[] claimedEnder;
@@ -45,7 +46,7 @@ public final class BackupViewHolder implements InventoryHolder {
         this.backupId = backupId;
         this.listPage = Math.max(0, listPage);
         this.listQuery = listQuery == null ? BackupQuery.all() : listQuery;
-        this.view = view;
+        this.view = view == null ? GuiView.INVENTORY : view;
         this.parts = parts;
         this.claimedInv = claimedInv;
         this.claimedEnder = claimedEnder;
@@ -75,6 +76,10 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public GuiView view() {
         return view;
+    }
+
+    public void setView(GuiView view) {
+        this.view = view == null ? GuiView.INVENTORY : view;
     }
 
     public SnapshotParts parts() {

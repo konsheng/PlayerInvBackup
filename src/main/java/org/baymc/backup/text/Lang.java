@@ -30,6 +30,7 @@ import org.bukkit.plugin.Plugin;
  */
 public final class Lang {
     private static final PlainTextComponentSerializer PLAIN_TEXT = PlainTextComponentSerializer.plainText();
+    private static final TagResolver EMPTY_PREFIX_PLACEHOLDER = Placeholder.component("prefix", Component.empty());
 
     private final Plugin plugin;
     private final Path file;
@@ -115,6 +116,31 @@ public final class Lang {
             return fallback == null ? Component.empty() : fallback;
         }
         return deserialize(raw, placeholders);
+    }
+
+    /**
+     * 获取语言键对应的消息, 但将 <prefix> 视为空.
+     *
+     * <p>用于 GUI 标题等场景, 避免在标题中显示插件前缀。
+     */
+    public Component msgNoPrefix(String path, TagResolver... placeholders) {
+        String raw = config.getString(path, null);
+        if (raw == null) {
+            String fallback = defaults == null ? null : defaults.getString(path, null);
+            if (fallback != null) {
+                tryAutoFill(path, fallback);
+                raw = fallback;
+            }
+        }
+        if (raw == null) {
+            warnMissing("console.lang.missing-key", path);
+            Component fallback = internalMsg(
+                    "errors.lang-key-missing",
+                    Placeholder.unparsed("key", path)
+            );
+            return fallback == null ? Component.empty() : fallback;
+        }
+        return deserializeNoPrefix(raw, placeholders);
     }
 
     /**
@@ -243,6 +269,27 @@ public final class Lang {
         }
     }
 
+    private Component deserializeNoPrefix(String raw, TagResolver... placeholders) {
+        String original = raw;
+        raw = normalizeLegacyTags(raw);
+        try {
+            TagResolver[] resolvers = withEmptyPrefix(placeholders);
+            return applyDefaultStyles(miniMessage.deserialize(raw, resolvers));
+        } catch (Exception e) {
+            String message = internalPlain(
+                    "console.lang.parse-failed",
+                    Placeholder.unparsed("file", String.valueOf(file)),
+                    Placeholder.unparsed("text", String.valueOf(original))
+            );
+            if (message != null && !message.isBlank()) {
+                plugin.getLogger().log(Level.WARNING, message, e);
+            } else {
+                plugin.getLogger().log(Level.WARNING, String.valueOf(e.getMessage()), e);
+            }
+            return applyDefaultStyles(Component.text(raw));
+        }
+    }
+
     /**
      * 从内置默认语言里读取消息, 避免“语言缺失”的场景下递归依赖外部语言文件
      */
@@ -293,6 +340,16 @@ public final class Lang {
         }
         TagResolver[] out = new TagResolver[placeholders.length + 1];
         out[0] = prefixPlaceholder;
+        System.arraycopy(placeholders, 0, out, 1, placeholders.length);
+        return out;
+    }
+
+    private static TagResolver[] withEmptyPrefix(TagResolver... placeholders) {
+        if (placeholders == null || placeholders.length == 0) {
+            return new TagResolver[]{EMPTY_PREFIX_PLACEHOLDER};
+        }
+        TagResolver[] out = new TagResolver[placeholders.length + 1];
+        out[0] = EMPTY_PREFIX_PLACEHOLDER;
         System.arraycopy(placeholders, 0, out, 1, placeholders.length);
         return out;
     }

@@ -114,71 +114,45 @@ public final class GuiService {
         return null;
     }
 
-    public void openBackupList(Player admin, UUID targetUuid, String targetName, int page) {
-        BackupStore store = resolveStoreOrError(admin, false);
-        if (store == null) {
-            return;
+    private BackupListHolder findOpenBackupListHolder(Player player, UUID targetUuid) {
+        if (player == null || targetUuid == null) {
+            return null;
+        }
+        if (!player.isOnline()) {
+            return null;
         }
 
-        UUID adminUuid = admin.getUniqueId();
-        String adminName = admin.getName();
-        Lang lang = plugin.lang();
-        plugin.auditService().log(
-                "OPEN_LIST",
-                admin,
-                targetUuid,
-                targetName,
-                null,
-                "page=" + page
-        );
-        Component loadingTitle = lang.msg("gui.backup-list.loading-title");
-        runOnPlayer(admin, () -> {
-            openMenu(admin, createLoading(loadingTitle), loadingTitle);
-        });
-
-        int limit = plugin.pluginConfig().guiListPageSize();
-        int offset = Math.max(0, page) * limit;
-
-        Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            List<BackupMeta> backups;
+        Inventory top = null;
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            top = manager.currentTop(player);
+        } else {
             try {
-                backups = store.listBackups(targetUuid, offset, limit);
-            } catch (Exception e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.list-load-failed",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("page", String.valueOf(page))
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.load-failed");
-                });
-                return;
+                InventoryView view = player.getOpenInventory();
+                top = view == null ? null : view.getTopInventory();
+            } catch (Exception ignored) {
+                top = null;
             }
+        }
 
-            int safePage = Math.max(0, page);
-            if (backups.isEmpty() && safePage > 0) {
-                runOnPlayer(admin, () -> {
-                    Chat.warn(admin, "warn.no-more-backups-back");
-                    openBackupList(admin, targetUuid, targetName, safePage - 1);
-                });
-                return;
-            }
+        if (top == null) {
+            return null;
+        }
+        Object holder = top.getHolder();
+        if (!(holder instanceof BackupListHolder listHolder)) {
+            return null;
+        }
+        if (listHolder.targetUuid() == null || !listHolder.targetUuid().equals(targetUuid)) {
+            return null;
+        }
+        if (listHolder.getInventory() == null) {
+            listHolder.setInventory(top);
+        }
+        return listHolder;
+    }
 
-            boolean hasNextPage = backups.size() >= limit;
-            runOnPlayer(admin, () -> {
-                Inventory inv = createBackupListInventory(targetUuid, targetName, safePage, backups, hasNextPage);
-                String name = targetName == null ? targetUuid.toString() : targetName;
-                Component title = backupListTitle(plugin.lang(), name, safePage);
-                openMenu(admin, inv, title);
-            });
-        });
+    public void openBackupList(Player admin, UUID targetUuid, String targetName, int page) {
+        openBackupList(admin, targetUuid, targetName, page, BackupQuery.all());
     }
 
     public void openBackupList(Player admin, UUID targetUuid, String targetName, int page, BackupQuery query) {
@@ -187,9 +161,7 @@ public final class GuiService {
             return;
         }
 
-        UUID adminUuid = admin.getUniqueId();
-        String adminName = admin.getName();
-        Lang lang = plugin.lang();
+        int safePage = Math.max(0, page);
         BackupQuery safeQuery = query == null ? BackupQuery.all() : query;
 
         plugin.auditService().log(
@@ -198,58 +170,46 @@ public final class GuiService {
                 targetUuid,
                 targetName,
                 null,
-                "page=" + page
+                "page=" + safePage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
         );
-        Component loadingTitle = lang.msg("gui.backup-list.loading-title");
+
         runOnPlayer(admin, () -> {
-            openMenu(admin, createLoading(loadingTitle), loadingTitle);
-        });
+            BackupListHolder existing = findOpenBackupListHolder(admin, targetUuid);
+            if (existing != null) {
+                existing.nextViewRefreshSeq(); // invalidate pending view loads
+                existing.setViewHolder(null);
 
-        int limit = plugin.pluginConfig().guiListPageSize();
-        int safePage = Math.max(0, page);
-        int offset = safePage * limit;
+                boolean same = safePage == existing.page() && safeQuery.equals(existing.query());
+                int limit = plugin.pluginConfig().guiListPageSize();
+                if (same && existing.isListLoaded()) {
+                    existing.setScreen(BackupListHolder.Screen.LIST);
+                    renderBackupListInventory(existing.getInventory(), existing, existing.backups().size() >= limit);
+                    syncIfViewing(admin, existing.getInventory());
+                    return;
+                }
 
-        Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            List<BackupMeta> backups;
-            try {
-                backups = store.listBackups(targetUuid, safeQuery, offset, limit);
-            } catch (Exception e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.list-load-failed-query",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("page", String.valueOf(page)),
-                                Placeholder.unparsed("query", String.valueOf(safeQuery))
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.load-failed");
-                });
+                existing.setScreen(BackupListHolder.Screen.LIST_LOADING);
+                existing.setListLoaded(false);
+                renderLoadingInventory(existing.getInventory(), plugin.lang().msgNoPrefix("gui.backup-list.loading-title"));
+                syncIfViewing(admin, existing.getInventory());
+                refreshBackupList(admin, existing, safePage, safeQuery);
                 return;
             }
 
-            if (backups.isEmpty() && safePage > 0) {
-                runOnPlayer(admin, () -> {
-                    Chat.warn(admin, "warn.no-more-backups-back");
-                    openBackupList(admin, targetUuid, targetName, safePage - 1, safeQuery);
-                });
-                return;
-            }
+            String name = targetName == null ? String.valueOf(targetUuid) : targetName;
+            Lang lang = plugin.lang();
+            Component title = backupListTitle(lang, name, safePage);
 
-            boolean hasNextPage = backups.size() >= limit;
-            runOnPlayer(admin, () -> {
-                Inventory inv = createBackupListInventory(targetUuid, targetName, safePage, safeQuery, backups, hasNextPage);
-                String name = targetName == null ? targetUuid.toString() : targetName;
-                Component title = backupListTitle(plugin.lang(), name, safePage);
-                openMenu(admin, inv, title);
-            });
+            BackupListHolder holder = new BackupListHolder(targetUuid, name, safePage, safeQuery, List.of());
+            holder.setScreen(BackupListHolder.Screen.LIST_LOADING);
+            Inventory inv = Bukkit.createInventory(holder, GUI_SIZE, title);
+            holder.setInventory(inv);
+
+            renderLoadingInventory(inv, lang.msgNoPrefix("gui.backup-list.loading-title"));
+            openMenu(admin, inv, title);
+            refreshBackupList(admin, holder, safePage, safeQuery);
         });
     }
 
@@ -295,11 +255,11 @@ public final class GuiService {
 
             if (backups.isEmpty() && safePage > 0) {
                 runOnPlayer(admin, () -> {
-                    Inventory top = holder.getInventory();
-                    if (top == null || !isViewing(admin, top)) {
+                    if (!holder.isRefreshSeqCurrent(refreshSeq)) {
                         return;
                     }
-                    if (!holder.isRefreshSeqCurrent(refreshSeq)) {
+                    BackupListHolder.Screen screen = holder.screen();
+                    if (screen != BackupListHolder.Screen.LIST && screen != BackupListHolder.Screen.LIST_LOADING) {
                         return;
                     }
                     Chat.warn(admin, "warn.no-more-backups-back");
@@ -311,25 +271,23 @@ public final class GuiService {
             boolean hasNextPage = backups.size() >= limit;
             runOnPlayer(admin, () -> {
                 Inventory top = holder.getInventory();
-                if (top == null || !isViewing(admin, top)) {
+                if (top == null) {
                     return;
                 }
                 if (!holder.isRefreshSeqCurrent(refreshSeq)) {
+                    return;
+                }
+                BackupListHolder.Screen screen = holder.screen();
+                if (screen != BackupListHolder.Screen.LIST && screen != BackupListHolder.Screen.LIST_LOADING) {
                     return;
                 }
 
                 holder.setPage(safePage);
                 holder.setQuery(safeQuery);
                 holder.setBackups(backups);
+                holder.setListLoaded(true);
 
-                Component desiredTitle = backupListTitle(plugin.lang(), targetName, safePage);
-                Component currentTitle = currentTitle(admin);
-                if (!desiredTitle.equals(currentTitle)) {
-                    Inventory nextInv = createBackupListInventory(targetUuid, targetName, safePage, safeQuery, backups, hasNextPage);
-                    openMenu(admin, nextInv, desiredTitle);
-                    return;
-                }
-
+                holder.setScreen(BackupListHolder.Screen.LIST);
                 renderBackupListInventory(top, holder, hasNextPage);
                 syncIfViewing(admin, top);
             });
@@ -352,212 +310,165 @@ public final class GuiService {
 
         UUID adminUuid = admin.getUniqueId();
         String adminName = admin.getName();
-        Lang lang = plugin.lang();
+        int safeListPage = Math.max(0, listPage);
         BackupQuery safeQuery = listQuery == null ? BackupQuery.all() : listQuery;
+        GuiView safeView = view == null ? GuiView.INVENTORY : view;
+        String safeTargetName = targetName == null ? String.valueOf(targetUuid) : targetName;
+        Lang lang = plugin.lang();
+
         plugin.auditService().log(
                 "OPEN_VIEW",
                 admin,
                 targetUuid,
                 targetName,
                 backupId,
-                "view=" + view.name() + " listPage=" + listPage
+                "view=" + safeView.name() + " listPage=" + safeListPage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
         );
-        Component loadingTitle = lang.msg("gui.backup-view.loading-title");
-        runOnPlayer(admin, () -> {
-            openMenu(admin, createLoading(loadingTitle), loadingTitle);
-        });
 
-        Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            BackupRecord record;
-            List<SlotClaim> claims;
-            try {
-                record = store.loadBackup(targetUuid, backupId).orElse(null);
-                if (record == null) {
+        Component title = backupViewTitle(lang, safeTargetName);
+        Component loadingLabel = lang.msgNoPrefix("gui.backup-view.loading-title");
+
+        runOnPlayer(admin, () -> {
+            BackupListHolder listHolder = findOpenBackupListHolder(admin, targetUuid);
+            if (listHolder == null) {
+                listHolder = new BackupListHolder(targetUuid, safeTargetName, safeListPage, safeQuery, List.of());
+                Inventory inv = Bukkit.createInventory(listHolder, GUI_SIZE, title);
+                listHolder.setInventory(inv);
+                listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
+                listHolder.setListLoaded(false);
+                listHolder.setViewHolder(null);
+
+                renderLoadingInventory(inv, loadingLabel);
+                openMenu(admin, inv, title);
+            } else {
+                Inventory inv = listHolder.getInventory();
+                if (inv == null) {
+                    return;
+                }
+
+                listHolder.nextRefreshSeq(); // invalidate pending list loads
+                listHolder.setPage(safeListPage);
+                listHolder.setQuery(safeQuery);
+                listHolder.setViewHolder(null);
+                listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
+
+                renderLoadingInventory(inv, loadingLabel);
+                syncIfViewing(admin, inv);
+            }
+
+            long viewSeq = listHolder.nextViewRefreshSeq();
+            BackupListHolder finalListHolder = listHolder;
+
+            Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
+                BackupRecord record;
+                List<SlotClaim> claims;
+                try {
+                    record = store.loadBackup(targetUuid, backupId).orElse(null);
+                    if (record == null) {
+                        runOnPlayer(admin, () -> {
+                            if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                                return;
+                            }
+                            Chat.error(admin, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId));
+                            openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                        });
+                        return;
+                    }
+                    claims = store.listClaims(targetUuid, backupId);
+                } catch (Exception e) {
+                    plugin.getLogger().log(
+                            Level.SEVERE,
+                            plugin.lang().plain(
+                                    "console.gui.backup-load-failed",
+                                    Placeholder.unparsed("actor", adminName),
+                                    Placeholder.unparsed("actor_uuid", adminUuid.toString()),
+                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                    Placeholder.unparsed("backup_id", backupId)
+                            ),
+                            e
+                    );
                     runOnPlayer(admin, () -> {
-                        Chat.error(admin, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId));
-                        openBackupList(admin, targetUuid, targetName, Math.max(0, listPage), safeQuery);
+                        if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                            return;
+                        }
+                        Chat.error(admin, "errors.load-failed");
+                        openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
                     });
                     return;
                 }
-                claims = store.listClaims(targetUuid, backupId);
-            } catch (Exception e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.backup-load-failed",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("backup_id", backupId)
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.load-failed");
-                });
-                return;
-            }
 
-            SnapshotParts parts;
-            try {
-                parts = SnapshotCodec.decodeGzip(record.snapshotBytes());
-            } catch (IOException e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.snapshot-invalid",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("backup_id", backupId)
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.snapshot-invalid");
-                });
-                return;
-            }
-
-            boolean[] claimedInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
-            boolean[] claimedEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
-            for (SlotClaim claim : claims) {
-                if (claim.slotType() == SlotType.INV && claim.slotIndex() >= 0 && claim.slotIndex() < claimedInv.length) {
-                    claimedInv[claim.slotIndex()] = true;
-                } else if (claim.slotType() == SlotType.ENDER && claim.slotIndex() >= 0 && claim.slotIndex() < claimedEnder.length) {
-                    claimedEnder[claim.slotIndex()] = true;
+                SnapshotParts parts;
+                try {
+                    parts = SnapshotCodec.decodeGzip(record.snapshotBytes());
+                } catch (IOException e) {
+                    plugin.getLogger().log(
+                            Level.SEVERE,
+                            plugin.lang().plain(
+                                    "console.gui.snapshot-invalid",
+                                    Placeholder.unparsed("actor", adminName),
+                                    Placeholder.unparsed("actor_uuid", adminUuid.toString()),
+                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                    Placeholder.unparsed("backup_id", backupId)
+                            ),
+                            e
+                    );
+                    runOnPlayer(admin, () -> {
+                        if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                            return;
+                        }
+                        Chat.error(admin, "errors.snapshot-invalid");
+                        openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                    });
+                    return;
                 }
-            }
 
-            runOnPlayer(admin, () -> {
-                Inventory inv = createBackupViewInventory(
-                        targetUuid,
-                        targetName,
-                        listPage,
-                        safeQuery,
-                        backupId,
-                        view,
-                        parts,
-                        claimedInv,
-                        claimedEnder,
-                        record.meta().locked(),
-                        record.meta().note()
-                );
-                String name = targetName == null ? targetUuid.toString() : targetName;
-                Component title = backupViewTitle(plugin.lang(), name, view);
-                openMenu(admin, inv, title);
+                boolean[] claimedInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
+                boolean[] claimedEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
+                for (SlotClaim claim : claims) {
+                    if (claim.slotType() == SlotType.INV && claim.slotIndex() >= 0 && claim.slotIndex() < claimedInv.length) {
+                        claimedInv[claim.slotIndex()] = true;
+                    } else if (claim.slotType() == SlotType.ENDER && claim.slotIndex() >= 0 && claim.slotIndex() < claimedEnder.length) {
+                        claimedEnder[claim.slotIndex()] = true;
+                    }
+                }
+
+                runOnPlayer(admin, () -> {
+                    if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                        return;
+                    }
+                    Inventory inv = finalListHolder.getInventory();
+                    if (inv == null) {
+                        return;
+                    }
+
+                    BackupViewHolder viewHolder = new BackupViewHolder(
+                            targetUuid,
+                            safeTargetName,
+                            backupId,
+                            safeListPage,
+                            safeQuery,
+                            safeView,
+                            parts,
+                            claimedInv,
+                            claimedEnder,
+                            record.meta().locked(),
+                            record.meta().note()
+                    );
+                    viewHolder.setInventory(inv);
+                    finalListHolder.setViewHolder(viewHolder);
+                    finalListHolder.setScreen(BackupListHolder.Screen.VIEW);
+
+                    renderBackupViewScreen(inv, viewHolder);
+                    syncIfViewing(admin, inv);
+                });
             });
         });
     }
 
     public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {
-        BackupStore store = resolveStoreOrError(admin, false);
-        if (store == null) {
-            return;
-        }
-
-        UUID adminUuid = admin.getUniqueId();
-        String adminName = admin.getName();
-        Lang lang = plugin.lang();
-        plugin.auditService().log(
-                "OPEN_VIEW",
-                admin,
-                targetUuid,
-                targetName,
-                backupId,
-                "view=" + view.name() + " listPage=" + listPage
-        );
-        Component loadingTitle = lang.msg("gui.backup-view.loading-title");
-        runOnPlayer(admin, () -> {
-            openMenu(admin, createLoading(loadingTitle), loadingTitle);
-        });
-
-        Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            BackupRecord record;
-            List<SlotClaim> claims;
-            try {
-                record = store.loadBackup(targetUuid, backupId).orElse(null);
-                if (record == null) {
-                    runOnPlayer(admin, () -> {
-                        Chat.error(admin, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId));
-                        openBackupList(admin, targetUuid, targetName, Math.max(0, listPage));
-                    });
-                    return;
-                }
-                claims = store.listClaims(targetUuid, backupId);
-            } catch (Exception e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.backup-load-failed",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("backup_id", backupId)
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.load-failed");
-                });
-                return;
-            }
-
-            SnapshotParts parts;
-            try {
-                parts = SnapshotCodec.decodeGzip(record.snapshotBytes());
-            } catch (IOException e) {
-                plugin.getLogger().log(
-                        Level.SEVERE,
-                        plugin.lang().plain(
-                                "console.gui.snapshot-invalid",
-                                Placeholder.unparsed("actor", adminName),
-                                Placeholder.unparsed("actor_uuid", adminUuid.toString()),
-                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                Placeholder.unparsed("backup_id", backupId)
-                        ),
-                        e
-                );
-                runOnPlayer(admin, () -> {
-                    closeMenu(admin);
-                    Chat.error(admin, "errors.snapshot-invalid");
-                });
-                return;
-            }
-
-            boolean[] claimedInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
-            boolean[] claimedEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
-            for (SlotClaim claim : claims) {
-                if (claim.slotType() == SlotType.INV && claim.slotIndex() >= 0 && claim.slotIndex() < claimedInv.length) {
-                    claimedInv[claim.slotIndex()] = true;
-                } else if (claim.slotType() == SlotType.ENDER && claim.slotIndex() >= 0 && claim.slotIndex() < claimedEnder.length) {
-                    claimedEnder[claim.slotIndex()] = true;
-                }
-            }
-
-            runOnPlayer(admin, () -> {
-                Inventory inv = createBackupViewInventory(
-                        targetUuid,
-                        targetName,
-                        listPage,
-                        backupId,
-                        view,
-                        parts,
-                        claimedInv,
-                        claimedEnder,
-                        record.meta().locked(),
-                        record.meta().note()
-                );
-                String name = targetName == null ? targetUuid.toString() : targetName;
-                Component title = backupViewTitle(plugin.lang(), name, view);
-                openMenu(admin, inv, title);
-            });
-        });
+        openBackupView(admin, targetUuid, targetName, listPage, BackupQuery.all(), backupId, view);
     }
 
     public void deliverPending(Player admin) {
@@ -671,6 +582,18 @@ public final class GuiService {
         if (slot < 0) {
             return;
         }
+        BackupListHolder.Screen screen = holder.screen();
+        if (screen == BackupListHolder.Screen.VIEW_LOADING || screen == BackupListHolder.Screen.LIST_LOADING) {
+            return;
+        }
+        if (screen == BackupListHolder.Screen.VIEW) {
+            BackupViewHolder viewHolder = holder.viewHolder();
+            if (viewHolder == null) {
+                return;
+            }
+            handleViewClick(admin, viewHolder, slot);
+            return;
+        }
         BackupQuery query = holder.query();
 
         if ((slot >= 45 && slot <= 53) || slot < holder.backups().size()) {
@@ -766,22 +689,13 @@ public final class GuiService {
         if (slot == SLOT_VIEW_TOGGLE) {
             GuiView next = holder.view() == GuiView.INVENTORY ? GuiView.ENDER_CHEST : GuiView.INVENTORY;
             runOnPlayer(admin, () -> {
-                Inventory inv = createBackupViewInventory(
-                        holder.targetUuid(),
-                        holder.targetName(),
-                        holder.listPage(),
-                        holder.listQuery(),
-                        holder.backupId(),
-                        next,
-                        holder.parts(),
-                        holder.claimedInv(),
-                        holder.claimedEnder(),
-                        holder.locked(),
-                        holder.note()
-                );
-                String name = holder.targetName() == null ? holder.targetUuid().toString() : holder.targetName();
-                Component title = backupViewTitle(plugin.lang(), name, next);
-                openMenu(admin, inv, title);
+                Inventory top = holder.getInventory();
+                if (top == null || !isViewing(admin, top)) {
+                    return;
+                }
+                holder.setView(next);
+                renderBackupViewInventory(top, holder);
+                syncIfViewing(admin, top);
             });
             return;
         }
@@ -1096,6 +1010,28 @@ public final class GuiService {
     }
 
     // 只重绘列表 GUI 的内容, 不重新打开 Inventory
+    private void renderLoadingInventory(Inventory inv, Component label) {
+        if (inv == null) {
+            return;
+        }
+
+        Lang lang = plugin.lang();
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, null);
+        }
+
+        int slot = Math.min(22, inv.getSize() - 1);
+        if (slot < 0) {
+            return;
+        }
+        Component name = label == null ? lang.msg("gui.loading.item-name") : label;
+        inv.setItem(slot, namedItem(
+                Material.CLOCK,
+                name,
+                lang.msgList("gui.loading.item-lore")
+        ));
+    }
+
     private void renderBackupListInventory(Inventory inv, BackupListHolder holder, boolean hasNextPage) {
         if (inv == null || holder == null) {
             return;
@@ -1191,6 +1127,34 @@ public final class GuiService {
     }
 
     // 只更新 "锁定/置顶" 按钮, 避免因为点击而重新打开 GUI
+    private void renderBackupViewScreen(Inventory inv, BackupViewHolder holder) {
+        if (inv == null || holder == null) {
+            return;
+        }
+        Lang lang = plugin.lang();
+
+        int size = inv.getSize();
+        for (int i = 45; i < size && i < 54; i++) {
+            inv.setItem(i, null);
+        }
+
+        renderBackupViewInventory(inv, holder);
+
+        inv.setItem(SLOT_VIEW_BACK, namedItem(Material.OAK_DOOR, lang.msg("gui.backup-view.back.name"), List.of()));
+        inv.setItem(SLOT_VIEW_TOGGLE, namedItem(
+                Material.ENDER_CHEST,
+                lang.msg("gui.backup-view.toggle.name"),
+                lang.msgList("gui.backup-view.toggle.lore")
+        ));
+        boolean online = Bukkit.getPlayer(holder.targetUuid()) != null;
+        inv.setItem(SLOT_VIEW_RESTORE, online
+                ? namedItem(Material.REDSTONE_BLOCK, lang.msg("gui.backup-view.restore.name"), lang.msgList("gui.backup-view.restore.lore"))
+                : namedItem(Material.BARRIER, lang.msg("gui.backup-view.restore-offline.name"), lang.msgList("gui.backup-view.restore-offline.lore")));
+        inv.setItem(SLOT_VIEW_PENDING, namedItem(Material.CHEST, lang.msg("gui.backup-view.pending.name"), lang.msgList("gui.backup-view.pending.lore")));
+
+        renderBackupViewLockItem(inv, holder);
+    }
+
     private void renderBackupViewLockItem(Inventory inv, BackupViewHolder holder) {
         if (inv == null || holder == null) {
             return;
@@ -1214,6 +1178,48 @@ public final class GuiService {
         );
     }
 
+    private void renderBackupViewInventory(Inventory inv, BackupViewHolder holder) {
+        if (inv == null || holder == null) {
+            return;
+        }
+        Lang lang = plugin.lang();
+
+        // 清空内容区域(不动底部按钮), 避免从背包视图切到末影箱后遗留旧物品
+        int clearEndExclusive = Math.min(45, inv.getSize());
+        for (int i = 0; i < clearEndExclusive; i++) {
+            inv.setItem(i, null);
+        }
+
+        if (holder.view() == GuiView.INVENTORY) {
+            for (int i = 0; i < SnapshotCodec.INVENTORY_SLOT_COUNT && i < inv.getSize(); i++) {
+                if (holder.claimedInv()[i]) {
+                    inv.setItem(i, namedItem(
+                            Material.BARRIER,
+                            lang.msg("gui.backup-view.claimed.name"),
+                            lang.msgList("gui.backup-view.claimed.lore")
+                    ));
+                    continue;
+                }
+                byte[] itemBytes = holder.parts().inventorySlotBytes()[i];
+                inv.setItem(i, toPreviewItem(itemBytes));
+            }
+            return;
+        }
+
+        for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT && i < inv.getSize(); i++) {
+            if (holder.claimedEnder()[i]) {
+                inv.setItem(i, namedItem(
+                        Material.BARRIER,
+                        lang.msg("gui.backup-view.claimed.name"),
+                        lang.msgList("gui.backup-view.claimed.lore")
+                ));
+                continue;
+            }
+            byte[] itemBytes = holder.parts().enderChestSlotBytes()[i];
+            inv.setItem(i, toPreviewItem(itemBytes));
+        }
+    }
+
     private Inventory createBackupListInventory(UUID targetUuid, String targetName, int page, List<BackupMeta> backups, boolean hasNextPage) {
         return createBackupListInventory(targetUuid, targetName, page, BackupQuery.all(), backups, hasNextPage);
     }
@@ -1233,7 +1239,7 @@ public final class GuiService {
         Inventory inv = Bukkit.createInventory(
                 holder,
                 GUI_SIZE,
-                lang.msg(
+                lang.msgNoPrefix(
                         "gui.backup-list.title",
                         Placeholder.unparsed("target", name),
                         Placeholder.unparsed("page", String.valueOf(page + 1))
@@ -1370,9 +1376,7 @@ public final class GuiService {
         Inventory inv = Bukkit.createInventory(
                 holder,
                 GUI_SIZE,
-                view == GuiView.INVENTORY
-                        ? lang.msg("gui.backup-view.title-inv", Placeholder.unparsed("target", name))
-                        : lang.msg("gui.backup-view.title-ender", Placeholder.unparsed("target", name))
+                lang.msgNoPrefix("gui.backup-view.title", Placeholder.unparsed("target", name))
         );
         holder.setInventory(inv);
 
@@ -1444,7 +1448,7 @@ public final class GuiService {
                     holder.listQuery(),
                     holder.view()
             );
-            Component title = lang.msg("gui.restore-confirm.title", Placeholder.unparsed("target", titleName));
+            Component title = lang.msgNoPrefix("gui.restore-confirm.title", Placeholder.unparsed("target", titleName));
             Inventory inv = Bukkit.createInventory(
                     confirmHolder,
                     CONFIRM_GUI_SIZE,
@@ -1702,21 +1706,19 @@ public final class GuiService {
         }
         String safeTarget = targetName == null ? "-" : targetName;
         int safePage = Math.max(0, page);
-        return lang.msg(
+        return lang.msgNoPrefix(
                 "gui.backup-list.title",
                 Placeholder.unparsed("target", safeTarget),
                 Placeholder.unparsed("page", String.valueOf(safePage + 1))
         );
     }
 
-    private static Component backupViewTitle(Lang lang, String targetName, GuiView view) {
+    private static Component backupViewTitle(Lang lang, String targetName) {
         if (lang == null) {
             return Component.empty();
         }
         String safeTarget = targetName == null ? "-" : targetName;
-        return view == GuiView.INVENTORY
-                ? lang.msg("gui.backup-view.title-inv", Placeholder.unparsed("target", safeTarget))
-                : lang.msg("gui.backup-view.title-ender", Placeholder.unparsed("target", safeTarget));
+        return lang.msgNoPrefix("gui.backup-view.title", Placeholder.unparsed("target", safeTarget));
     }
 
     private Inventory createLoading(Component title) {
