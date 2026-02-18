@@ -33,7 +33,7 @@ jobs:
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: BayMcBackUp-${{ github.ref_name }}-${{ github.sha }}
+          name: PlayerInvBackup-${{ github.ref_name }}-${{ github.sha }}
           path: build/libs/*.jar
           if-no-files-found: error
           retention-days: 14

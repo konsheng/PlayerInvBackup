@@ -1,7 +1,7 @@
-# BayMcBackUp 配置 (Folia 1.21.1+)
+# PlayerInvBackup 配置 (Folia 1.21.1+)
 # 备份范围: 仅玩家背包 (含盔甲/副手) + 末影箱
 
-# 语言文件 (位于 plugins/BayMcBackUp/lang/)
+# 语言文件 (位于 plugins/PlayerInvBackup/lang/)
 # 修改后可使用 /bmbackup reload 重载生效
 language: "zh_CN.yml"
 
@@ -31,7 +31,7 @@ backup:
 
 audit:
   # 是否启用操作审计
-  # 启用后会把关键操作写入 plugins/BayMcBackUp/logs
+  # 启用后会把关键操作写入 plugins/PlayerInvBackup/logs
   # 日志按天切分, 旧文件会自动压缩为 .gz
   enabled: true
 
@@ -50,11 +50,11 @@ storage:
   type: sqlite
 
   local:
-    # 相对 plugins/BayMcBackUp/ 的路径
+    # 相对 plugins/PlayerInvBackup/ 的路径
     base-path: "data"
 
   sqlite:
-    # 相对 plugins/BayMcBackUp/ 的路径
+    # 相对 plugins/PlayerInvBackup/ 的路径
     file: "data/backups.db"
 
   mysql:
@@ -71,7 +71,7 @@ storage:
   h2:
     # 如果填写 url, 会优先使用 url
     url: ""
-    # 相对 plugins/BayMcBackUp/ 的路径, 不需要写 .mv.db 后缀
+    # 相对 plugins/PlayerInvBackup/ 的路径, 不需要写 .mv.db 后缀
     file: "data/backups_h2"
     username: "sa"
     password: ""

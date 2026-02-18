@@ -1,7 +1,7 @@
-prefix: "<#FFB300>[BayMcBackUp]</#FFB300> <#90A4AE>»</#90A4AE> "
+prefix: "<#FFB300>[PlayerInvBackup]</#FFB300> <#90A4AE>»</#90A4AE> "
 
 help:
-  header: "<prefix><#FFB300>BayMcBackUp 帮助</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
+  header: "<prefix><#FFB300>PlayerInvBackup 帮助</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
     - "<prefix><#B0BEC5>权限: </#B0BEC5><white><perm></white><#B0BEC5>(默认 OP)</#B0BEC5>"
     - "<prefix><#B0BEC5>配置文件: </#B0BEC5><white><config></white>"
@@ -287,8 +287,8 @@ common:
 
 console:
   plugin:
-    enabled: "BayMcBackUp 已启用"
-    disabled: "BayMcBackUp 已关闭"
+    enabled: "PlayerInvBackup 已启用"
+    disabled: "PlayerInvBackup 已关闭"
 
   store:
     init-failed: "初始化存储失败: <reason>"

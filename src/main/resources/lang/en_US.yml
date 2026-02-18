@@ -1,7 +1,7 @@
-prefix: "<#FFB300>[BayMcBackUp]</#FFB300> <#90A4AE>»</#90A4AE> "
+prefix: "<#FFB300>[PlayerInvBackup]</#FFB300> <#90A4AE>»</#90A4AE> "
 
 help:
-  header: "<prefix><#FFB300>BayMcBackUp Help</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
+  header: "<prefix><#FFB300>PlayerInvBackup Help</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
     - "<prefix><#B0BEC5>Permission: </#B0BEC5><white><perm></white><#B0BEC5>(default OP)</#B0BEC5>"
     - "<prefix><#B0BEC5>Config: </#B0BEC5><white><config></white>"
@@ -286,8 +286,8 @@ common:
 
 console:
   plugin:
-    enabled: "BayMcBackUp enabled"
-    disabled: "BayMcBackUp disabled"
+    enabled: "PlayerInvBackup enabled"
+    disabled: "PlayerInvBackup disabled"
 
   store:
     init-failed: "Failed to initialize storage: <reason>"

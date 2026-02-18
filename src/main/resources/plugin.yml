@@ -9,13 +9,13 @@ description: Folia 背包备份 (背包 + 末影箱) , 提供管理员 GUI
 
 commands:
   bmbackup:
-    description: BayMcBackUp 管理命令
+    description: PlayerInvBackup 管理命令
     usage: "用法: /bmbackup help"
     aliases: [bmbu]
 
 permissions:
   baymcbackup.admin:
-    description: BayMcBackUp 全权限 (包含所有子权限)
+    description: PlayerInvBackup 全权限 (包含所有子权限)
     default: op
     children:
       baymcbackup.open: true

@@ -28,7 +28,7 @@ import org.bukkit.entity.Player;
 /**
  * 管理员操作审计
  *
- * <p>将关键操作写入 {@code plugins/BayMcBackUp/logs/audit-YYYY-MM-DD.log}, 便于追溯:
+ * <p>将关键操作写入 {@code plugins/PlayerInvBackup/logs/audit-YYYY-MM-DD.log}, 便于追溯:
  * 打开 GUI, 领取物品, 恢复备份, 置顶/备注等
  */
 public final class AuditService {

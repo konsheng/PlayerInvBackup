@@ -1,6 +1,6 @@
-# BayMcBackUp (Paper / Folia)
+# PlayerInvBackup (Paper / Folia)
 
-我的世界服务器玩家背包备份插件（背包含盔甲/副手 + 末影箱）
+我的世界服务器玩家背包备份插件（背包/盔甲/副手 + 末影箱）
 
 ## 功能
 
@@ -19,7 +19,7 @@
 
 ### 可选依赖
 
-- ProtocolLib: 提供 Packet GUI（纯发包，可选）
+- ProtocolLib: 提供 Packet GUI（可选纯发包）
   - 未安装时插件仍可正常启用，GUI 自动使用原生 Bukkit Inventory GUI
 
 ## 安装
@@ -29,14 +29,14 @@
    - 自行构建:
      - Windows: `./gradlew.bat clean build`
      - Linux: `./gradlew clean build`
-2. 自行构建产物位置: `build/libs/BayMcBackUp-*.jar`
-3. 放入服务器 `plugins/`, 启动生成配置: `plugins/BayMcBackUp/config.yml`
+2. 自行构建产物位置: `build/libs/PlayerInvBackup-*.jar`
+3. 放入服务器 `plugins/`, 启动生成配置: `plugins/PlayerInvBackup/config.yml`
 
 ## 配置
 
-常用配置 `plugins/BayMcBackUp/config.yml`:
+常用配置 `plugins/PlayerInvBackup/config.yml`:
 
-- `language`: 语言文件名 (位于 `plugins/BayMcBackUp/lang/`), 修改后可 `/bmbackup reload`
+- `language`: 语言文件名 (位于 `plugins/PlayerInvBackup/lang/`), 修改后可 `/bmbackup reload`
 - `backup.interval-minutes`: 自动备份间隔 (分钟, 0 = 关闭自动备份)
 - `backup.jitter-seconds`: 错峰秒数
 - `backup.keep-per-player`: 每玩家保留最近 N 份 (0 = 不清理)
@@ -70,14 +70,14 @@
 
 ### 审计日志
 
-- 位置: `plugins/BayMcBackUp/logs/`
+- 位置: `plugins/PlayerInvBackup/logs/`
 - 文件: 按天切分 `audit-YYYY-MM-DD.log`，旧文件会自动压缩为 `.log.gz`
 - 清理: `audit.keep-days` 控制保留天数，超过天数的文件会自动删除
 
 ## 语言文件
 
-- 默认语言文件: `plugins/BayMcBackUp/lang/zh_CN.yml`
-- 内置英文语言文件: `plugins/BayMcBackUp/lang/en_US.yml`，在配置 `language` 中设置为 `en_US.yml` 即可
+- 默认语言文件: `plugins/PlayerInvBackup/lang/zh_CN.yml`
+- 内置英文语言文件: `plugins/PlayerInvBackup/lang/en_US.yml`，在配置 `language` 中设置为 `en_US.yml` 即可
 - 所有游戏内提示与控制台提示均从语言文件读取（例如 `console.*`），需要修改提示文本时直接编辑该文件
 - 修改后执行 `/bmbackup reload` 立即生效
 - 插件会自动补全缺失的语言键，减少升级后出现“语言文件缺少键”的情况

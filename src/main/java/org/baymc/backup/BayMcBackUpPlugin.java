@@ -189,7 +189,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
             this.ioDispatcher = new IoDispatcher(
                     pluginConfig.queueLimit(),
                     pluginConfig.maxWritesPerSecond(),
-                    "BayMcBackUp-io"
+                    getName() + "-io"
             );
             this.backupService = new BackupService(this, pluginConfig, store, ioDispatcher);
 
