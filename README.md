@@ -36,7 +36,7 @@
 
 常用配置 `plugins/PlayerInvBackup/config.yml`:
 
-- `language`: 语言文件名 (位于 `plugins/PlayerInvBackup/lang/`), 修改后可 `/bmbackup reload`
+- `language`: 语言文件名 (位于 `plugins/PlayerInvBackup/lang/`), 修改后可 `/pib reload`
 - `display.backup-time-format`: 备份时间显示格式 (Java DateTimeFormatter pattern, 影响 GUI/命令里的时间展示)
 - `backup.interval-minutes`: 自动备份间隔 (分钟, 0 = 关闭自动备份)
 - `backup.jitter-seconds`: 错峰秒数
@@ -80,12 +80,12 @@
 - 默认语言文件: `plugins/PlayerInvBackup/lang/zh_CN.yml`
 - 内置英文语言文件: `plugins/PlayerInvBackup/lang/en_US.yml`，在配置 `language` 中设置为 `en_US.yml` 即可
 - 所有游戏内提示与控制台提示均从语言文件读取（例如 `console.*`），需要修改提示文本时直接编辑该文件
-- 修改后执行 `/bmbackup reload` 立即生效
+- 修改后执行 `/pib reload` 立即生效
 - 插件会自动补全缺失的语言键，减少升级后出现“语言文件缺少键”的情况
 
 ## 命令
 
-`/bmbackup help` 可查看完整帮助与示例
+`/pib help` 可查看完整帮助与示例（全名命令：`/playerinvbackup`，别名：`/invb`, `/invbackup`）
 
 常用子命令:
 

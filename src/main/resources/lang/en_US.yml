@@ -13,7 +13,7 @@ help:
     - "<prefix><#90A4AE>Tip: Backup ID is shown on the paper item in 'Backup List' under 'ID'; restore is recommended via GUI 'Restore to player' with confirmation</#90A4AE>"
     - "<prefix><#90A4AE>Tip: On Folia, restore only supports online players</#90A4AE>"
     - "<prefix><#FFA726>Warning: Restore overwrites the target's inventory and ender chest (only unclaimed slots are restored)</#FFA726>"
-    - "<prefix><#90A4AE>Console usage: No leading / needed (e.g., <white>bmbackup nowall</white>)</#90A4AE>"
+    - "<prefix><#90A4AE>Console usage: No leading / needed (e.g., <white><label> nowall</white>)</#90A4AE>"
     - "<prefix><#90A4AE>Console tip: open/pending are GUI or inventory actions and only work in game</#90A4AE>"
   commands:
     - "<prefix><#FFD54F>/<label> open [name|UUID]</#FFD54F> <#B0BEC5>Open backup list GUI</#B0BEC5>"
@@ -146,7 +146,7 @@ gui:
     empty:
       name: "<#EF5350>No backups</#EF5350>"
       lore:
-        - "<#90A4AE>Wait for auto backup or use /bmbackup now [player]</#90A4AE>"
+        - "<#90A4AE>Wait for auto backup or use /pib now [player]</#90A4AE>"
     entry:
       name: "<#FFD54F>Backup <white><time></white></#FFD54F>"
       lore:
@@ -239,7 +239,7 @@ gui:
         - "<#90A4AE>Pinned backups are not auto purged</#90A4AE>"
         - "<#90A4AE>Pinned backups appear at the top of the list</#90A4AE>"
         - "<#90A4AE>Click to toggle pin</#90A4AE>"
-        - "<#90A4AE>Tip: Use /bmbackup note to set or clear note</#90A4AE>"
+        - "<#90A4AE>Tip: Use /pib note to set or clear note</#90A4AE>"
   restore-confirm:
     title: "<#EF5350>Confirm restore</#EF5350><#90A4AE>: <target></#90A4AE>"
     ok:
@@ -291,7 +291,7 @@ console:
 
   store:
     init-failed: "Failed to initialize storage: <reason>"
-    unavailable-standby: "Storage unavailable, plugin stays enabled for config fix, run /bmbackup reload to retry"
+    unavailable-standby: "Storage unavailable, plugin stays enabled for config fix, run /pib reload to retry"
 
   dependency:
     protocollib-missing: "ProtocolLib not detected, GUI will use Bukkit mode"

@@ -181,7 +181,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
                 } catch (Exception ignored) {
                 }
             }
-            // 存储不可用时不禁用插件, 保持命令可用以便管理员修正配置后 /bmbackup reload 重试
+            // 存储不可用时不禁用插件, 保持命令可用以便管理员修正配置后 /pib reload 重试
             newStore = null;
         }
         if (newStore != null) {
@@ -200,7 +200,7 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         }
 
         var command = new BackupCommand(this);
-        var pluginCommand = getCommand("bmbackup");
+        var pluginCommand = getCommand("playerinvbackup");
         if (pluginCommand != null) {
             pluginCommand.setExecutor(command);
             pluginCommand.setTabCompleter(command);

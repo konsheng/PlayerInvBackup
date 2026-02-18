@@ -53,7 +53,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 public final class GuiService {
     private static final DateTimeFormatter DEFAULT_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
-    private static final String MAIN_LABEL = "bmbackup";
+    private static final String MAIN_LABEL = "pib";
 
     private static final int GUI_SIZE = 54;
 

@@ -36,7 +36,7 @@ public final class RestoreService {
 
     public void restoreToPlayer(CommandSender actor, Player target, String backupId) {
         if (!plugin.isStoreReady()) {
-            runOnActor(actor, () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "bmbackup")));
+            runOnActor(actor, () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "pib")));
             return;
         }
 

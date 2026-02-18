@@ -8,10 +8,10 @@ authors: [Konsheng]
 description: Paper / Folia 背包备份 (玩家背包 + 末影箱)
 
 commands:
-  bmbackup:
+  playerinvbackup:
     description: PlayerInvBackup 管理命令
-    usage: "用法: /bmbackup help"
-    aliases: [bmbu]
+    usage: "用法: /playerinvbackup help"
+    aliases: [pib, invb, invbackup]
 
 permissions:
   baymcbackup.admin:

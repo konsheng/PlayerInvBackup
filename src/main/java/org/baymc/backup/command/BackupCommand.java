@@ -36,7 +36,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * /bmbackup 主命令实现
+ * /playerinvbackup 主命令实现
  *
  * <p>包含:
  * 1) 备份管理子命令 (open/now/nowall/restore/pending/status/reload 等)
@@ -713,7 +713,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         if (plugin.isStoreReady()) {
             return true;
         }
-        String safeLabel = label == null || label.isBlank() ? "bmbackup" : label;
+        String safeLabel = label == null || label.isBlank() ? "playerinvbackup" : label;
         Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", safeLabel));
         return false;
     }

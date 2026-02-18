@@ -2,7 +2,7 @@
 # 备份范围: 仅玩家背包 (含盔甲/副手) + 末影箱
 
 # 语言文件 (位于 plugins/PlayerInvBackup/lang/)
-# 修改后可使用 /bmbackup reload 重载生效
+# 修改后可使用 /pib reload 重载生效
 language: "zh_CN.yml"
 
 display:

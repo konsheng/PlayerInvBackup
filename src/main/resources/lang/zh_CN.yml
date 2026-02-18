@@ -13,7 +13,7 @@ help:
     - "<prefix><#90A4AE>提示: 备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#90A4AE>"
     - "<prefix><#90A4AE>提示: Folia 下仅支持对在线玩家进行恢复</#90A4AE>"
     - "<prefix><#FFA726>注意: 恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FFA726>"
-    - "<prefix><#90A4AE>控制台执行: 无需输入前导 /(例如: <white>bmbackup nowall</white>)</#90A4AE>"
+    - "<prefix><#90A4AE>控制台执行: 无需输入前导 /(例如: <white><label> nowall</white>)</#90A4AE>"
     - "<prefix><#90A4AE>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#90A4AE>"
   commands:
     - "<prefix><#FFD54F>/<label> open [玩家名|UUID]</#FFD54F> <#B0BEC5>打开备份列表 GUI</#B0BEC5>"
@@ -146,7 +146,7 @@ gui:
     empty:
       name: "<#EF5350>暂无备份</#EF5350>"
       lore:
-        - "<#90A4AE>请等待自动备份或使用 /bmbackup now [玩家]</#90A4AE>"
+        - "<#90A4AE>请等待自动备份或使用 /pib now [玩家]</#90A4AE>"
     entry:
       name: "<#FFD54F>备份 <white><time></white></#FFD54F>"
       lore:
@@ -239,7 +239,7 @@ gui:
         - "<#90A4AE>置顶后, 不会被自动清理</#90A4AE>"
         - "<#90A4AE>置顶显示的备份会排在列表顶部</#90A4AE>"
         - "<#90A4AE>点击切换置顶状态</#90A4AE>"
-        - "<#90A4AE>提示: 使用 /bmbackup note 设置/清除备注</#90A4AE>"
+        - "<#90A4AE>提示: 使用 /pib note 设置/清除备注</#90A4AE>"
   restore-confirm:
     title: "<#EF5350>确认恢复</#EF5350><#90A4AE>: <target></#90A4AE>"
     ok:
@@ -292,7 +292,7 @@ console:
 
   store:
     init-failed: "初始化存储失败: <reason>"
-    unavailable-standby: "存储不可用, 插件将保持启用以便修正配置, 修正后执行 /bmbackup reload 重试"
+    unavailable-standby: "存储不可用, 插件将保持启用以便修正配置, 修正后执行 /pib reload 重试"
 
   dependency:
     protocollib-missing: "未检测到 ProtocolLib, GUI 将使用原生方案"      
