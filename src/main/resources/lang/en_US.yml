@@ -8,7 +8,6 @@ help:
     - "<prefix><#90A4AE>Tip: Backup ID is shown on the paper item in 'Backup List' under 'ID'; restore is recommended via GUI 'Restore to player' with confirmation</#90A4AE>"
     - "<prefix><#90A4AE>Tip: On Folia, restore only supports online players</#90A4AE>"
     - "<prefix><#FFA726>Warning: Restore overwrites the target's inventory and ender chest (only unclaimed slots are restored)</#FFA726>"
-    - "<prefix><#90A4AE>Console usage: No leading / needed (e.g., <white><label> nowall</white>)</#90A4AE>"
     - "<prefix><#90A4AE>Console tip: open/pending are GUI or inventory actions and only work in game</#90A4AE>"
   commands:
     - "<prefix><#FFD54F>/<label> open [name|UUID]</#FFD54F> <#B0BEC5>Open backup list GUI</#B0BEC5>"

@@ -8,7 +8,6 @@ help:
     - "<prefix><#90A4AE>提示: 备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#90A4AE>"
     - "<prefix><#90A4AE>提示: Folia 下仅支持对在线玩家进行恢复</#90A4AE>"
     - "<prefix><#FFA726>注意: 恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FFA726>"
-    - "<prefix><#90A4AE>控制台执行: 无需输入前导 /(例如: <white><label> nowall</white>)</#90A4AE>"
     - "<prefix><#90A4AE>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#90A4AE>"
   commands:
     - "<prefix><#FFD54F>/<label> open [玩家名|UUID]</#FFD54F> <#B0BEC5>打开备份列表 GUI</#B0BEC5>"
