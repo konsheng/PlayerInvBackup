@@ -11,6 +11,7 @@ commands:
   playerinvbackup:
     description: PlayerInvBackup 管理命令
     usage: "用法: /playerinvbackup help"
+    permission: baymcbackup.admin
     aliases: [pib, invb, invbackup]
 
 permissions:

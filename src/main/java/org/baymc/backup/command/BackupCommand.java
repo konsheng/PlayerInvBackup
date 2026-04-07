@@ -154,6 +154,10 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
     }
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!Permissions.has(sender, Permissions.ADMIN)) {
+            Chat.error(sender, "errors.no-permission", Placeholder.unparsed("perm", Permissions.ADMIN));
+            return true;
+        }
         if (args.length == 0) {
             sendHelp(sender, label);
             return true;
@@ -660,7 +664,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        if (!hasAnyCommandPermission(sender)) {
+        if (!Permissions.has(sender, Permissions.ADMIN)) {
             return List.of();
         }
         if (args.length == 1) {
@@ -673,20 +677,6 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             }
         }
         return List.of();
-    }
-
-    private boolean hasAnyCommandPermission(CommandSender sender) {
-        return Permissions.has(sender, Permissions.OPEN)
-                || Permissions.has(sender, Permissions.NOW)
-                || Permissions.has(sender, Permissions.NOWALL)
-                || Permissions.has(sender, Permissions.SELF_BACKUP)
-                || Permissions.has(sender, Permissions.RESTORE)
-                || Permissions.has(sender, Permissions.PENDING)
-                || Permissions.has(sender, Permissions.STATUS)
-                || Permissions.has(sender, Permissions.RELOAD)
-                || Permissions.has(sender, Permissions.LIST)
-                || Permissions.has(sender, Permissions.INFO)
-                || Permissions.has(sender, Permissions.LOCK);
     }
 
     private boolean ensurePermission(CommandSender sender, String requiredPermission) {
