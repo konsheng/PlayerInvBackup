@@ -628,30 +628,8 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
 
     private void sendHelp(CommandSender sender, String label) {
-        var cfg = plugin.pluginConfig();
-
-        String storageName = storageName();
-        String storagePath = switch (cfg.storageType()) {
-            case SQLITE -> plugin.getDataFolder().toPath().resolve(cfg.sqliteFile()).toString();
-            case LOCAL -> plugin.getDataFolder().toPath().resolve(cfg.localBasePath()).toString();
-            case MYSQL -> cfg.mysql().host() + ":" + cfg.mysql().port() + "/" + cfg.mysql().database();
-            case H2 -> plugin.getDataFolder().toPath().resolve(cfg.h2().file()).toString();
-        };
-
         Chat.plain(sender, "help.header", Placeholder.unparsed("version", pluginVersion()));
-        Chat.plainList(
-                sender,
-                "help.lines",
-                Placeholder.unparsed("perm", Permissions.ADMIN),
-                Placeholder.unparsed("config", plugin.getDataFolder().toPath().resolve("config.yml").toString()),
-                Placeholder.unparsed("interval", String.valueOf(cfg.backupInterval().toMinutes())),
-                Placeholder.unparsed("jitter", String.valueOf(cfg.jitter().toSeconds())),
-                Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())),
-                Placeholder.unparsed("keep_days", String.valueOf(cfg.keepDuration().toDays())),
-                Placeholder.unparsed("storage_name", storageName),
-                Placeholder.unparsed("storage_path", storagePath),
-                Placeholder.unparsed("label", label)
-        );
+        Chat.plainList(sender, "help.lines", Placeholder.unparsed("label", label));
         Chat.plainList(sender, "help.commands", Placeholder.unparsed("label", label));
         Chat.plain(sender, "help.example", Placeholder.unparsed("label", label));
     }
@@ -662,6 +640,16 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             case LOCAL -> plugin.lang().raw("storage.name.local");
             case MYSQL -> plugin.lang().raw("storage.name.mysql");
             case H2 -> plugin.lang().raw("storage.name.h2");
+        };
+    }
+
+    private String storagePath() {
+        var cfg = plugin.pluginConfig();
+        return switch (cfg.storageType()) {
+            case SQLITE -> plugin.getDataFolder().toPath().resolve(cfg.sqliteFile()).toString();
+            case LOCAL -> plugin.getDataFolder().toPath().resolve(cfg.localBasePath()).toString();
+            case MYSQL -> cfg.mysql().host() + ":" + cfg.mysql().port() + "/" + cfg.mysql().database();
+            case H2 -> plugin.getDataFolder().toPath().resolve(cfg.h2().file()).toString();
         };
     }
 
@@ -863,9 +851,31 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         String none = plugin.lang().raw("common.none");
 
         String storageName = storageName();
+        String storagePath = storagePath();
+        String backupScope = plugin.lang().raw("status.scope-value");
 
         Chat.plain(sender, "status.title");
-        Chat.plain(sender, "status.storage", Placeholder.unparsed("storage_name", storageName));
+        Chat.plain(sender, "status.permission", Placeholder.unparsed("perm", Permissions.ADMIN));
+        Chat.plain(
+                sender,
+                "status.config",
+                Placeholder.unparsed("path", plugin.getDataFolder().toPath().resolve("config.yml").toString())
+        );
+        Chat.plain(sender, "status.scope", Placeholder.unparsed("scope", backupScope));
+        Chat.plain(
+                sender,
+                "status.current-config",
+                Placeholder.unparsed("interval", String.valueOf(cfg.backupInterval().toMinutes())),
+                Placeholder.unparsed("jitter", String.valueOf(cfg.jitter().toSeconds())),
+                Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())),
+                Placeholder.unparsed("keep_days", String.valueOf(cfg.keepDuration().toDays()))
+        );
+        Chat.plain(
+                sender,
+                "status.storage",
+                Placeholder.unparsed("storage_name", storageName),
+                Placeholder.unparsed("storage_path", storagePath)
+        );
         String guiModeKey = "common.gui_mode." + (cfg.guiMode() == null ? "auto" : cfg.guiMode().configValue());
         String configuredGuiMode = plugin.lang().raw(guiModeKey);
         String activeGuiMode = plugin.isPacketGuiEnabled()
@@ -882,18 +892,6 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             String reasonText = reason == null || reason.isBlank() ? none : reason;
             Chat.plain(sender, "status.store-unavailable", Placeholder.unparsed("reason", reasonText));
         }
-        if (cfg.backupInterval().isZero()) {
-            Chat.plain(sender, "status.auto-disabled");
-        } else {
-            Chat.plain(
-                    sender,
-                    "status.auto-enabled",
-                    Placeholder.unparsed("interval", String.valueOf(cfg.backupInterval().toMinutes())),
-                    Placeholder.unparsed("jitter", String.valueOf(cfg.jitter().toSeconds()))
-            );
-        }
-        Chat.plain(sender, "status.keep", Placeholder.unparsed("keep", String.valueOf(cfg.keepPerPlayer())));
-        Chat.plain(sender, "status.keep-days", Placeholder.unparsed("days", String.valueOf(cfg.keepDuration().toDays())));
         String yesText = plugin.lang().raw("common.yes_text");
         String noText = plugin.lang().raw("common.no_text");
         Chat.plain(sender, "status.audit-enabled", Placeholder.unparsed("enabled", cfg.auditEnabled() ? yesText : noText));
@@ -910,8 +908,6 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         switch (cfg.storageType()) {
             case SQLITE -> {
                 Path db = plugin.getDataFolder().toPath().resolve(cfg.sqliteFile());
-                Chat.plain(sender, "status.sqlite-file", Placeholder.unparsed("path", db.toString()));
-
                 if (sender instanceof Player player) {
                     Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
                         long size = tryGetFileSize(db);
@@ -932,18 +928,13 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                     }
                 }
             }
-            case LOCAL -> Chat.plain(sender, "status.local-dir", Placeholder.unparsed("path", plugin.getDataFolder().toPath().resolve(cfg.localBasePath()).toString()));
-            case MYSQL -> Chat.plain(
-                    sender,
-                    "status.mysql",
-                    Placeholder.unparsed("host", cfg.mysql().host()),
-                    Placeholder.unparsed("port", String.valueOf(cfg.mysql().port())),
-                    Placeholder.unparsed("database", cfg.mysql().database())
-            );
+            case LOCAL -> {
+            }
+            case MYSQL -> {
+            }
             case H2 -> {
                 Path base = plugin.getDataFolder().toPath().resolve(cfg.h2().file());
                 Path db = Path.of(base + ".mv.db");
-                Chat.plain(sender, "status.h2-file", Placeholder.unparsed("path", db.toString()));
 
                 long size = tryGetFileSize(db);
                 if (size >= 0) {

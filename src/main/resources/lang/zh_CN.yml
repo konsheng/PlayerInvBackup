@@ -3,11 +3,6 @@ prefix: "<#FFB300>[PlayerInvBackup]</#FFB300> <#90A4AE>»</#90A4AE> "
 help:
   header: "<prefix><#FFB300>PlayerInvBackup 帮助</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
-    - "<prefix><#B0BEC5>权限: </#B0BEC5><white><perm></white><#B0BEC5>(默认 OP)</#B0BEC5>"
-    - "<prefix><#B0BEC5>配置文件: </#B0BEC5><white><config></white>"
-    - "<prefix><#B0BEC5>备份范围: </#B0BEC5><white>背包(含盔甲/副手)+ 末影箱</white>"
-    - "<prefix><#B0BEC5>当前配置: </#B0BEC5><white><interval></white><#B0BEC5> 分钟(0=关闭), 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒, 保留 </#B0BEC5><white><keep></white><#B0BEC5> 份/人, 保留天数 </#B0BEC5><white><keep_days></white><#B0BEC5> 天</#B0BEC5>"
-    - "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
     - "<prefix><#90A4AE>提示: 目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名; 离线模式服务器可直接使用名字</#90A4AE>"
     - "<prefix><#90A4AE>提示: GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#90A4AE>"
     - "<prefix><#90A4AE>提示: 备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#90A4AE>"
@@ -115,8 +110,13 @@ list:
 
 status:
   title: "<prefix><#FFB300>状态信息</#FFB300>"
+  permission: "<prefix><#B0BEC5>权限: </#B0BEC5><white><perm></white><#B0BEC5>(默认 OP)</#B0BEC5>"
+  config: "<prefix><#B0BEC5>配置文件: </#B0BEC5><white><path></white>"
+  scope: "<prefix><#B0BEC5>备份范围: </#B0BEC5><white><scope></white>"
+  scope-value: "背包(含盔甲/副手)+ 末影箱"
+  current-config: "<prefix><#B0BEC5>当前配置: </#B0BEC5><white><interval></white><#B0BEC5> 分钟(0=关闭), 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒, 保留 </#B0BEC5><white><keep></white><#B0BEC5> 份/人, 保留天数 </#B0BEC5><white><keep_days></white><#B0BEC5> 天</#B0BEC5>"
   gui-mode: "<prefix><#B0BEC5>GUI 模式: </#B0BEC5><white><mode></white><#B0BEC5> 当前: </#B0BEC5><white><active></white>"
-  storage: "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white>"
+  storage: "<prefix><#B0BEC5>存储后端: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
   store-unavailable: "<prefix><#EF5350>存储不可用, 已暂停备份与恢复功能, 原因: <reason></#EF5350>"
   auto-enabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><white><interval></white><#B0BEC5> 分钟 / 错峰 </#B0BEC5><white><jitter></white><#B0BEC5> 秒</#B0BEC5>"
   auto-disabled: "<prefix><#B0BEC5>自动备份: </#B0BEC5><#FFA726>已关闭</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"

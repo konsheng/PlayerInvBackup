@@ -3,11 +3,6 @@ prefix: "<#FFB300>[PlayerInvBackup]</#FFB300> <#90A4AE>»</#90A4AE> "
 help:
   header: "<prefix><#FFB300>PlayerInvBackup Help</#FFB300> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
-    - "<prefix><#B0BEC5>Permission: </#B0BEC5><white><perm></white><#B0BEC5>(default OP)</#B0BEC5>"
-    - "<prefix><#B0BEC5>Config: </#B0BEC5><white><config></white>"
-    - "<prefix><#B0BEC5>Backup scope: </#B0BEC5><white>Inventory (armor/offhand) + Ender Chest</white>"
-    - "<prefix><#B0BEC5>Current config: </#B0BEC5><white><interval></white><#B0BEC5> min (0=off), jitter </#B0BEC5><white><jitter></white><#B0BEC5> sec, keep </#B0BEC5><white><keep></white><#B0BEC5> per player, keep days </#B0BEC5><white><keep_days></white><#B0BEC5> days</#B0BEC5>"
-    - "<prefix><#B0BEC5>Storage: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
     - "<prefix><#90A4AE>Tip: When the target is offline, online-mode servers require UUID or cached name; offline-mode servers can use the name directly</#90A4AE>"
     - "<prefix><#90A4AE>Tip: Click a slot in GUI to claim the whole stack; full inventory goes to pending (/<label> pending)</#90A4AE>"
     - "<prefix><#90A4AE>Tip: Backup ID is shown on the paper item in 'Backup List' under 'ID'; restore is recommended via GUI 'Restore to player' with confirmation</#90A4AE>"
@@ -115,8 +110,13 @@ list:
 
 status:
   title: "<prefix><#FFB300>Status</#FFB300>"
+  permission: "<prefix><#B0BEC5>Permission: </#B0BEC5><white><perm></white><#B0BEC5>(default OP)</#B0BEC5>"
+  config: "<prefix><#B0BEC5>Config: </#B0BEC5><white><path></white>"
+  scope: "<prefix><#B0BEC5>Backup scope: </#B0BEC5><white><scope></white>"
+  scope-value: "Inventory (armor/offhand) + Ender Chest"
+  current-config: "<prefix><#B0BEC5>Current config: </#B0BEC5><white><interval></white><#B0BEC5> min (0=off), jitter </#B0BEC5><white><jitter></white><#B0BEC5> sec, keep </#B0BEC5><white><keep></white><#B0BEC5> per player, keep days </#B0BEC5><white><keep_days></white><#B0BEC5> days</#B0BEC5>"
   gui-mode: "<prefix><#B0BEC5>GUI mode: </#B0BEC5><white><mode></white><#B0BEC5> Current: </#B0BEC5><white><active></white>"
-  storage: "<prefix><#B0BEC5>Storage: </#B0BEC5><white><storage_name></white>"
+  storage: "<prefix><#B0BEC5>Storage: </#B0BEC5><white><storage_name></white><#B0BEC5>(</#B0BEC5><white><storage_path></white><#B0BEC5>)</#B0BEC5>"
   store-unavailable: "<prefix><#EF5350>Storage unavailable, backup and restore are paused, reason: <reason></#EF5350>"
   auto-enabled: "<prefix><#B0BEC5>Auto backup: </#B0BEC5><white><interval></white><#B0BEC5> min / jitter </#B0BEC5><white><jitter></white><#B0BEC5> sec</#B0BEC5>"
   auto-disabled: "<prefix><#B0BEC5>Auto backup: </#B0BEC5><#FFA726>disabled</#FFA726><#B0BEC5>(backup.interval-minutes=0)</#B0BEC5>"
