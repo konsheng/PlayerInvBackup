@@ -157,6 +157,10 @@ gui:
         - "<#81C784>▶ Click to open</#81C784>"
     prev:
       name: "<#4FC3F7>◀ Previous page</#4FC3F7>"
+    prev-disabled:
+      name: "<#78909C>◀ Previous page</#78909C>"
+      lore:
+        - "<#90A4AE>Already on the first page</#90A4AE>"
     next:
       name: "<#4FC3F7>Next page ▶</#4FC3F7>"
     next-disabled:
@@ -274,9 +278,9 @@ storage:
     h2: "H2"
 
 common:
-  yes_text: "<#81C784>Yes</#81C784>"
-  no_text: "<#EF5350>No</#EF5350>"
-  none: "<#78909C>-</#78909C>"
+  yes_text: "Yes"
+  no_text: "No"
+  none: "-"
   gui_mode:
     auto: "Auto"
     bukkit: "Bukkit"

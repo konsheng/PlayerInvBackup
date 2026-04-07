@@ -6,6 +6,7 @@ package org.baymc.backup.config;
 public enum GuiSoundAction {
     BARRIER_SLOT("sounds.gui.barrier-slot"),
     LIST_ENTRY("sounds.gui.backup-list.entry-open"),
+    LIST_PAGE_DISABLED("sounds.gui.backup-list.page-disabled"),
     LIST_PREV("sounds.gui.backup-list.prev-page"),
     LIST_NEXT("sounds.gui.backup-list.next-page"),
     LIST_FILTER_TIME("sounds.gui.backup-list.filter-time"),

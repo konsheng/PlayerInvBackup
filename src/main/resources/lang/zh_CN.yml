@@ -157,6 +157,10 @@ gui:
         - "<#81C784>▶ 点击打开</#81C784>"
     prev:
       name: "<#4FC3F7>◀ 上一页</#4FC3F7>"
+    prev-disabled:
+      name: "<#78909C>◀ 上一页</#78909C>"
+      lore:
+        - "<#90A4AE>已经是第一页</#90A4AE>"
     next:
       name: "<#4FC3F7>下一页 ▶</#4FC3F7>"
     next-disabled:
@@ -274,9 +278,9 @@ storage:
     h2: "H2"
 
 common:
-  yes_text: "<#81C784>是</#81C784>"
-  no_text: "<#EF5350>否</#EF5350>"
-  none: "<#78909C>-</#78909C>"
+  yes_text: "是"
+  no_text: "否"
+  none: "-"
   gui_mode:
     auto: "自动"
     bukkit: "原生"

@@ -598,21 +598,23 @@ public final class GuiService {
         BackupQuery query = holder.query();
 
         if (slot == SLOT_LIST_PREV) {
-            playGuiSound(admin, GuiSoundAction.LIST_PREV);
             if (holder.page() <= 0) {
+                playGuiSound(admin, GuiSoundAction.LIST_PAGE_DISABLED);
                 Chat.warn(admin, "errors.already-first-page");
                 return;
             }
+            playGuiSound(admin, GuiSoundAction.LIST_PREV);
             refreshBackupList(admin, holder, holder.page() - 1, query);
             return;
         }
         if (slot == SLOT_LIST_NEXT) {
-            playGuiSound(admin, GuiSoundAction.LIST_NEXT);
             int limit = plugin.pluginConfig().guiListPageSize();
             if (holder.backups().size() < limit) {
+                playGuiSound(admin, GuiSoundAction.LIST_PAGE_DISABLED);
                 Chat.warn(admin, "errors.no-next-page");
                 return;
             }
+            playGuiSound(admin, GuiSoundAction.LIST_NEXT);
             refreshBackupList(admin, holder, holder.page() + 1, query);
             return;
         }
@@ -1088,7 +1090,13 @@ public final class GuiService {
                 ? lang.raw("gui.backup-list.filter-trigger.value.all")
                 : lang.raw(safeQuery.trigger().langKey());
 
-        inv.setItem(SLOT_LIST_PREV, namedItem(Material.ARROW, lang.msg("gui.backup-list.prev.name"), List.of()));
+        inv.setItem(SLOT_LIST_PREV, holder.page() > 0
+                ? namedItem(Material.ARROW, lang.msg("gui.backup-list.prev.name"), List.of())
+                : namedItem(
+                        Material.GRAY_STAINED_GLASS_PANE,
+                        lang.msg("gui.backup-list.prev-disabled.name"),
+                        lang.msgList("gui.backup-list.prev-disabled.lore")
+                ));
         inv.setItem(SLOT_LIST_TIME_FILTER, namedItem(
                 Material.CLOCK,
                 lang.msg("gui.backup-list.filter-time.name"),
@@ -1290,7 +1298,13 @@ public final class GuiService {
                 ? lang.raw("gui.backup-list.filter-trigger.value.all")
                 : lang.raw(safeQuery.trigger().langKey());
 
-        inv.setItem(SLOT_LIST_PREV, namedItem(Material.ARROW, lang.msg("gui.backup-list.prev.name"), List.of()));
+        inv.setItem(SLOT_LIST_PREV, page > 0
+                ? namedItem(Material.ARROW, lang.msg("gui.backup-list.prev.name"), List.of())
+                : namedItem(
+                        Material.GRAY_STAINED_GLASS_PANE,
+                        lang.msg("gui.backup-list.prev-disabled.name"),
+                        lang.msgList("gui.backup-list.prev-disabled.lore")
+                ));
         inv.setItem(SLOT_LIST_TIME_FILTER, namedItem(
                 Material.CLOCK,
                 lang.msg("gui.backup-list.filter-time.name"),

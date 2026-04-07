@@ -133,6 +133,10 @@ sounds:
         name: "inherit"
         volume: 1.0
         pitch: 1.0
+      page-disabled:
+        name: "block.note_block.bass"
+        volume: 1.0
+        pitch: 1.0
       prev-page:
         name: "inherit"
         volume: 1.0
