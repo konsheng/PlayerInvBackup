@@ -109,8 +109,98 @@ gui:
 sounds:
   gui:
     enabled: true
+
+    # 默认 GUI 点击音效
+    # 下面未单独指定的按钮会继承这里
     click:
       # 设置为 "none" 表示关闭
       name: "UI_BUTTON_CLICK"
       volume: 1.0
       pitch: 1.0
+
+    # 每个 GUI 按钮都可以独立指定音效
+    # name:
+    # - "inherit" = 继承 sounds.gui.click
+    # - "none" = 关闭该按钮音效
+    # - 其他值 = Bukkit Sound 枚举名
+    backup-list:
+      entry-open:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      prev-page:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      next-page:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      filter-time:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      filter-trigger:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      search:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      clear-filters:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      jump-back:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      jump-forward:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      refresh:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+
+    backup-view:
+      back:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      toggle:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      restore:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      lock:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      pending:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      claim-slot:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+
+    restore-confirm:
+      confirm:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      info:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0
+      cancel:
+        name: "inherit"
+        volume: 1.0
+        pitch: 1.0

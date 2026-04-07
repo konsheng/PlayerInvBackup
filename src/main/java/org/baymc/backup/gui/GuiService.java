@@ -16,6 +16,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.baymc.backup.BayMcBackUpPlugin;
 import org.baymc.backup.Permissions;
 import org.baymc.backup.codec.SnapshotCodec;
+import org.baymc.backup.config.GuiSoundAction;
 import org.baymc.backup.domain.BackupMeta;
 import org.baymc.backup.domain.BackupRecord;
 import org.baymc.backup.domain.SlotClaim;
@@ -596,11 +597,8 @@ public final class GuiService {
         }
         BackupQuery query = holder.query();
 
-        if ((slot >= 45 && slot <= 53) || slot < holder.backups().size()) {
-            playGuiClick(admin);
-        }
-
         if (slot == SLOT_LIST_PREV) {
+            playGuiSound(admin, GuiSoundAction.LIST_PREV);
             if (holder.page() <= 0) {
                 Chat.warn(admin, "errors.already-first-page");
                 return;
@@ -609,6 +607,7 @@ public final class GuiService {
             return;
         }
         if (slot == SLOT_LIST_NEXT) {
+            playGuiSound(admin, GuiSoundAction.LIST_NEXT);
             int limit = plugin.pluginConfig().guiListPageSize();
             if (holder.backups().size() < limit) {
                 Chat.warn(admin, "errors.no-next-page");
@@ -619,28 +618,33 @@ public final class GuiService {
         }
 
         if (slot == SLOT_LIST_TIME_FILTER) {
+            playGuiSound(admin, GuiSoundAction.LIST_FILTER_TIME);
             BackupQuery next = nextTimeFilterQuery(query);
             refreshBackupList(admin, holder, 0, next);
             return;
         }
 
         if (slot == SLOT_LIST_TRIGGER_FILTER) {
+            playGuiSound(admin, GuiSoundAction.LIST_FILTER_TRIGGER);
             BackupQuery next = nextTriggerFilterQuery(query);
             refreshBackupList(admin, holder, 0, next);
             return;
         }
 
         if (slot == SLOT_LIST_CLEAR_FILTERS) {
+            playGuiSound(admin, GuiSoundAction.LIST_CLEAR_FILTERS);
             refreshBackupList(admin, holder, 0, BackupQuery.all());
             return;
         }
 
         if (slot == SLOT_LIST_SEARCH) {
+            playGuiSound(admin, GuiSoundAction.LIST_SEARCH);
             beginBackupIdSearch(admin, holder);
             return;
         }
 
         if (slot == SLOT_LIST_JUMP_BACK) {
+            playGuiSound(admin, GuiSoundAction.LIST_JUMP_BACK);
             int nextPage = Math.max(0, holder.page() - 5);
             if (nextPage == holder.page()) {
                 Chat.warn(admin, "errors.already-first-page");
@@ -651,6 +655,7 @@ public final class GuiService {
         }
 
         if (slot == SLOT_LIST_JUMP_FORWARD) {
+            playGuiSound(admin, GuiSoundAction.LIST_JUMP_FORWARD);
             int limit = plugin.pluginConfig().guiListPageSize();
             if (holder.backups().size() < limit) {
                 Chat.warn(admin, "errors.no-next-page");
@@ -661,6 +666,7 @@ public final class GuiService {
         }
 
         if (slot == SLOT_LIST_REFRESH) {
+            playGuiSound(admin, GuiSoundAction.LIST_REFRESH);
             refreshBackupList(admin, holder, holder.page(), query);
             return;
         }
@@ -668,25 +674,19 @@ public final class GuiService {
         if (slot >= holder.backups().size()) {
             return;
         }
+        playGuiSound(admin, GuiSoundAction.LIST_ENTRY);
         BackupMeta meta = holder.backups().get(slot);
         openBackupView(admin, holder.targetUuid(), holder.targetName(), holder.page(), query, meta.backupId(), GuiView.INVENTORY);
     }
 
     public void handleViewClick(Player admin, BackupViewHolder holder, int slot) {
-        boolean isButton = slot == SLOT_VIEW_BACK
-                || slot == SLOT_VIEW_TOGGLE
-                || slot == SLOT_VIEW_RESTORE
-                || slot == SLOT_VIEW_LOCK
-                || slot == SLOT_VIEW_PENDING;
-        if (isButton) {
-            playGuiClick(admin);
-        }
-
         if (slot == SLOT_VIEW_BACK) {
+            playGuiSound(admin, GuiSoundAction.VIEW_BACK);
             openBackupList(admin, holder.targetUuid(), holder.targetName(), holder.listPage(), holder.listQuery());
             return;
         }
         if (slot == SLOT_VIEW_TOGGLE) {
+            playGuiSound(admin, GuiSoundAction.VIEW_TOGGLE);
             GuiView next = holder.view() == GuiView.INVENTORY ? GuiView.ENDER_CHEST : GuiView.INVENTORY;
             runOnPlayer(admin, () -> {
                 Inventory top = holder.getInventory();
@@ -700,6 +700,7 @@ public final class GuiService {
             return;
         }
         if (slot == SLOT_VIEW_PENDING) {
+            playGuiSound(admin, GuiSoundAction.VIEW_PENDING);
             if (!Permissions.has(admin, Permissions.PENDING)) {
                 Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.PENDING));
                 return;
@@ -708,6 +709,7 @@ public final class GuiService {
             return;
         }
         if (slot == SLOT_VIEW_RESTORE) {
+            playGuiSound(admin, GuiSoundAction.VIEW_RESTORE);
             if (!Permissions.has(admin, Permissions.RESTORE)) {
                 Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.RESTORE));
                 return;
@@ -721,6 +723,7 @@ public final class GuiService {
             return;
         }
         if (slot == SLOT_VIEW_LOCK) {
+            playGuiSound(admin, GuiSoundAction.VIEW_LOCK);
             if (!Permissions.has(admin, Permissions.LOCK)) {
                 Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.LOCK));
                 return;
@@ -790,7 +793,7 @@ public final class GuiService {
             if (itemBytes == null || itemBytes.length == 0) {
                 return;
             }
-            playGuiClick(admin);
+            playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
             tryClaimSlot(admin, holder, SlotType.INV, slot, itemBytes);
         } else {
             if (slot < 0 || slot >= SnapshotCodec.ENDER_CHEST_SLOT_COUNT) {
@@ -803,17 +806,20 @@ public final class GuiService {
             if (itemBytes == null || itemBytes.length == 0) {
                 return;
             }
-            playGuiClick(admin);
+            playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
             tryClaimSlot(admin, holder, SlotType.ENDER, slot, itemBytes);
         }
     }
 
     public void handleRestoreConfirmClick(Player admin, RestoreConfirmHolder holder, int slot) {
-        if (slot == CONFIRM_OK || slot == CONFIRM_CANCEL || slot == CONFIRM_INFO) {
-            playGuiClick(admin);
-        }
         if (slot == CONFIRM_CANCEL) {
+            playGuiSound(admin, GuiSoundAction.RESTORE_CONFIRM_CANCEL);
             openBackupView(admin, holder.targetUuid(), holder.targetName(), holder.listPage(), holder.listQuery(), holder.backupId(), holder.returnView());
+            return;
+        }
+
+        if (slot == CONFIRM_INFO) {
+            playGuiSound(admin, GuiSoundAction.RESTORE_CONFIRM_INFO);
             return;
         }
 
@@ -821,6 +827,7 @@ public final class GuiService {
             return;
         }
 
+        playGuiSound(admin, GuiSoundAction.RESTORE_CONFIRM_OK);
         if (!Permissions.has(admin, Permissions.RESTORE)) {
             Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.RESTORE));
             openBackupView(admin, holder.targetUuid(), holder.targetName(), holder.listPage(), holder.listQuery(), holder.backupId(), holder.returnView());
@@ -1942,12 +1949,12 @@ public final class GuiService {
         player.getScheduler().run(plugin, ignored -> runnable.run(), null);
     }
 
-    private void playGuiClick(Player player) {
+    private void playGuiSound(Player player, GuiSoundAction action) {
         var config = plugin.pluginConfig();
         if (config == null || !config.guiSoundsEnabled()) {
             return;
         }
-        var effect = config.guiClickSound();
+        var effect = config.guiButtonSounds().effectFor(action);
         if (effect == null || !effect.enabled()) {
             return;
         }

@@ -25,6 +25,34 @@ public record SoundEffect(
         return sound != null;
     }
 
+    public static SoundEffect fromConfigOrFallback(
+            Plugin plugin,
+            Lang lang,
+            ConfigurationSection section,
+            String path,
+            SoundEffect fallback
+    ) {
+        SoundEffect safeFallback = fallback == null ? disabled() : fallback;
+        if (section == null || path == null || path.isBlank() || !hasExplicitConfig(section, path)) {
+            return safeFallback;
+        }
+
+        String rawName = section.getString(path + ".name", null);
+        if (rawName == null || rawName.isBlank() || rawName.equalsIgnoreCase("inherit")) {
+            return safeFallback;
+        }
+
+        return fromConfig(
+                plugin,
+                lang,
+                section,
+                path,
+                safeFallback.enabled() ? safeFallback.sound().name() : "none",
+                safeFallback.volume(),
+                safeFallback.pitch()
+        );
+    }
+
     public static SoundEffect fromConfig(
             Plugin plugin,
             Lang lang,
@@ -69,5 +97,12 @@ public record SoundEffect(
 
     private static double clamp(double value, double min, double max) {
         return Math.min(max, Math.max(min, value));
+    }
+
+    private static boolean hasExplicitConfig(ConfigurationSection section, String path) {
+        return section.contains(path, true)
+                || section.contains(path + ".name", true)
+                || section.contains(path + ".volume", true)
+                || section.contains(path + ".pitch", true);
     }
 }

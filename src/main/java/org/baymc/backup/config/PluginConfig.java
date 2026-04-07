@@ -43,7 +43,8 @@ public record PluginConfig(
         boolean backupOnWorldChange,
         Set<String> excludedWorlds,
         boolean guiSoundsEnabled,
-        SoundEffect guiClickSound
+        SoundEffect guiClickSound,
+        GuiButtonSounds guiButtonSounds
 ) {
     public static PluginConfig from(Plugin plugin, Lang lang, FileConfiguration config) {
         var intervalMinutes = Math.max(0, config.getLong("backup.interval-minutes", 30));
@@ -140,6 +141,7 @@ public record PluginConfig(
                 1.0f,
                 1.0f
         );
+        GuiButtonSounds guiButtonSounds = GuiButtonSounds.from(plugin, lang, config, guiClickSound);
 
         return new PluginConfig(
                 Duration.ofMinutes(intervalMinutes),
@@ -166,7 +168,8 @@ public record PluginConfig(
                 backupOnWorldChange,
                 excludedWorlds,
                 guiSoundsEnabled,
-                guiClickSound
+                guiClickSound,
+                guiButtonSounds
         );
     }
 }
