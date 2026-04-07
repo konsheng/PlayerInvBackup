@@ -118,6 +118,11 @@ sounds:
       volume: 1.0
       pitch: 1.0
 
+    barrier-slot:
+      name: "block.note_block.bass"
+      volume: 1.0
+      pitch: 1.0
+
     # 每个 GUI 按钮都可以独立指定音效
     # name:
     # - "inherit" = 继承 sounds.gui.click

@@ -4,6 +4,7 @@ package org.baymc.backup.config;
  * GUI 可配置音效的交互动作
  */
 public enum GuiSoundAction {
+    BARRIER_SLOT("sounds.gui.barrier-slot"),
     LIST_ENTRY("sounds.gui.backup-list.entry-open"),
     LIST_PREV("sounds.gui.backup-list.prev-page"),
     LIST_NEXT("sounds.gui.backup-list.next-page"),

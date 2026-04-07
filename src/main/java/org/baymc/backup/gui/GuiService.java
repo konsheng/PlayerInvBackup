@@ -672,6 +672,7 @@ public final class GuiService {
         }
 
         if (slot >= holder.backups().size()) {
+            playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             return;
         }
         playGuiSound(admin, GuiSoundAction.LIST_ENTRY);
@@ -787,6 +788,7 @@ public final class GuiService {
                 return;
             }
             if (holder.claimedInv()[slot]) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
                 return;
             }
             byte[] itemBytes = holder.parts().inventorySlotBytes()[slot];
@@ -800,6 +802,7 @@ public final class GuiService {
                 return;
             }
             if (holder.claimedEnder()[slot]) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
                 return;
             }
             byte[] itemBytes = holder.parts().enderChestSlotBytes()[slot];
@@ -1959,6 +1962,17 @@ public final class GuiService {
             return;
         }
         runOnPlayer(player, () -> player.playSound(player.getLocation(), effect.sound(), effect.volume(), effect.pitch()));
+    }
+
+    private void playBarrierSlotSoundIfPresent(Player player, Inventory inventory, int slot) {
+        if (inventory == null || slot < 0 || slot >= inventory.getSize()) {
+            return;
+        }
+        ItemStack item = inventory.getItem(slot);
+        if (item == null || item.getType() != Material.BARRIER) {
+            return;
+        }
+        playGuiSound(player, GuiSoundAction.BARRIER_SLOT);
     }
 
     private static ItemStack[] cloneStorage(ItemStack[] storageContents) {

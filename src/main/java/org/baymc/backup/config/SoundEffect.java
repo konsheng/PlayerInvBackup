@@ -73,7 +73,7 @@ public record SoundEffect(
 
         Sound sound;
         try {
-            sound = Sound.valueOf(name.trim().toUpperCase(Locale.ROOT));
+            sound = Sound.valueOf(normalizeSoundName(name));
         } catch (IllegalArgumentException e) {
             if (plugin != null && lang != null) {
                 plugin.getLogger().warning(lang.plain(
@@ -97,6 +97,16 @@ public record SoundEffect(
 
     private static double clamp(double value, double min, double max) {
         return Math.min(max, Math.max(min, value));
+    }
+
+    private static String normalizeSoundName(String name) {
+        String normalized = name == null ? "" : name.trim();
+        int namespaceSep = normalized.indexOf(':');
+        if (namespaceSep >= 0 && namespaceSep < normalized.length() - 1) {
+            normalized = normalized.substring(namespaceSep + 1);
+        }
+        normalized = normalized.replace('.', '_').replace('-', '_');
+        return normalized.toUpperCase(Locale.ROOT);
     }
 
     private static boolean hasExplicitConfig(ConfigurationSection section, String path) {
