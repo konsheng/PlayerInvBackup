@@ -1,44 +1,48 @@
+# Gradle 和 Kotlin DSL 缓存
 .gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
 .kotlin/
 
-### IntelliJ IDEA ###
+# 构建产物
+build/
+
+# IntelliJ IDEA 文件
 .idea/
-*.iws
 *.iml
-*.ipr
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### Eclipse ###
-.apt_generated
+# VS Code 文件
+.vscode/
+
+# Eclipse 和 STS 文件
 .classpath
-.factorypath
 .project
-.settings
-.springBeans
-.sts4-cache
+.settings/
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
-### NetBeans ###
+# NetBeans 文件
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
+# 本地运行和调试数据
+logs/
+run/
+plugins/PlayerInvBackup/
 
-### Local DB ###
+# 本地数据库文件
+*.db
+*.db-*
 *.sqlite
 *.sqlite-*
+*.mv.db
+*.trace.db
 
-### Mac OS ###
+# JVM 崩溃转储
+hs_err_pid*
+replay_pid*
+
+# 系统生成文件
 .DS_Store
+Thumbs.db
