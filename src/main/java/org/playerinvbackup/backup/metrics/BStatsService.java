@@ -11,7 +11,7 @@ import org.bstats.bukkit.Metrics;
  * <p>bStats 自带全局开关(plugins/bStats/config.yml), 插件侧只负责初始化
  */
 public final class BStatsService {
-    private static final int PLUGIN_ID = 29588;
+    private static final int PLUGIN_ID = 30660;
 
     private final PlayerInvBackupPlugin plugin;
     private Metrics metrics;
