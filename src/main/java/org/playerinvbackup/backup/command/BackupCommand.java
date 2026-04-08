@@ -231,10 +231,10 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                         break;
                     }
                     if (args.length < 2) {
-                        Chat.error(player, "errors.usage-open", Placeholder.unparsed("label", label));
+                        guiService.openBackupList(player, player.getUniqueId(), player.getName(), 0);
                         break;
 	                    }
-	
+
 	                    String token = args[1];
 	                    ResolvedTarget target = resolveTarget(token);
 	                    if (target == null) {

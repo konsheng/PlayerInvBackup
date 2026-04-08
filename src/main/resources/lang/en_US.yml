@@ -10,7 +10,7 @@ help:
     - "<prefix><#EF5350>⚠ Warning: </#EF5350><#FF8A65>Restore overwrites the target's inventory and ender chest (only unclaimed slots are restored)</#FF8A65>"
     - "<prefix><#78909C>Console tip: open/pending are GUI or inventory actions and only work in game</#78909C>"
   commands:
-    - "<prefix><#4FC3F7>/<label> open <player/UUID></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Open backup list GUI</#E0E0E0>"
+    - "<prefix><#4FC3F7>/<label> open [player/UUID]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Open your own backup list with no argument, or open the specified player's list</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> list <player/UUID> [page]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>List backups (console friendly)</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> info <player/UUID> <backup id></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show backup details</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> lock <player/UUID> <backup id> [note]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Pin a backup (not auto purged)</#E0E0E0>"
@@ -22,7 +22,7 @@ help:
     - "<prefix><#4FC3F7>/<label> status</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show status</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Reload config and language</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show this help</#E0E0E0>"
-  example: "<prefix><#90A4AE>Example: </#90A4AE><#4FC3F7>/<label> open Steve</#4FC3F7> <#78909C>or</#78909C> <#4FC3F7>/<label> open <UUID></#4FC3F7>"
+  example: "<prefix><#90A4AE>Example: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>or</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
 
 errors:
   no-permission: "<prefix><#EF5350>✖ You do not have permission (requires <#FFCA28><perm></#FFCA28>)</#EF5350>"
@@ -32,7 +32,7 @@ errors:
   store-unavailable: "<prefix><#EF5350>✖ Storage is unavailable, fix config then run <#FFCA28>/<label> reload</#FFCA28></#EF5350>"
   console-no-inventory: "<prefix><#EF5350>✖ Console has no inventory, run this command in game</#EF5350>"
   backup-queue-full: "<prefix><#EF5350>✖ Backup queue is full or unavailable, try again later</#EF5350>"
-  usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open <player/UUID></#FFCA28></#EF5350>"
+  usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open [player/UUID]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backup [player/UUID]</#FFCA28></#EF5350>"
   usage-restore: "<prefix><#EF5350>Usage: <#FFCA28>/<label> restore <player/UUID> <backup id></#FFCA28></#EF5350>"
   usage-list: "<prefix><#EF5350>Usage: <#FFCA28>/<label> list <player/UUID> [page]</#FFCA28></#EF5350>"

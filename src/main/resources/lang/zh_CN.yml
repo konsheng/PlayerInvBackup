@@ -10,7 +10,7 @@ help:
     - "<prefix><#EF5350>⚠ 注意: </#EF5350><#FF8A65>恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FF8A65>"
     - "<prefix><#78909C>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#78909C>"
   commands:
-    - "<prefix><#4FC3F7>/<label> open <玩家名/UUID></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>打开备份列表 GUI</#E0E0E0>"
+    - "<prefix><#4FC3F7>/<label> open [玩家名/UUID]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>不填参数时打开自己的备份列表, 填写后打开指定玩家</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> list <玩家名/UUID> [页码]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>列出备份(控制台友好)</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> info <玩家名/UUID> <备份编号></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看备份详情</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> lock <玩家名/UUID> <备份编号> [备注]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>置顶显示备份(不会被自动清理)</#E0E0E0>"
@@ -22,7 +22,7 @@ help:
     - "<prefix><#4FC3F7>/<label> status</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看运行状态</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>重载配置/语言</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看本帮助</#E0E0E0>"
-  example: "<prefix><#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open Steve</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> open <UUID></#4FC3F7>"
+  example: "<prefix><#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
 
 errors:
   no-permission: "<prefix><#EF5350>✖ 你没有权限(需要 <#FFCA28><perm></#FFCA28>)</#EF5350>"
@@ -32,7 +32,7 @@ errors:
   store-unavailable: "<prefix><#EF5350>✖ 存储不可用, 请修正配置后执行 <#FFCA28>/<label> reload</#FFCA28></#EF5350>"
   console-no-inventory: "<prefix><#EF5350>✖ 控制台没有背包, 无法执行该操作, 请在游戏内执行</#EF5350>"
   backup-queue-full: "<prefix><#EF5350>✖ 备份队列已满或不可用, 请稍后再试</#EF5350>"
-  usage-open: "<prefix><#EF5350>用法: <#FFCA28>/<label> open <玩家名/UUID></#FFCA28></#EF5350>"
+  usage-open: "<prefix><#EF5350>用法: <#FFCA28>/<label> open [玩家名/UUID]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>用法: <#FFCA28>/<label> backup [玩家名/UUID]</#FFCA28></#EF5350>"
   usage-restore: "<prefix><#EF5350>用法: <#FFCA28>/<label> restore <玩家名/UUID> <备份编号></#FFCA28></#EF5350>"
   usage-list: "<prefix><#EF5350>用法: <#FFCA28>/<label> list <玩家名/UUID> [页码]</#FFCA28></#EF5350>"
