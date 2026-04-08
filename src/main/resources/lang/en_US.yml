@@ -120,12 +120,12 @@ status:
   audit-keep-days: "<prefix><#90A4AE>Audit keep days: </#90A4AE><white><days></white> <#78909C>days(0=off)</#78909C>"
   io-queue: "<prefix><#90A4AE>I/O queue: </#90A4AE><white><size></white><#78909C>/</#78909C><white><limit></white> <#78909C>(remaining <remaining>)</#78909C>"
   sqlite-file: "<prefix><#90A4AE>SQLite file: </#90A4AE><white><path></white>"
-  sqlite-size: "<prefix><#90A4AE>Database size: </#90A4AE><#FFCA28><size></#FFCA28> <#78909C>bytes</#78909C>"
+  sqlite-size: "<prefix><#90A4AE>Database size: </#90A4AE><#FFCA28><size></#FFCA28>"
   sqlite-size-unknown: "<prefix><#90A4AE>Database size: </#90A4AE><#78909C>unknown</#78909C>"
   local-dir: "<prefix><#90A4AE>Local dir: </#90A4AE><white><path></white>"
   mysql: "<prefix><#90A4AE>MySQL: </#90A4AE><white><host>: <port>/<database></white>"
   h2-file: "<prefix><#90A4AE>H2 file: </#90A4AE><white><path></white>"
-  h2-size: "<prefix><#90A4AE>Database size: </#90A4AE><#FFCA28><size></#FFCA28> <#78909C>bytes</#78909C>"
+  h2-size: "<prefix><#90A4AE>Database size: </#90A4AE><#FFCA28><size></#FFCA28>"
   h2-size-unknown: "<prefix><#90A4AE>Database size: </#90A4AE><#78909C>unknown</#78909C>"
 
 gui:

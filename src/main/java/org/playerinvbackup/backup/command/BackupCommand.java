@@ -730,6 +730,23 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private static String formatFileSize(long bytes) {
+        if (bytes < 0) {
+            return "-";
+        }
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        double value = bytes;
+        int unitIndex = 0;
+        while (value >= 1024.0 && unitIndex < units.length - 1) {
+            value /= 1024.0;
+            unitIndex++;
+        }
+        if (unitIndex == 0) {
+            return String.format(Locale.ROOT, "%d %s", bytes, units[unitIndex]);
+        }
+        return String.format(Locale.ROOT, "%.2f %s", value, units[unitIndex]);
+    }
+
     private static Player findOnlinePlayerByNameOrUuid(String token) {
         UUID uuid = tryParseUuid(token);
         if (uuid != null) {
@@ -824,7 +841,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                         long size = tryGetFileSize(db);
                         runOnSender(player, () -> {
                             if (size >= 0) {
-                                Chat.plain(player, "status.sqlite-size", Placeholder.unparsed("size", String.valueOf(size)));
+                                Chat.plain(player, "status.sqlite-size", Placeholder.unparsed("size", formatFileSize(size)));
                             } else {
                                 Chat.plain(player, "status.sqlite-size-unknown");
                             }
@@ -833,7 +850,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 } else {
                     long size = tryGetFileSize(db);
                     if (size >= 0) {
-                        Chat.plain(sender, "status.sqlite-size", Placeholder.unparsed("size", String.valueOf(size)));
+                        Chat.plain(sender, "status.sqlite-size", Placeholder.unparsed("size", formatFileSize(size)));
                     } else {
                         Chat.plain(sender, "status.sqlite-size-unknown");
                     }
@@ -849,7 +866,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
                 long size = tryGetFileSize(db);
                 if (size >= 0) {
-                    Chat.plain(sender, "status.h2-size", Placeholder.unparsed("size", String.valueOf(size)));
+                    Chat.plain(sender, "status.h2-size", Placeholder.unparsed("size", formatFileSize(size)));
                 } else {
                     Chat.plain(sender, "status.h2-size-unknown");
                 }
