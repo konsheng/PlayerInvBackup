@@ -1,4 +1,4 @@
-name: 构建并发布
+name: 正式版构建并发布
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "要发布的标签（例如 1.0，也支持 v1.0）。留空则使用当前引用（ref）。"
+        description: 正式版发布版本标签
         required: false
         type: string
 
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build-and-upload:
-    name: 构建并上传产物
+    name: 正式版构建
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
@@ -33,21 +33,36 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: 构建
+      - name: 解析正式版构建信息
+        id: meta
+        shell: bash
+        run: |
+          # 支持 1.0 和 v1.0 两种标签写法
+          raw_tag="${{ github.event.inputs.tag || github.ref_name }}"
+          release_version="${raw_tag#v}"
+          jar_name="PlayerInvBackup-${release_version}.jar"
+          echo "tag=${raw_tag}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
+          echo "jar_name=${jar_name}" >> "$GITHUB_OUTPUT"
+
+      - name: 执行正式版构建
+        shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon clean build
+          ./gradlew --no-daemon clean build -PpluginVersionOverride=${{ steps.meta.outputs.release_version }} -PartifactVersionOverride=${{ steps.meta.outputs.release_version }}
 
-      - name: 创建发布（如不存在）
+      - name: 创建发布页
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          TAG: ${{ steps.meta.outputs.tag }}
         run: |
           gh release view "$TAG" || gh release create "$TAG" --title "$TAG" --generate-notes
 
-      - name: 上传插件 JAR 包到发布
+      - name: 上传正式版插件
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          gh release upload "$TAG" build/libs/*.jar --clobber
+          gh release upload "$TAG" "build/libs/${{ steps.meta.outputs.jar_name }}" --clobber

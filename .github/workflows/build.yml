@@ -1,4 +1,4 @@
-name: 构建并上传产物
+name: 开发版构建并上传产物
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: 构建
+    name: 开发版构建
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
@@ -25,15 +25,31 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: 构建
+      - name: 解析开发版构建信息
+        id: meta
+        shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon clean build
+          # 读取项目当前的基础版本号, 例如 1.0-SNAPSHOT
+          base_version="$(./gradlew --quiet printVersion)"
+          # 使用当前提交的 7 位短哈希, 区分不同开发构建
+          short_sha="${GITHUB_SHA::7}"
+          artifact_version="${base_version}-${short_sha}"
+          jar_name="PlayerInvBackup-${artifact_version}.jar"
+          echo "base_version=${base_version}" >> "$GITHUB_OUTPUT"
+          echo "artifact_version=${artifact_version}" >> "$GITHUB_OUTPUT"
+          echo "jar_name=${jar_name}" >> "$GITHUB_OUTPUT"
+
+      - name: 执行开发版构建
+        shell: bash
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build -PartifactVersionOverride=${{ steps.meta.outputs.artifact_version }}
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: PlayerInvBackup-${{ github.ref_name }}-${{ github.sha }}
-          path: build/libs/*.jar
+          name: PlayerInvBackup Artifact
+          path: build/libs/${{ steps.meta.outputs.jar_name }}
           if-no-files-found: error
           retention-days: 14
