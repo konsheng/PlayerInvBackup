@@ -1,7 +1,7 @@
 prefix: "<gradient:#FFB75E:#ED8F03>[PlayerInvBackup]</gradient> <#78909C>»</#78909C> "
 
 help:
-  header: "<prefix><gradient:#FFB75E:#ED8F03>PlayerInvBackup Help</gradient> <#90A4AE>(v<version>)</#90A4AE>"
+  header: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Help</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
     - "<prefix><#4FC3F7>💡 Tip: </#4FC3F7><#B0BEC5>When the target is offline, online-mode servers require UUID or cached name; offline-mode servers can use the name directly</#B0BEC5>"
     - "<prefix><#4FC3F7>💡 Tip: </#4FC3F7><#B0BEC5>Click a slot in GUI to claim the whole stack; full inventory goes to pending (/<label> pending)</#B0BEC5>"
@@ -102,7 +102,7 @@ list:
   line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>ID: </#90A4AE><white><id></white> <#90A4AE>Trigger: </#90A4AE><white><trigger></white> <#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C> <#90A4AE>Pinned: </#90A4AE><white><locked></white> <#90A4AE>Note: </#90A4AE><white><note></white>"
 
 status:
-  title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Status</bold></gradient>"
+  title: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Status</bold></gradient>"
   permission: "<prefix><#90A4AE>Permission: </#90A4AE><white><perm></white> <#78909C>(default OP)</#78909C>"
   config: "<prefix><#90A4AE>Config: </#90A4AE><white><path></white>"
   scope: "<prefix><#90A4AE>Backup scope: </#90A4AE><white><scope></white>"

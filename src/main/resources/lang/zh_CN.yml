@@ -1,7 +1,7 @@
 prefix: "<gradient:#FFB75E:#ED8F03>[PlayerInvBackup]</gradient> <#78909C>»</#78909C> "
 
 help:
-  header: "<prefix><gradient:#FFB75E:#ED8F03>PlayerInvBackup 帮助</gradient> <#90A4AE>(v<version>)</#90A4AE>"
+  header: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 帮助</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
   lines:
     - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名; 离线模式服务器可直接使用名字</#B0BEC5>"
     - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#B0BEC5>"
@@ -102,7 +102,7 @@ list:
   line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>编号: </#90A4AE><white><id></white> <#90A4AE>触发: </#90A4AE><white><trigger></white> <#90A4AE>大小: </#90A4AE><white><size></white> <#78909C>字节</#78909C> <#90A4AE>置顶显示: </#90A4AE><white><locked></white> <#90A4AE>备注: </#90A4AE><white><note></white>"
 
 status:
-  title: "<prefix><gradient:#FFB75E:#ED8F03><bold>状态信息</bold></gradient>"
+  title: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 状态信息</bold></gradient>"
   permission: "<prefix><#90A4AE>权限: </#90A4AE><white><perm></white> <#78909C>(默认 OP)</#78909C>"
   config: "<prefix><#90A4AE>配置文件: </#90A4AE><white><path></white>"
   scope: "<prefix><#90A4AE>备份范围: </#90A4AE><white><scope></white>"
