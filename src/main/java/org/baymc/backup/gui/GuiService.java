@@ -216,6 +216,10 @@ public final class GuiService {
 
     // 原地刷新备份列表. 只有当标题需要变化时才重新打开 GUI
     private void refreshBackupList(Player admin, BackupListHolder holder, int page, BackupQuery query) {
+        refreshBackupList(admin, holder, page, query, false);
+    }
+
+    private void refreshBackupList(Player admin, BackupListHolder holder, int page, BackupQuery query, boolean fallbackWarned) {
         if (admin == null || holder == null) {
             return;
         }
@@ -263,8 +267,10 @@ public final class GuiService {
                     if (screen != BackupListHolder.Screen.LIST && screen != BackupListHolder.Screen.LIST_LOADING) {
                         return;
                     }
-                    Chat.warn(admin, "warn.no-more-backups-back");
-                    refreshBackupList(admin, holder, safePage - 1, safeQuery);
+                    if (!fallbackWarned) {
+                        Chat.warn(admin, "warn.no-more-backups-back");
+                    }
+                    refreshBackupList(admin, holder, safePage - 1, safeQuery, true);
                 });
                 return;
             }

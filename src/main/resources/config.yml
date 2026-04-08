@@ -200,7 +200,7 @@ sounds:
         pitch: 1.0
       # 点击刷新当前页按钮
       refresh:
-        name: "INHERIT"
+        name: "ENTITY_EXPERIENCE_ORB_PICKUP"
         volume: 1.0
         pitch: 1.0
 
