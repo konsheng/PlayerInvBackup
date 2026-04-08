@@ -79,7 +79,7 @@ jobs:
             echo "- 构建文件: ${{ steps.meta.outputs.jar_name }}"
             echo "- 提交哈希: ${GITHUB_SHA::7}"
             echo
-            echo "## Commit Message"
+            echo "## 提交信息"
             echo
             printf '%s\n' "$commit_message"
           } > "$notes_file"
@@ -91,7 +91,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: SNAPSHOT
-          TITLE: PlayerInvBackup SNAPSHOT
+          TITLE: PlayerInvBackup ${{ steps.meta.outputs.base_version }}
           NOTES_FILE: ${{ steps.snapshot_notes.outputs.notes_file }}
           JAR_NAME: ${{ steps.meta.outputs.jar_name }}
         run: |
