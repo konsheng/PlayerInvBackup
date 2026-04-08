@@ -112,7 +112,7 @@ status:
   permission: "<prefix><#90A4AE>权限: </#90A4AE><white><perm></white> <#78909C>(默认 OP)</#78909C>"
   config: "<prefix><#90A4AE>配置文件: </#90A4AE><white><path></white>"
   scope: "<prefix><#90A4AE>备份范围: </#90A4AE><white><scope></white>"
-  scope-value: "背包(含盔甲/副手)+ 末影箱"
+  scope-value: "背包(含盔甲/副手) + 末影箱"
   current-config: "<prefix><#90A4AE>当前配置: </#90A4AE><#FFCA28><interval></#FFCA28><#90A4AE> 分钟(0=关闭), 错峰 </#90A4AE><#FFCA28><jitter></#FFCA28><#90A4AE> 秒, 保留 </#90A4AE><#FFCA28><keep></#FFCA28><#90A4AE> 份/人, 保留天数 </#90A4AE><#FFCA28><keep_days></#FFCA28><#90A4AE> 天</#90A4AE>"
   gui-mode: "<prefix><#90A4AE>GUI 模式: </#90A4AE><white><mode></white> <#78909C>▸</#78909C> <#90A4AE>当前: </#90A4AE><white><active></white>"
   storage: "<prefix><#90A4AE>存储后端: </#90A4AE><#4FC3F7><storage_name></#4FC3F7> <#78909C>(<storage_path>)</#78909C>"
