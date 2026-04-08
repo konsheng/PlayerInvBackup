@@ -393,14 +393,8 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
         }
 
         // 兜底: 开发环境下可能无法扫描 jar, 这里确保常用语言文件至少会被提取出来
-        try {
-            saveResource("lang/zh_CN.yml", false);
-        } catch (Exception ignored) {
-        }
-        try {
-            saveResource("lang/en_US.yml", false);
-        } catch (Exception ignored) {
-        }
+        saveBundledLangIfMissing(normalizedLangDir, "zh_CN.yml");
+        saveBundledLangIfMissing(normalizedLangDir, "en_US.yml");
 
         try {
             Path jarPath = pluginJarPath();
@@ -454,6 +448,20 @@ public final class BayMcBackUpPlugin extends JavaPlugin {
             return uri == null ? null : Path.of(uri);
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    private void saveBundledLangIfMissing(Path langDir, String fileName) {
+        if (langDir == null || fileName == null || fileName.isBlank()) {
+            return;
+        }
+        try {
+            Path target = langDir.resolve(fileName).normalize();
+            if (Files.exists(target)) {
+                return;
+            }
+            saveResource("lang/" + fileName, false);
+        } catch (Exception ignored) {
         }
     }
 

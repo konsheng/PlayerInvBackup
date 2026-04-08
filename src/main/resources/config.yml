@@ -129,7 +129,7 @@ sounds:
     # 默认 GUI 点击音效
     # 下面未单独指定的按钮会继承这里
     click:
-      # 设置为 "none" 表示关闭
+      # 设置为 "NONE" 表示关闭
       name: "UI_BUTTON_CLICK"
       volume: 1.0
       pitch: 1.0
@@ -142,65 +142,65 @@ sounds:
 
     # 每个 GUI 按钮都可以独立指定音效
     # name:
-    # - "inherit" = 继承 sounds.gui.click
-    # - "none" = 关闭该按钮音效
+    # - "INHERIT" = 继承 sounds.gui.click
+    # - "NONE" = 关闭该按钮音效
     # - 其他值 = Bukkit Sound 枚举名
 
     # 备份列表页按钮音效
     backup-list:
       # 点击某条备份记录，打开预览详情
       entry-open:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击不可翻页的上一页/下一页玻璃板
       page-disabled:
-        name: "block.note_block.bass"
+        name: "BLOCK_NOTE_BLOCK_BASS"
         volume: 1.0
         pitch: 1.0
       # 点击上一页按钮
       prev-page:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击下一页按钮
       next-page:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击时间筛选按钮
       filter-time:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击触发类型筛选按钮
       filter-trigger:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击按编号搜索按钮
       search:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击清空筛选条件按钮
       clear-filters:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击快退 5 页按钮
       jump-back:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击快进 5 页按钮
       jump-forward:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击刷新当前页按钮
       refresh:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 
@@ -208,32 +208,32 @@ sounds:
     backup-view:
       # 点击返回备份列表按钮
       back:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击切换背包/末影箱视图按钮
       toggle:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击恢复到目标玩家按钮
       restore:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击置顶与保护按钮
       lock:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击领取待投递物品按钮
       pending:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击预览中的物品槽位进行领取
       claim-slot:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 
@@ -246,11 +246,11 @@ sounds:
         pitch: 1.0
       # 点击查看恢复目标信息按钮
       info:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
       # 点击取消恢复按钮
       cancel:
-        name: "inherit"
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
