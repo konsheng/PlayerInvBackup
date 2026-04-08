@@ -3,7 +3,7 @@ plugins {
     id("com.gradleup.shadow") version "9.3.1"
 }
 
-group = "org.baymc"
+group = "org.playerinvbackup"
 version = "1.0"
 
 repositories {
@@ -64,7 +64,7 @@ tasks.shadowJar {
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/INDEX.LIST")
-    relocate("org.bstats", "org.baymc.backup.libs.bstats")
+    relocate("org.bstats", "org.playerinvbackup.backup.libs.bstats")
 }
 
 tasks.build {

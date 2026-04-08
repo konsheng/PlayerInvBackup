@@ -1,6 +1,6 @@
 name: ${name}
 version: ${version}
-main: org.baymc.backup.BayMcBackUpPlugin
+main: org.playerinvbackup.backup.PlayerInvBackupPlugin
 api-version: "1.21"
 folia-supported: true
 softdepend: [ProtocolLib]
@@ -11,70 +11,70 @@ commands:
   playerinvbackup:
     description: PlayerInvBackup 管理命令
     usage: "用法: /playerinvbackup help"
-    permission: baymcbackup.admin
+    permission: playerinvbackup.admin
     aliases: [pib, invb, invbackup]
 
 permissions:
-  baymcbackup.admin:
+  playerinvbackup.admin:
     description: PlayerInvBackup 全权限 (包含所有子权限)
     default: op
     children:
-      baymcbackup.open: true
-      baymcbackup.now: true
-      baymcbackup.nowall: true
-      baymcbackup.self: true
-      baymcbackup.restore: true
-      baymcbackup.pending: true
-      baymcbackup.status: true
-      baymcbackup.reload: true
-      baymcbackup.list: true
-      baymcbackup.info: true
-      baymcbackup.lock: true
+      playerinvbackup.open: true
+      playerinvbackup.now: true
+      playerinvbackup.nowall: true
+      playerinvbackup.self: true
+      playerinvbackup.restore: true
+      playerinvbackup.pending: true
+      playerinvbackup.status: true
+      playerinvbackup.reload: true
+      playerinvbackup.list: true
+      playerinvbackup.info: true
+      playerinvbackup.lock: true
 
-  baymcbackup.open:
+  playerinvbackup.open:
     description: 允许打开并使用备份 GUI
     default: false
 
-  baymcbackup.now:
+  playerinvbackup.now:
     description: 允许为指定玩家手动备份
     default: false
 
-  baymcbackup.nowall:
+  playerinvbackup.nowall:
     description: 允许为所有在线玩家手动备份
     default: false
 
-  baymcbackup.self:
+  playerinvbackup.self:
     description: 允许玩家为自己手动备份
     default: false
 
-  baymcbackup.restore:
+  playerinvbackup.restore:
     description: 允许将备份恢复到玩家 (仅在线)
     default: false
 
-  baymcbackup.pending:
+  playerinvbackup.pending:
     description: 允许将待投递物品投递到自己的背包
     default: false
 
-  baymcbackup.status:
+  playerinvbackup.status:
     description: 允许查看插件状态
     default: false
 
-  baymcbackup.reload:
+  playerinvbackup.reload:
     description: 允许重载配置和语言文件
     default: false
 
-  baymcbackup.list:
+  playerinvbackup.list:
     description: 允许通过命令列出备份
     default: false
 
-  baymcbackup.info:
+  playerinvbackup.info:
     description: 允许通过命令查看备份详情
     default: false
 
-  baymcbackup.lock:
+  playerinvbackup.lock:
     description: 允许锁定/解锁备份并设置备注
     default: false
 
-  baymcbackup.backup.exempt:
+  playerinvbackup.backup.exempt:
     description: 玩家免于自动备份 (定时/事件触发)
     default: false
