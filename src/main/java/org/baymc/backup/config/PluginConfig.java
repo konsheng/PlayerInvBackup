@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
@@ -34,6 +35,7 @@ public record PluginConfig(
         int queueLimit,
         double maxWritesPerSecond,
         int guiListPageSize,
+        List<GuiTimeFilterOption> guiTimeFilters,
         GuiMode guiMode,
         String languageFile,
         DateTimeFormatter backupTimeFormatter,
@@ -94,6 +96,12 @@ public record PluginConfig(
         var maxWritesPerSecond = Math.max(0.1, config.getDouble("performance.max-writes-per-second", 20));
 
         var guiListPageSize = Math.min(45, Math.max(9, config.getInt("gui.list-page-size", 45)));
+        List<GuiTimeFilterOption> guiTimeFilters = GuiTimeFilterOption.fromConfig(
+                plugin,
+                lang,
+                config,
+                "gui.backup-list.time-filters"
+        );
 
         String guiModeRaw = config.getString("gui.mode", "auto");
         if (guiModeRaw != null) {
@@ -159,6 +167,7 @@ public record PluginConfig(
                 queueLimit,
                 maxWritesPerSecond,
                 guiListPageSize,
+                guiTimeFilters,
                 guiMode,
                 languageFile,
                 backupTimeFormatter,

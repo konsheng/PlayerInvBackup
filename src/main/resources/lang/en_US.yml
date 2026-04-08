@@ -174,9 +174,14 @@ gui:
         - "<#4FC3F7>▶ Click to switch</#4FC3F7>"
       value:
         all: "All"
-        24h: "Last 24 hours"
-        7d: "Last 7 days"
-        30d: "Last 30 days"
+        second: "Last <value> second"
+        seconds: "Last <value> seconds"
+        minute: "Last <value> minute"
+        minutes: "Last <value> minutes"
+        hour: "Last <value> hour"
+        hours: "Last <value> hours"
+        day: "Last <value> day"
+        days: "Last <value> days"
     filter-trigger:
       name: "<#FFCA28>⚡ Trigger filter</#FFCA28>"
       lore:
@@ -304,6 +309,7 @@ console:
   config:
     gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
     backup-time-format-invalid: "Invalid display.backup-time-format: <value>, using default yyyy-MM-dd HH:mm:ss"
+    gui-time-filter-invalid: "Invalid GUI time filter config ignored: path=<path>, value=<value>"
     defaults-resource-missing: "Default config resource not found: <resource>"
     autofill-added: "Auto filled config keys: file=<file>, added=<added>"
     autofill-failed: "Auto fill config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"

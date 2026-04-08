@@ -174,9 +174,14 @@ gui:
         - "<#4FC3F7>▶ 点击切换</#4FC3F7>"
       value:
         all: "全部"
-        24h: "近 24 小时"
-        7d: "近 7 天"
-        30d: "近 30 天"
+        second: "近 <value> 秒"
+        seconds: "近 <value> 秒"
+        minute: "近 <value> 分钟"
+        minutes: "近 <value> 分钟"
+        hour: "近 <value> 小时"
+        hours: "近 <value> 小时"
+        day: "近 <value> 天"
+        days: "近 <value> 天"
     filter-trigger:
       name: "<#FFCA28>⚡ 触发筛选</#FFCA28>"
       lore:
@@ -305,6 +310,7 @@ console:
   config:
     gui-mode-invalid: "gui.mode 配置无效, 已使用自动模式: <value>"
     backup-time-format-invalid: "display.backup-time-format 配置无效: <value>, 已使用默认格式 yyyy-MM-dd HH:mm:ss"
+    gui-time-filter-invalid: "GUI 时间筛选配置无效, 已忽略: path=<path>, value=<value>"
     defaults-resource-missing: "配置默认资源不存在: <resource>"
     autofill-added: "已自动补全配置键: file=<file>, added=<added>"
     autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"

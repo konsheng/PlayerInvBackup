@@ -106,6 +106,21 @@ gui:
   # 每页显示备份数量 (最大 45)
   list-page-size: 45
 
+  backup-list:
+    # 时间筛选列表, 按顺序循环
+    # 支持:
+    # - all
+    # - 数字 + s/m/h/d, 例如 30m, 1h, 6h, 12h, 24h, 7d, 30d
+    time-filters:
+      - "all"
+      - "30m"
+      - "1h"
+      - "6h"
+      - "12h"
+      - "24h"
+      - "7d"
+      - "30d"
+
 sounds:
   gui:
     enabled: true

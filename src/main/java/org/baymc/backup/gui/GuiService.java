@@ -1,7 +1,6 @@
 package org.baymc.backup.gui;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -17,6 +16,7 @@ import org.baymc.backup.BayMcBackUpPlugin;
 import org.baymc.backup.Permissions;
 import org.baymc.backup.codec.SnapshotCodec;
 import org.baymc.backup.config.GuiSoundAction;
+import org.baymc.backup.config.GuiTimeFilterOption;
 import org.baymc.backup.domain.BackupMeta;
 import org.baymc.backup.domain.BackupRecord;
 import org.baymc.backup.domain.SlotClaim;
@@ -1629,10 +1629,14 @@ public final class GuiService {
 
     private BackupQuery nextTimeFilterQuery(BackupQuery current) {
         BackupQuery safe = current == null ? BackupQuery.all() : current;
-        TimeFilterWindow window = resolveTimeFilterWindow(safe);
-        TimeFilterWindow[] values = TimeFilterWindow.values();
-        TimeFilterWindow next = values[(window.ordinal() + 1) % values.length];
-        long after = next == TimeFilterWindow.ALL ? 0L : System.currentTimeMillis() - next.duration().toMillis();
+        List<GuiTimeFilterOption> filters = timeFilters();
+        GuiTimeFilterOption window = resolveTimeFilterWindow(safe, filters);
+        int index = filters.indexOf(window);
+        if (index < 0) {
+            index = 0;
+        }
+        GuiTimeFilterOption next = filters.get((index + 1) % filters.size());
+        long after = next.createdAfterMillis(System.currentTimeMillis());
         return new BackupQuery(safe.trigger(), after);
     }
 
@@ -1667,16 +1671,21 @@ public final class GuiService {
     }
 
     private String timeFilterDisplayValue(Lang lang, BackupQuery query) {
-        if (lang == null) {
-            return "-";
-        }
-        TimeFilterWindow window = resolveTimeFilterWindow(query);
-        return lang.raw(window.langKey());
+        GuiTimeFilterOption window = resolveTimeFilterWindow(query, timeFilters());
+        return window.displayText(lang);
     }
 
-    private TimeFilterWindow resolveTimeFilterWindow(BackupQuery query) {
+    private GuiTimeFilterOption resolveTimeFilterWindow(BackupQuery query) {
+        return resolveTimeFilterWindow(query, timeFilters());
+    }
+
+    private GuiTimeFilterOption resolveTimeFilterWindow(BackupQuery query, List<GuiTimeFilterOption> filters) {
+        List<GuiTimeFilterOption> safeFilters = filters == null || filters.isEmpty()
+                ? GuiTimeFilterOption.defaults()
+                : filters;
+        GuiTimeFilterOption allOption = safeFilters.get(0);
         if (query == null || query.createdAfterMillis() <= 0) {
-            return TimeFilterWindow.ALL;
+            return allOption;
         }
 
         long now = System.currentTimeMillis();
@@ -1685,43 +1694,28 @@ public final class GuiService {
             diff = 0;
         }
 
-        TimeFilterWindow best = TimeFilterWindow.LAST_24H;
-        long bestDelta = Math.abs(diff - best.duration().toMillis());
+        GuiTimeFilterOption best = null;
+        long bestDelta = Long.MAX_VALUE;
 
-        for (TimeFilterWindow window : TimeFilterWindow.values()) {
-            if (window == TimeFilterWindow.ALL) {
+        for (GuiTimeFilterOption window : safeFilters) {
+            if (window.all()) {
                 continue;
             }
             long delta = Math.abs(diff - window.duration().toMillis());
-            if (delta < bestDelta) {
+            if (best == null || delta < bestDelta) {
                 best = window;
                 bestDelta = delta;
             }
         }
-        return best;
+        return best == null ? allOption : best;
     }
 
-    private enum TimeFilterWindow {
-        ALL(Duration.ZERO, "gui.backup-list.filter-time.value.all"),
-        LAST_24H(Duration.ofHours(24), "gui.backup-list.filter-time.value.24h"),
-        LAST_7D(Duration.ofDays(7), "gui.backup-list.filter-time.value.7d"),
-        LAST_30D(Duration.ofDays(30), "gui.backup-list.filter-time.value.30d");
-
-        private final Duration duration;
-        private final String langKey;
-
-        TimeFilterWindow(Duration duration, String langKey) {
-            this.duration = duration;
-            this.langKey = langKey;
+    private List<GuiTimeFilterOption> timeFilters() {
+        var config = plugin.pluginConfig();
+        if (config == null || config.guiTimeFilters().isEmpty()) {
+            return GuiTimeFilterOption.defaults();
         }
-
-        Duration duration() {
-            return duration;
-        }
-
-        String langKey() {
-            return langKey;
-        }
+        return config.guiTimeFilters();
     }
 
     private static Component backupListTitle(Lang lang, String targetName, int page) {
