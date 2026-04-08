@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -39,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
  * /playerinvbackup 主命令实现
  *
  * <p>包含:
- * 1) 备份管理子命令 (open/now/nowall/restore/pending/status/reload 等)
+ * 1) 备份管理子命令 (open/backup/restore/pending/status/reload 等)
  * 2) 控制台友好命令 (list/info)
  * 3) 置顶显示与备注 (lock/unlock/note)
  * 4) Tab 补全
@@ -65,9 +63,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
     private enum Subcommand {
         OPEN("open", Permissions.OPEN, true, true),
-        NOW("now", Permissions.NOW, false, true),
-        NOWALL("nowall", Permissions.NOWALL, false, false, "backupall"),
-        BACKUP("backup", Permissions.SELF_BACKUP, true, false, "self"),
+        BACKUP("backup", null, false, true),
         RESTORE("restore", Permissions.RESTORE, false, true),
         PENDING("pending", Permissions.PENDING, true, false),
         LIST("list", Permissions.LIST, false, true),
@@ -179,31 +175,31 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 }
             }
             case BACKUP -> {
-                if (ensurePermission(sender, Permissions.SELF_BACKUP)) {
-                    if (!(sender instanceof Player player)) {
-                        Chat.error(sender, "errors.console-no-inventory");
+                if (args.length >= 2) {
+                    if (!ensurePermission(sender, Permissions.BACKUP) || !ensureStoreReady(sender, label)) {
                         break;
                     }
-                    if (!ensureStoreReady(player, label)) {
+                    Player target = findOnlinePlayerByNameOrUuid(args[1]);
+                    if (target == null) {
+                        Chat.error(sender, "errors.player-not-online");
                         break;
                     }
-
-                    player.getScheduler().run(plugin, ignored -> {
-                        var backupService = plugin.backupService();
-                        if (!plugin.isStoreReady() || backupService == null) {
-                            runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
-                            return;
-                        }
-                        boolean queued = backupService.requestBackup(player, TriggerType.MANUAL);
-                        if (queued) {
-                            runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", player.getName())));
-                            plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=true");
-                        } else {
-                            runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
-                            plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=false");
-                        }
-                    }, null);
+                    queueManualBackup(sender, label, target, "MANUAL_BACKUP");
+                    break;
                 }
+
+                if (!ensurePermission(sender, Permissions.SELF_BACKUP)) {
+                    break;
+                }
+                if (!(sender instanceof Player player)) {
+                    Chat.error(sender, "errors.usage-backup", Placeholder.unparsed("label", label));
+                    break;
+                }
+                if (!ensureStoreReady(player, label)) {
+                    break;
+                }
+
+                queueManualBackup(sender, label, player, "SELF_BACKUP");
             }
             case RELOAD -> {
                 if (ensurePermission(sender, Permissions.RELOAD)) {
@@ -248,99 +244,6 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 	                    guiService.openBackupList(player, target.uuid(), target.name(), 0);
 	                }
 	            }
-            case NOW -> {
-                if (ensurePermission(sender, Permissions.NOW) && ensureStoreReady(sender, label)) {
-                    if (args.length < 2) {
-                        Chat.error(sender, "errors.usage-now", Placeholder.unparsed("label", label));
-                        break;
-                    }
-                    Player target = findOnlinePlayerByNameOrUuid(args[1]);
-                    if (target == null) {
-                        Chat.error(sender, "errors.player-not-online");
-                        break;
-                    }
-
-                    target.getScheduler().run(plugin, ignored -> {
-                        var backupService = plugin.backupService();
-                        if (!plugin.isStoreReady() || backupService == null) {
-                            runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
-                            return;
-                        }
-                        boolean queued = backupService.requestBackup(target, TriggerType.MANUAL);
-                        if (queued) {
-                            runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", target.getName())));
-                            plugin.auditService().log("MANUAL_BACKUP", sender, target.getUniqueId(), target.getName(), null, "queued=true");
-                        } else {
-                            runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
-                            plugin.auditService().log("MANUAL_BACKUP", sender, target.getUniqueId(), target.getName(), null, "queued=false");
-                        }
-                    }, null);
-                }
-            }
-            case NOWALL -> {
-                if (ensurePermission(sender, Permissions.NOWALL) && ensureStoreReady(sender, label)) {
-                    List<Player> targets = List.copyOf(Bukkit.getOnlinePlayers());
-                    if (targets.isEmpty()) {
-                        Chat.warn(sender, "errors.no-online-players");
-                        break;
-                    }
-
-                    int total = targets.size();
-                    Chat.info(sender, "info.backupall-start", Placeholder.unparsed("total", String.valueOf(total)));
-
-                    AtomicInteger queued = new AtomicInteger();
-                    AtomicInteger skipped = new AtomicInteger();
-                    AtomicInteger done = new AtomicInteger();
-                    AtomicBoolean summarized = new AtomicBoolean(false);
-
-                    for (Player target : targets) {
-                        target.getScheduler().run(plugin, ignored -> {
-                            var backupService = plugin.backupService();
-                            if (!plugin.isStoreReady() || backupService == null) {
-                                skipped.incrementAndGet();
-                                if (done.incrementAndGet() == total && summarized.compareAndSet(false, true)) {
-                                    runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
-                                }
-                                return;
-                            }
-                            boolean ok = backupService.requestBackup(target, TriggerType.MANUAL);
-                            if (ok) {
-                                queued.incrementAndGet();
-                            } else {
-                                skipped.incrementAndGet();
-                            }
-
-                            if (done.incrementAndGet() == total && summarized.compareAndSet(false, true)) {
-                                runOnSender(sender, () -> Chat.success(
-                                        sender,
-                                        "success.backupall-submitted",
-                                        Placeholder.unparsed("queued", String.valueOf(queued.get())),
-                                        Placeholder.unparsed("skipped", String.valueOf(skipped.get()))
-                                ));
-                                plugin.auditService().log("MANUAL_BACKUP_ALL", sender, null, null, null,
-                                        "total=" + total + " queued=" + queued.get() + " skipped=" + skipped.get() + " timeout=false");
-                            }
-                        }, null);
-                    }
-
-                    Bukkit.getGlobalRegionScheduler().runDelayed(plugin, ignored -> {
-                        if (!summarized.compareAndSet(false, true)) {
-                            return;
-                        }
-                        int notExecuted = Math.max(0, total - done.get());
-                        runOnSender(sender, () -> Chat.warn(
-                                sender,
-                                "warn.backupall-timeout-summary",
-                                Placeholder.unparsed("queued", String.valueOf(queued.get())),
-                                Placeholder.unparsed("skipped", String.valueOf(skipped.get())),
-                                Placeholder.unparsed("not_executed", String.valueOf(notExecuted))
-                        ));
-                        plugin.auditService().log("MANUAL_BACKUP_ALL", sender, null, null, null,
-                                "total=" + total + " queued=" + queued.get() + " skipped=" + skipped.get()
-                                        + " notExecuted=" + notExecuted + " timeout=true");
-                    }, 100L);
-                }
-            }
             case RESTORE -> {
                 if (ensurePermission(sender, Permissions.RESTORE) && ensureStoreReady(sender, label)) {
                     if (args.length < 3) {
@@ -677,6 +580,24 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             }
         }
         return List.of();
+    }
+
+    private void queueManualBackup(CommandSender sender, String label, Player target, String auditAction) {
+        target.getScheduler().run(plugin, ignored -> {
+            var backupService = plugin.backupService();
+            if (!plugin.isStoreReady() || backupService == null) {
+                runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
+                return;
+            }
+            boolean queued = backupService.requestBackup(target, TriggerType.MANUAL);
+            if (queued) {
+                runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", target.getName())));
+                plugin.auditService().log(auditAction, sender, target.getUniqueId(), target.getName(), null, "queued=true");
+            } else {
+                runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
+                plugin.auditService().log(auditAction, sender, target.getUniqueId(), target.getName(), null, "queued=false");
+            }
+        }, null);
     }
 
     private boolean ensurePermission(CommandSender sender, String requiredPermission) {

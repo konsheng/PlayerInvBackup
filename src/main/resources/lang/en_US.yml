@@ -16,9 +16,7 @@ help:
     - "<prefix><#4FC3F7>/<label> lock [name|UUID] [backup id] [note]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Pin a backup (not auto purged)</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> unlock [name|UUID] [backup id]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Unpin a backup</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> note [name|UUID] [backup id] [note]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Set or clear backup note</#E0E0E0>"
-    - "<prefix><#4FC3F7>/<label> now [online name|UUID]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Create a backup now</#E0E0E0>"
-    - "<prefix><#4FC3F7>/<label> backup</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Create a backup for yourself</#E0E0E0>"
-    - "<prefix><#4FC3F7>/<label> nowall</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Backup all online players (alias backupall)</#E0E0E0>"
+    - "<prefix><#4FC3F7>/<label> backup [online name|UUID]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Backup yourself with no argument, or backup the specified online player</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> pending</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Deliver pending items into inventory</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> restore [online name|UUID] [backup id]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Restore the backup (claimed slots excluded)</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> status</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show status</#E0E0E0>"
@@ -35,7 +33,7 @@ errors:
   console-no-inventory: "<prefix><#EF5350>✖ Console has no inventory, run this command in game</#EF5350>"
   backup-queue-full: "<prefix><#EF5350>✖ Backup queue is full or unavailable, try again later</#EF5350>"
   usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open [name|UUID]</#FFCA28></#EF5350>"
-  usage-now: "<prefix><#EF5350>Usage: <#FFCA28>/<label> now [online name|UUID]</#FFCA28></#EF5350>"
+  usage-backup: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backup [online name|UUID]</#FFCA28></#EF5350>"
   usage-restore: "<prefix><#EF5350>Usage: <#FFCA28>/<label> restore [online name|UUID] [backup id]</#FFCA28></#EF5350>"
   usage-list: "<prefix><#EF5350>Usage: <#FFCA28>/<label> list [name|UUID] [page]</#FFCA28></#EF5350>"
   usage-info: "<prefix><#EF5350>Usage: <#FFCA28>/<label> info [name|UUID] [backup id]</#FFCA28></#EF5350>"
@@ -63,14 +61,12 @@ errors:
   deliver-inventory-full: "<prefix><#FFA726>⚠ Inventory is full, remaining pending: <#FFCA28><remaining></#FFCA28></#FFA726>"
   already-first-page: "<prefix><#FFA726>⚠ Already on the first page</#FFA726>"
   no-next-page: "<prefix><#FFA726>⚠ No next page</#FFA726>"
-  no-online-players: "<prefix><#FFA726>⚠ No players online</#FFA726>"
 
   snapshot-hash-mismatch: "<prefix><#EF5350>✖ Backup is corrupted (SHA256 mismatch), restore blocked: <#FFCA28><backup_id></#FFCA28></#EF5350>"
 
 info:
   checking-pending: "<prefix><#4FC3F7>ℹ Checking pending items...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore...</#4FC3F7>"
-  backupall-start: "<prefix><#4FC3F7>ℹ Submitting backup tasks: <#FFCA28><total></#FFCA28> online players</#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ Enter backup ID (e.g., <#FFCA28>1730000000000-abc12345</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup Info</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(<id>)</#90A4AE>"
   lines:
@@ -93,11 +89,9 @@ success:
   pending-delivered: "<prefix><#66BB6A>✔ Delivered: <#FFCA28><count></#FFCA28> items</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ Claimed this slot (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
-  backupall-submitted: "<prefix><#66BB6A>✔ Backup tasks submitted: queued <#FFCA28><queued></#FFCA28>, skipped <#FFCA28><skipped></#FFCA28> (queue full or unavailable)</#66BB6A>"
 
 warn:
   auto-backup-before-restore-failed: "<prefix><#FFA726>⚠ Auto backup before restore failed (queue full), continuing restore</#FFA726>"
-  backupall-timeout-summary: "<prefix><#FFA726>⚠ Backup tasks summary (timeout): queued <#FFCA28><queued></#FFCA28>, skipped <#FFCA28><skipped></#FFCA28>, not executed <#FFCA28><not_executed></#FFCA28> (offline or canceled)</#FFA726>"
   no-more-backups-back: "<prefix><#FFA726>⚠ No more backups, returned to previous page</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ An admin restored your inventory and ender chest</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ Please enter a backup ID, or type <#FFCA28><cancel></#FFCA28> to cancel</#FFA726>"
@@ -145,7 +139,7 @@ gui:
     empty:
       name: "<#EF5350>✖ No backups</#EF5350>"
       lore:
-        - "<#90A4AE>Wait for auto backup or use /pib now [player]</#90A4AE>"
+        - "<#90A4AE>Wait for auto backup or use /pib backup [player]</#90A4AE>"
     entry:
       name: "<#FFCA28>Backup <white><time></white></#FFCA28>"
       lore:

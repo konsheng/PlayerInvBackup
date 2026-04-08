@@ -5,7 +5,7 @@ api-version: "1.21"
 folia-supported: true
 softdepend: [ProtocolLib]
 authors: [Konsheng]
-description: Paper / Folia 背包备份 (玩家背包 + 末影箱)
+description: Paper / Folia 背包备份, 包含玩家背包和末影箱
 
 commands:
   playerinvbackup:
@@ -16,12 +16,11 @@ commands:
 
 permissions:
   playerinvbackup.admin:
-    description: PlayerInvBackup 全权限 (包含所有子权限)
+    description: PlayerInvBackup 全部权限, 包含所有子权限
     default: op
     children:
       playerinvbackup.open: true
-      playerinvbackup.now: true
-      playerinvbackup.nowall: true
+      playerinvbackup.backup: true
       playerinvbackup.self: true
       playerinvbackup.restore: true
       playerinvbackup.pending: true
@@ -35,20 +34,16 @@ permissions:
     description: 允许打开并使用备份 GUI
     default: false
 
-  playerinvbackup.now:
-    description: 允许为指定玩家手动备份
-    default: false
-
-  playerinvbackup.nowall:
-    description: 允许为所有在线玩家手动备份
+  playerinvbackup.backup:
+    description: 允许为指定在线玩家手动备份
     default: false
 
   playerinvbackup.self:
-    description: 允许玩家为自己手动备份
+    description: 允许为自己手动备份
     default: false
 
   playerinvbackup.restore:
-    description: 允许将备份恢复到玩家 (仅在线)
+    description: 允许将备份恢复到玩家, 仅支持在线恢复
     default: false
 
   playerinvbackup.pending:
@@ -72,9 +67,9 @@ permissions:
     default: false
 
   playerinvbackup.lock:
-    description: 允许锁定/解锁备份并设置备注
+    description: 允许置顶, 取消置顶和设置备注
     default: false
 
   playerinvbackup.backup.exempt:
-    description: 玩家免于自动备份 (定时/事件触发)
+    description: 玩家免于自动备份, 包含定时和事件触发
     default: false
