@@ -1,123 +1,123 @@
-# PlayerInvBackup (Paper / Folia)
+# 📦 PlayerInvBackup
+Paper / Folia 1.21.1+ 玩家背包备份插件, 备份范围为玩家背包和末影箱
 
-我的世界服务器玩家背包备份插件（背包/盔甲/副手 + 末影箱）
+---
 
-## 功能
+## 🔔 功能特性
+- 自动备份, 支持定时与事件触发
+- 事件触发支持上线, 下线, 死亡, 切换世界
+- 图形界面支持备份列表, 预览, 搜索, 筛选, 快速翻页, 恢复确认
+- 预览中可直接点击物品格整组领取
+- 背包已满时, 物品会进入待投递队列, 可通过 `/pib pending` 继续领取
+- 备份支持置顶显示与备注, 置顶记录不会被自动清理
+- 恢复前会校验快照 `SHA-256`
+- 提供控制台友好的 `list`, `info`, `lock`, `unlock`, `note`, `status` 命令
+- 支持 SQLite, Local, MySQL, H2 四种存储后端
+- 支持原生 Bukkit GUI 与 ProtocolLib Packet GUI 自动切换
+- 支持自定义 GUI 按钮音效与时间筛选周期
+- 支持审计日志
 
-- 自动备份: 定时 + 事件触发 (上线/下线/死亡/切换世界)
-- 管理员 GUI: 列表/预览/整组领取/置顶显示/搜索与筛选/二次确认恢复
-- 控制台命令: `list`/`info`/`lock`/`note` 等, 不进入 GUI 也能查询与管理
-- 备份校验: 恢复前校验 sha256, 发现损坏会阻止写入并提示
-- 待投递: 背包满时物品进入待投递队列, 玩家可使用 `pending` 领取
+## 🧩 运行环境
+基于 Paper 1.21.1 API 开发
+- 支持 Paper / Folia `1.21.1+`
+- Java `21`
+- 可选依赖 `ProtocolLib`
 
-## 环境
+`ProtocolLib` 仅影响 Packet GUI，未安装时插件仍可正常使用, 会自动回退为原生 Bukkit GUI
 
-- Minecraft: 1.21.x (api-version: 1.21)
-- 服务端: Paper 或 Folia
-- Java: 21
-- 构建: Gradle
+## ⌨️ 命令
+主命令:
 
-### 可选依赖
+- `/playerinvbackup`
+- 别名 `/pib` `/invb` `/invbackup`
 
-- ProtocolLib: 提供 Packet GUI（可选纯发包）
-  - 未安装时插件仍可正常启用，GUI 自动使用原生 Bukkit Inventory GUI
+参数约定:
 
-## 安装
+- `<>` 必填 `[]` 选填
 
-1. 获取插件:
-   - Release: 下载 JAR
-   - 自行构建:
-     - Windows: `./gradlew.bat clean build`
-     - Linux: `./gradlew clean build`
-2. 自行构建产物位置: `build/libs/PlayerInvBackup-*.jar`
-3. 放入服务器 `plugins/`, 启动生成配置: `plugins/PlayerInvBackup/config.yml`
+命令列表:
 
-## 配置
+- `/pib open [玩家名/UUID]` 不填参数时打开自己的备份列表, 填写后打开指定玩家
+- `/pib backup [玩家名/UUID]` 不填参数时立即备份自己, 填写后备份指定在线玩家
+- `/pib pending` 领取待投递物品
+- `/pib restore <玩家名/UUID> <备份编号>` 将指定备份恢复到目标玩家
+- `/pib list <玩家名/UUID> [页码]` 以命令形式列出备份
+- `/pib info <玩家名/UUID> <备份编号>` 查看备份详情
+- `/pib lock <玩家名/UUID> <备份编号> [备注]` 置顶显示备份
+- `/pib unlock <玩家名/UUID> <备份编号>` 取消置顶显示
+- `/pib note <玩家名/UUID> <备份编号> [备注]` 设置或清除备注
+- `/pib status` 查看插件运行状态
+- `/pib reload` 重载配置与语言文件
+- `/pib help` 查看帮助
 
-常用配置 `plugins/PlayerInvBackup/config.yml`:
+## 🔐 权限
+主权限
+- `playerinvbackup.admin`
+  - `playerinvbackup.open`
+  - `playerinvbackup.backup`
+  - `playerinvbackup.self`
+  - `playerinvbackup.restore`
+  - `playerinvbackup.pending`
+  - `playerinvbackup.status`
+  - `playerinvbackup.reload`
+  - `playerinvbackup.list`
+  - `playerinvbackup.info`
+  - `playerinvbackup.lock`
+  - `playerinvbackup.backup.exempt`
 
-- `language`: 语言文件名 (位于 `plugins/PlayerInvBackup/lang/`), 修改后可 `/pib reload`
-- `display.backup-time-format`: 备份时间显示格式 (Java DateTimeFormatter pattern, 影响 GUI/命令里的时间展示)
-- `backup.interval-minutes`: 自动备份间隔 (分钟, 0 = 关闭自动备份)
-- `backup.jitter-seconds`: 错峰秒数
-- `backup.keep-per-player`: 每玩家保留最近 N 份 (0 = 不清理)
-- `backup.keep-days`: 每玩家保留最近 N 天 (0 = 不清理)
-- `backup.triggers.*`: 事件触发备份开关
-- `backup.excluded-worlds`: 排除世界 (定时/事件触发都会跳过)
-- `storage.type`: `sqlite` | `local` | `mysql` | `h2`
-- `storage.sqlite.file`: SQLite 数据文件路径
-- `storage.local.base-path`: 本地文件存储目录
-- `storage.mysql.*`: MySQL/MariaDB 连接配置 (支持 `url` 或 `host/port/database` 拼接)
-- `storage.h2.*`: H2 文件数据库配置 (支持 `url` 或 `file` 拼接)
-- `performance.queue-limit` / `performance.max-writes-per-second`: I/O 队列与写入速率限制
-- `gui.mode`: `auto` | `bukkit` | `packet` GUI 界面的生成方式
-- `gui.list-page-size`: GUI 列表每页数量
-- `sounds.gui.*`: GUI 点击音效
-- `audit.enabled`: 是否启用操作审计
-- `audit.console`: 是否在控制台输出每条审计记录
-- `audit.keep-days`: 审计日志保留天数 (0 = 不清理)
+说明
+- `/pib` 主命令当前会先检查 `playerinvbackup.admin`
+- 也就是说, 普通玩家即使单独拥有子权限, 也不能直接使用 `/pib`
+- `playerinvbackup.backup.exempt` 用于免除自动备份, 包括定时与事件触发
 
-### 保留策略
+### 🔄 自动备份
+- `backup.interval-minutes`  
+  自动备份间隔, `0` 表示关闭
+- `backup.jitter-seconds`  
+  错峰秒数, 用于平滑 I/O 写入压力
+- `backup.keep-per-player`  
+  每名玩家保留的最近备份数量, `0` 表示不按数量清理
+- `backup.keep-days`  
+  每名玩家保留的最近天数, `0` 表示不按时间清理
+- `backup.triggers.join`
+- `backup.triggers.quit`
+- `backup.triggers.death`
+- `backup.triggers.world-change`
+- `backup.excluded-worlds` 排除自动备份的世界列表
 
-- `backup.keep-per-player` 与 `backup.keep-days` 可同时启用
-- 置顶显示的备份不会被自动清理
-- 存在待投递物品的备份不会被自动清理
+## 📘 使用说明
+- `/pib open` 与 `/pib backup` 都支持无参数默认作用于自己
+- `/pib backup [玩家名/UUID]` 只有在填写参数时才会尝试备份指定在线玩家
+- 预览界面点击物品格会整组领取
+- 如果背包已满, 物品会进入待投递队列
+- 已置顶的备份不会被自动清理
+- 存在未投递物品的备份也不会被自动清理
 
-### GUI 模式
+目标解析规则
 
-- `gui.mode=auto`（默认）: 自动切换，有 ProtocolLib 则使用 Packet GUI，否则使用原生 GUI
-- `gui.mode=bukkit`: 强制使用原生 Bukkit Inventory GUI
-- `gui.mode=packet`: 强制使用 Packet GUI，需要 ProtocolLib，缺失或初始化失败会自动降级为原生 GUI
+- 在线模式服务器 `online-mode=true`  
+  目标离线时, 建议使用 UUID 或服务器已缓存的离线名称
+- 离线模式服务器 `online-mode=false`  
+  目标离线时可以直接按名字计算离线 UUID
 
-### 审计日志
+恢复限制
 
-- 位置: `plugins/PlayerInvBackup/logs/`
-- 文件: 按天切分 `audit-YYYY-MM-DD.log`，旧文件会自动压缩为 `.log.gz`
-- 清理: `audit.keep-days` 控制保留天数，超过天数的文件会自动删除
+- 当前恢复实现要求目标玩家在线
+- `GUI` 恢复与 `/pib restore` 都基于在线 `Player` 实体执行
 
-## 语言文件
+## 🛠️ 构建
+Windows
+```powershell
+./gradlew.bat clean build
+```
+Linux
+```bash
+./gradlew clean build
+```
 
-- 默认语言文件: `plugins/PlayerInvBackup/lang/zh_CN.yml`
-- 内置英文语言文件: `plugins/PlayerInvBackup/lang/en_US.yml`，在配置 `language` 中设置为 `en_US.yml` 即可
-- 所有游戏内提示与控制台提示均从语言文件读取（例如 `console.*`），需要修改提示文本时直接编辑该文件
-- 修改后执行 `/pib reload` 立即生效
-- 插件会自动补全缺失的语言键，减少升级后出现“语言文件缺少键”的情况
+本地产物 `build/libs/PlayerInvBackup.jar`
 
-## 命令
+----
 
-`/pib help` 可查看完整帮助与示例（全名命令：`/playerinvbackup`，别名：`/invb`, `/invbackup`）
-
-常用子命令:
-
-- `open <玩家>`: 打开备份列表 GUI
-- `list <玩家> [页码]`: 列出备份 (控制台友好)
-- `info <玩家> <备份编号>`: 查看备份详情
-- `backup`: 为自己立即备份
-- `now <玩家>` / `nowall`: 立即备份
-- `restore <玩家> <备份编号>`: 恢复到玩家 (Folia 下仅支持在线恢复)
-- `pending`: 领取待投递物品
-- `lock`/`unlock`/`note`: 置顶显示与备注
-- `status`, `reload`
-
-## 权限
-
-- `baymcbackup.admin`: 全部权限 (默认 OP)
-- 细分权限:
-  - `baymcbackup.open`
-  - `baymcbackup.now`
-  - `baymcbackup.nowall`
-  - `baymcbackup.self`
-  - `baymcbackup.restore`
-  - `baymcbackup.pending`
-  - `baymcbackup.status`
-  - `baymcbackup.reload`
-  - `baymcbackup.list`
-  - `baymcbackup.info`
-  - `baymcbackup.lock`
-- `baymcbackup.backup.exempt`: 玩家免于自动备份 (定时/事件触发)
-
-## 备份说明
-
-- "置顶显示" 的备份不会参与自动清理，并在列表顶部显示
-- 在线模式服务器（`online-mode=true`）：目标离线时只能使用 UUID 或服务器已缓存的离线名，未缓存请使用 UUID
-- 离线模式服务器（`online-mode=false`）：目标离线时可直接使用名字
+## 🌍 bStats
+[![bStats](https://bstats.org/signatures/bukkit/PlayerInvBackup.svg)](https://bstats.org/plugin/bukkit/PlayerInvBackup/30660)
