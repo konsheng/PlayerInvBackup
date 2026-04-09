@@ -37,9 +37,11 @@ jobs:
           # 使用当前提交的 7 位短哈希, 区分不同开发构建
           short_sha="${GITHUB_SHA::7}"
           artifact_version="${base_version}-${short_sha}"
+          release_tag="${base_version}"
           jar_name="PlayerInvBackup-${artifact_version}.jar"
           echo "base_version=${base_version}" >> "$GITHUB_OUTPUT"
           echo "artifact_version=${artifact_version}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${release_tag}" >> "$GITHUB_OUTPUT"
           echo "jar_name=${jar_name}" >> "$GITHUB_OUTPUT"
 
       - name: 执行开发版构建
@@ -56,16 +58,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: 更新 SNAPSHOT 标签
+      - name: 更新开发版标签
         if: github.event_name == 'push'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f SNAPSHOT "$GITHUB_SHA"
-          git push origin refs/tags/SNAPSHOT --force
+          git tag -f "${{ steps.meta.outputs.release_tag }}" "$GITHUB_SHA"
+          git push origin "refs/tags/${{ steps.meta.outputs.release_tag }}" --force
 
-      - name: 生成 SNAPSHOT 预发布说明
+      - name: 生成开发版预发布说明
         if: github.event_name == 'push'
         id: snapshot_notes
         shell: bash
@@ -85,12 +87,33 @@ jobs:
           } > "$notes_file"
           echo "notes_file=$notes_file" >> "$GITHUB_OUTPUT"
 
-      - name: 创建或更新 SNAPSHOT 预发布
+      - name: 清理旧的开发版预发布
         if: github.event_name == 'push'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: SNAPSHOT
+          CURRENT_TAG: ${{ steps.meta.outputs.release_tag }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '
+            .[]
+            | select(.prerelease == true)
+            | select(.tag_name == "SNAPSHOT" or (.tag_name | endswith("-SNAPSHOT")))
+            | select(.tag_name != env.CURRENT_TAG)
+            | "\(.id)\t\(.tag_name)"' |
+          while IFS=$'\t' read -r release_id tag_name; do
+            if [ -z "$release_id" ] || [ -z "$tag_name" ]; then
+              continue
+            fi
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+            git push origin ":refs/tags/${tag_name}" || true
+          done
+
+      - name: 创建或更新开发版预发布
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.release_tag }}
           TITLE: PlayerInvBackup ${{ steps.meta.outputs.base_version }}
           NOTES_FILE: ${{ steps.snapshot_notes.outputs.notes_file }}
           JAR_NAME: ${{ steps.meta.outputs.jar_name }}
