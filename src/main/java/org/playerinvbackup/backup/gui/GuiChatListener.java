@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
@@ -15,16 +16,26 @@ import org.bukkit.event.player.PlayerQuitEvent;
  */
 public final class GuiChatListener implements Listener {
     private final GuiService guiService;
+    private final PlainTextComponentSerializer plainText = PlainTextComponentSerializer.plainText();
 
     public GuiChatListener(GuiService guiService) {
         this.guiService = guiService;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
-        String message = PlainTextComponentSerializer.plainText().serialize(event.message());
+        String message = plainText.serialize(event.message());
         if (guiService.handleBackupIdSearchChat(player, message)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLegacyChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        if (guiService.handleBackupIdSearchChat(player, event.getMessage())) {
             event.setCancelled(true);
         }
     }
