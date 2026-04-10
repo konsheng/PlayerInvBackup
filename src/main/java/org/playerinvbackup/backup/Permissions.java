@@ -16,6 +16,7 @@ public final class Permissions {
 
     public static final String OPEN = "playerinvbackup.open";
     public static final String BACKUP = "playerinvbackup.backup";
+    public static final String BACKUP_ALL = "playerinvbackup.backupall";
     public static final String SELF_BACKUP = "playerinvbackup.self";
     public static final String RESTORE = "playerinvbackup.restore";
     public static final String PENDING = "playerinvbackup.pending";

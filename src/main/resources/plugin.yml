@@ -21,6 +21,7 @@ permissions:
     children:
       playerinvbackup.open: true
       playerinvbackup.backup: true
+      playerinvbackup.backupall: true
       playerinvbackup.self: true
       playerinvbackup.restore: true
       playerinvbackup.pending: true
@@ -36,6 +37,10 @@ permissions:
 
   playerinvbackup.backup:
     description: 允许为指定在线玩家手动备份
+    default: false
+
+  playerinvbackup.backupall:
+    description: 允许立即为所有在线玩家手动备份
     default: false
 
   playerinvbackup.self:

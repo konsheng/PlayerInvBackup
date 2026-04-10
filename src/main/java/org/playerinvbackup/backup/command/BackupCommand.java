@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -64,6 +65,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
     private enum Subcommand {
         OPEN("open", Permissions.OPEN, true, true),
         BACKUP("backup", null, false, true),
+        BACKUPALL("backupall", Permissions.BACKUP_ALL, false, false),
         RESTORE("restore", Permissions.RESTORE, false, true),
         PENDING("pending", Permissions.PENDING, true, false),
         LIST("list", Permissions.LIST, false, true),
@@ -200,6 +202,16 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 }
 
                 queueManualBackup(sender, label, player, "SELF_BACKUP");
+            }
+            case BACKUPALL -> {
+                if (!ensurePermission(sender, Permissions.BACKUP_ALL) || !ensureStoreReady(sender, label)) {
+                    break;
+                }
+                if (args.length >= 2) {
+                    Chat.error(sender, "errors.usage-backupall", Placeholder.unparsed("label", label));
+                    break;
+                }
+                queueManualBackupAll(sender, label);
             }
             case RELOAD -> {
                 if (ensurePermission(sender, Permissions.RELOAD)) {
@@ -598,6 +610,71 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 plugin.auditService().log(auditAction, sender, target.getUniqueId(), target.getName(), null, "queued=false");
             }
         }, null);
+    }
+
+    private void queueManualBackupAll(CommandSender sender, String label) {
+        List<Player> targets = new ArrayList<>(Bukkit.getOnlinePlayers());
+        if (targets.isEmpty()) {
+            Chat.error(sender, "errors.no-online-players");
+            return;
+        }
+
+        var backupService = plugin.backupService();
+        if (!plugin.isStoreReady() || backupService == null) {
+            Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label));
+            return;
+        }
+
+        AtomicInteger queued = new AtomicInteger();
+        AtomicInteger skipped = new AtomicInteger();
+        AtomicInteger remaining = new AtomicInteger(targets.size());
+
+        for (Player target : targets) {
+            target.getScheduler().run(
+                    plugin,
+                    ignored -> {
+                        boolean queuedThisTime = target.isOnline() && plugin.isStoreReady() && plugin.backupService() != null
+                                && plugin.backupService().requestBackup(target, TriggerType.MANUAL);
+                        finishManualBackupAllOne(sender, target, queuedThisTime, queued, skipped, remaining);
+                    },
+                    () -> finishManualBackupAllOne(sender, target, false, queued, skipped, remaining)
+            );
+        }
+    }
+
+    private void finishManualBackupAllOne(
+            CommandSender sender,
+            Player target,
+            boolean queuedThisTime,
+            AtomicInteger queued,
+            AtomicInteger skipped,
+            AtomicInteger remaining
+    ) {
+        if (queuedThisTime) {
+            queued.incrementAndGet();
+        } else {
+            skipped.incrementAndGet();
+        }
+
+        plugin.auditService().log(
+                "MANUAL_BACKUP_ALL",
+                sender,
+                target.getUniqueId(),
+                target.getName(),
+                null,
+                "queued=" + queuedThisTime
+        );
+
+        if (remaining.decrementAndGet() != 0) {
+            return;
+        }
+
+        runOnSender(sender, () -> Chat.success(
+                sender,
+                "success.backupall-submitted",
+                Placeholder.unparsed("queued", String.valueOf(queued.get())),
+                Placeholder.unparsed("skipped", String.valueOf(skipped.get()))
+        ));
     }
 
     private boolean ensurePermission(CommandSender sender, String requiredPermission) {
