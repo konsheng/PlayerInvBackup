@@ -15,6 +15,10 @@ backup:
   # 自动备份间隔 (分钟, 0 = 关闭自动备份)
   interval-minutes: 30
 
+  # 玩家手动执行 /pib backup 备份自己的冷却秒数
+  # 仅对无参数的自助备份生效
+  manual-self-cooldown-seconds: 5
+
   # 错峰秒数: 每个玩家每轮备份会加上随机延迟, 避免 200 人同一刻写入造成 I/O 峰值
   jitter-seconds: 300
 

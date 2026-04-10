@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -53,6 +54,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
     private final GuiService guiService;
     private final RestoreService restoreService;
     private final DateTimeFormatter timeFormatter;
+    private final Map<UUID, Long> selfBackupCooldownUntilMillis = new ConcurrentHashMap<>();
 
     public BackupCommand(PlayerInvBackupPlugin plugin) {
         this.plugin = plugin;
@@ -75,7 +77,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         NOTE("note", Permissions.LOCK, false, true),
         STATUS("status", Permissions.STATUS, false, false),
         RELOAD("reload", Permissions.RELOAD, false, false),
-        HELP("help", null, false, false);
+        HELP("help", Permissions.ADMIN, false, false);
 
         private final List<String> tokens;
         private final String requiredPermission;
@@ -152,12 +154,10 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
     }
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!Permissions.has(sender, Permissions.ADMIN)) {
-            Chat.error(sender, "errors.no-permission", Placeholder.unparsed("perm", Permissions.ADMIN));
-            return true;
-        }
         if (args.length == 0) {
-            sendHelp(sender, label);
+            if (ensurePermission(sender, Permissions.ADMIN)) {
+                sendHelp(sender, label);
+            }
             return true;
         }
 
@@ -170,7 +170,11 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (sub) {
-            case HELP -> sendHelp(sender, label);
+            case HELP -> {
+                if (ensurePermission(sender, Permissions.ADMIN)) {
+                    sendHelp(sender, label);
+                }
+            }
             case STATUS -> {
                 if (ensurePermission(sender, Permissions.STATUS)) {
                     sendStatus(sender);
@@ -201,7 +205,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                     break;
                 }
 
-                queueManualBackup(sender, label, player, "SELF_BACKUP");
+                queueSelfManualBackup(sender, label, player);
             }
             case BACKUPALL -> {
                 if (!ensurePermission(sender, Permissions.BACKUP_ALL) || !ensureStoreReady(sender, label)) {
@@ -581,15 +585,29 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        if (!Permissions.has(sender, Permissions.ADMIN)) {
-            return List.of();
-        }
         if (args.length == 1) {
-            return prefixMatches(args[0], Subcommand.topLevelTokensFor(sender));
+            List<String> tokens = new ArrayList<>();
+            for (Subcommand subcommand : Subcommand.values()) {
+                if (!subcommand.availableTo(sender)) {
+                    continue;
+                }
+                if (subcommand == Subcommand.BACKUP) {
+                    if (!canUseBackupCommand(sender)) {
+                        continue;
+                    }
+                } else if (!subcommand.permittedFor(sender)) {
+                    continue;
+                }
+                tokens.addAll(subcommand.tokens());
+            }
+            return prefixMatches(args[0], tokens);
         }
         if (args.length == 2) {
             Subcommand sub = Subcommand.resolve(args[0]);
-            if (sub != null && sub.availableTo(sender) && sub.permittedFor(sender) && sub.suggestOnlinePlayersOnSecondArg()) {
+            boolean canSuggest = sub == Subcommand.BACKUP
+                    ? Permissions.has(sender, Permissions.BACKUP)
+                    : sub != null && sub.permittedFor(sender);
+            if (sub != null && sub.availableTo(sender) && canSuggest && sub.suggestOnlinePlayersOnSecondArg()) {
                 return prefixMatches(args[1], Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
             }
         }
@@ -610,6 +628,43 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             } else {
                 runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
                 plugin.auditService().log(auditAction, sender, target.getUniqueId(), target.getName(), null, "queued=false");
+            }
+        }, null);
+    }
+
+    private void queueSelfManualBackup(CommandSender sender, String label, Player player) {
+        player.getScheduler().run(plugin, ignored -> {
+            var backupService = plugin.backupService();
+            if (!plugin.isStoreReady() || backupService == null) {
+                runOnSender(sender, () -> Chat.error(sender, "errors.store-unavailable", Placeholder.unparsed("label", label)));
+                return;
+            }
+
+            long now = System.currentTimeMillis();
+            long remainingMillis = remainingSelfBackupCooldown(player.getUniqueId(), now);
+            if (remainingMillis > 0L) {
+                long remainingSeconds = Math.max(1L, (remainingMillis + 999L) / 1000L);
+                runOnSender(sender, () -> Chat.error(
+                        sender,
+                        "errors.backup-cooldown",
+                        Placeholder.unparsed("seconds", String.valueOf(remainingSeconds))
+                ));
+                return;
+            }
+
+            boolean queued = backupService.requestBackup(player, TriggerType.MANUAL);
+            if (queued) {
+                long cooldownMillis = plugin.pluginConfig() == null ? 0L : Math.max(0L, plugin.pluginConfig().manualSelfBackupCooldown().toMillis());
+                if (cooldownMillis > 0L) {
+                    selfBackupCooldownUntilMillis.put(player.getUniqueId(), now + cooldownMillis);
+                } else {
+                    selfBackupCooldownUntilMillis.remove(player.getUniqueId());
+                }
+                runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", player.getName())));
+                plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=true");
+            } else {
+                runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
+                plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=false");
             }
         }, null);
     }
@@ -685,6 +740,19 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
         }
         Chat.error(sender, "errors.no-permission", Placeholder.unparsed("perm", requiredPermission));
         return false;
+    }
+
+    private boolean canUseBackupCommand(CommandSender sender) {
+        return Permissions.has(sender, Permissions.BACKUP) || Permissions.has(sender, Permissions.SELF_BACKUP);
+    }
+
+    private long remainingSelfBackupCooldown(UUID playerUuid, long now) {
+        long until = selfBackupCooldownUntilMillis.getOrDefault(playerUuid, 0L);
+        if (until <= now) {
+            selfBackupCooldownUntilMillis.remove(playerUuid, until);
+            return 0L;
+        }
+        return until - now;
     }
 
     private boolean ensureStoreReady(CommandSender sender, String label) {

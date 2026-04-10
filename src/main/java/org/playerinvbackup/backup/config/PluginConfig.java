@@ -22,6 +22,7 @@ import org.bukkit.plugin.Plugin;
 public record PluginConfig(
         Duration backupInterval,
         Duration jitter,
+        Duration manualSelfBackupCooldown,
         int keepPerPlayer,
         Duration keepDuration,
         boolean auditEnabled,
@@ -52,6 +53,7 @@ public record PluginConfig(
     public static PluginConfig from(Plugin plugin, Lang lang, FileConfiguration config) {
         var intervalMinutes = Math.max(0, config.getLong("backup.interval-minutes", 30));
         var jitterSeconds = Math.max(0, config.getLong("backup.jitter-seconds", 300));
+        var manualSelfBackupCooldownSeconds = Math.max(0, config.getLong("backup.manual-self-cooldown-seconds", 5));
         var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 50));
         var keepDays = Math.max(0, config.getLong("backup.keep-days", 0));
         var keepDuration = Duration.ofDays(keepDays);
@@ -156,6 +158,7 @@ public record PluginConfig(
         return new PluginConfig(
                 Duration.ofMinutes(intervalMinutes),
                 Duration.ofSeconds(jitterSeconds),
+                Duration.ofSeconds(manualSelfBackupCooldownSeconds),
                 keepPerPlayer,
                 keepDuration,
                 auditEnabled,

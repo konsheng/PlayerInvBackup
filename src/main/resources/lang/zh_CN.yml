@@ -33,6 +33,7 @@ errors:
   store-unavailable: "<prefix><#EF5350>✖ 存储不可用, 请修正配置后执行 <#FFCA28>/<label> reload</#FFCA28></#EF5350>"
   console-no-inventory: "<prefix><#EF5350>✖ 控制台没有背包, 无法执行该操作, 请在游戏内执行</#EF5350>"
   backup-queue-full: "<prefix><#EF5350>✖ 备份队列已满或不可用, 请稍后再试</#EF5350>"
+  backup-cooldown: "<prefix><#FFA726>⚠ 请等待 <#FFCA28><seconds></#FFCA28> 秒后再备份自己</#FFA726>"
   usage-open: "<prefix><#EF5350>用法: <#FFCA28>/<label> open [玩家名/UUID]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>用法: <#FFCA28>/<label> backup [玩家名/UUID]</#FFCA28></#EF5350>"
   usage-backupall: "<prefix><#EF5350>用法: <#FFCA28>/<label> backupall</#FFCA28></#EF5350>"

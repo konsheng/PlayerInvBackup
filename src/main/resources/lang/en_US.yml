@@ -33,6 +33,7 @@ errors:
   store-unavailable: "<prefix><#EF5350>✖ Storage is unavailable, fix config then run <#FFCA28>/<label> reload</#FFCA28></#EF5350>"
   console-no-inventory: "<prefix><#EF5350>✖ Console has no inventory, run this command in game</#EF5350>"
   backup-queue-full: "<prefix><#EF5350>✖ Backup queue is full or unavailable, try again later</#EF5350>"
+  backup-cooldown: "<prefix><#FFA726>⚠ Wait <#FFCA28><seconds></#FFCA28> more seconds before backing yourself up again</#FFA726>"
   usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open [player/UUID]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backup [player/UUID]</#FFCA28></#EF5350>"
   usage-backupall: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backupall</#FFCA28></#EF5350>"
