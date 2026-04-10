@@ -278,6 +278,7 @@ storage:
     sqlite: "SQLite"
     local: "本地文件"
     mysql: "MySQL"
+    postgresql: "PostgreSQL"
     h2: "H2"
 
 common:

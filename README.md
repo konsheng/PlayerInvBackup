@@ -12,7 +12,7 @@ Paper / Folia 1.21.1+ 玩家背包备份插件, 备份范围为玩家背包和�
 - 备份支持置顶显示与备注, 置顶记录不会被自动清理
 - 恢复前会校验快照 `SHA-256`
 - 提供控制台友好的 `list`, `info`, `lock`, `unlock`, `note`, `status` 命令
-- 支持 SQLite, Local, MySQL, H2 四种存储后端
+- 支持 SQLite, Local, MySQL, PostgreSQL, H2 五种存储后端
 - 支持原生 Bukkit GUI 与 ProtocolLib Packet GUI 自动切换
 - 支持自定义 GUI 按钮音效与时间筛选周期
 - 支持审计日志

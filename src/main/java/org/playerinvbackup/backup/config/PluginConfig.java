@@ -31,6 +31,7 @@ public record PluginConfig(
         Path localBasePath,
         Path sqliteFile,
         MysqlConfig mysql,
+        PostgresqlConfig postgresql,
         H2Config h2,
         int queueLimit,
         double maxWritesPerSecond,
@@ -90,6 +91,7 @@ public record PluginConfig(
         var localBasePath = Path.of(config.getString("storage.local.base-path", "data"));
         var sqliteFile = Path.of(config.getString("storage.sqlite.file", "data/backups.db"));
         MysqlConfig mysql = MysqlConfig.from(config);
+        PostgresqlConfig postgresql = PostgresqlConfig.from(config);
         H2Config h2 = H2Config.from(config);
 
         var queueLimit = Math.max(1, config.getInt("performance.queue-limit", 500));
@@ -163,6 +165,7 @@ public record PluginConfig(
                 localBasePath,
                 sqliteFile,
                 mysql,
+                postgresql,
                 h2,
                 queueLimit,
                 maxWritesPerSecond,

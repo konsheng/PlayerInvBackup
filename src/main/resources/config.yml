@@ -57,7 +57,7 @@ bstats:
   enabled: true
 
 storage:
-  # 存储后端: local | sqlite | mysql | h2
+  # 存储后端: local | sqlite | mysql | postgresql | h2
   type: sqlite
 
   local:
@@ -78,6 +78,17 @@ storage:
     password: ""
     # 额外参数, 以 & 连接. 例如: useSSL=false&serverTimezone=UTC
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
+
+  postgresql:
+    # 如果填写 url, 会优先使用 url
+    url: ""
+    host: "127.0.0.1"
+    port: 5432
+    database: "playerinvbackup"
+    username: "postgres"
+    password: ""
+    # 额外参数, 以 & 连接. 例如: sslmode=disable
+    parameters: "sslmode=disable"
 
   h2:
     # 如果填写 url, 会优先使用 url

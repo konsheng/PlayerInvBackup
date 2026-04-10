@@ -29,6 +29,8 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.45.3.0")
     // MySQL 驱动
     implementation("com.mysql:mysql-connector-j:8.0.33")
+    // PostgreSQL 驱动
+    implementation("org.postgresql:postgresql:42.7.5")
     // H2 驱动
     implementation("com.h2database:h2:2.2.224")
 

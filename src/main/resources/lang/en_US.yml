@@ -278,6 +278,7 @@ storage:
     sqlite: "SQLite"
     local: "Local files"
     mysql: "MySQL"
+    postgresql: "PostgreSQL"
     h2: "H2"
 
 common:

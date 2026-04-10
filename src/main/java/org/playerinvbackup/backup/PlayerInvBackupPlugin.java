@@ -30,6 +30,7 @@ import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.store.h2.H2BackupStore;
 import org.playerinvbackup.backup.store.local.LocalBackupStore;
 import org.playerinvbackup.backup.store.mysql.MysqlBackupStore;
+import org.playerinvbackup.backup.store.postgresql.PostgresqlBackupStore;
 import org.playerinvbackup.backup.store.sqlite.SqliteBackupStore;
 import org.playerinvbackup.backup.text.Chat;
 import org.playerinvbackup.backup.text.Lang;
@@ -221,6 +222,11 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
                     config.mysql().jdbcUrl(),
                     config.mysql().username(),
                     config.mysql().password()
+            );
+            case POSTGRESQL -> new PostgresqlBackupStore(
+                    config.postgresql().jdbcUrl(),
+                    config.postgresql().username(),
+                    config.postgresql().password()
             );
             case H2 -> {
                 Path fileBase = dataFolder.resolve(config.h2().file());
@@ -538,6 +544,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
             case LOCAL -> "local(" + getDataFolder().toPath().resolve(pluginConfig.localBasePath()) + ")";
             case SQLITE -> "sqlite(" + getDataFolder().toPath().resolve(pluginConfig.sqliteFile()) + ")";
             case MYSQL -> "mysql(" + pluginConfig.mysql().host() + ":" + pluginConfig.mysql().port() + "/" + pluginConfig.mysql().database() + ")";
+            case POSTGRESQL -> "postgresql(" + pluginConfig.postgresql().host() + ":" + pluginConfig.postgresql().port() + "/" + pluginConfig.postgresql().database() + ")";
             case H2 -> "h2(" + getDataFolder().toPath().resolve(pluginConfig.h2().file()) + ")";
         };
 

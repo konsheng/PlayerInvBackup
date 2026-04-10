@@ -558,6 +558,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             case SQLITE -> plugin.lang().raw("storage.name.sqlite");
             case LOCAL -> plugin.lang().raw("storage.name.local");
             case MYSQL -> plugin.lang().raw("storage.name.mysql");
+            case POSTGRESQL -> plugin.lang().raw("storage.name.postgresql");
             case H2 -> plugin.lang().raw("storage.name.h2");
         };
     }
@@ -568,6 +569,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             case SQLITE -> plugin.getDataFolder().toPath().resolve(cfg.sqliteFile()).toString();
             case LOCAL -> plugin.getDataFolder().toPath().resolve(cfg.localBasePath()).toString();
             case MYSQL -> cfg.mysql().host() + ":" + cfg.mysql().port() + "/" + cfg.mysql().database();
+            case POSTGRESQL -> cfg.postgresql().host() + ":" + cfg.postgresql().port() + "/" + cfg.postgresql().database();
             case H2 -> plugin.getDataFolder().toPath().resolve(cfg.h2().file()).toString();
         };
     }
@@ -936,6 +938,8 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             case LOCAL -> {
             }
             case MYSQL -> {
+            }
+            case POSTGRESQL -> {
             }
             case H2 -> {
                 Path base = plugin.getDataFolder().toPath().resolve(cfg.h2().file());
