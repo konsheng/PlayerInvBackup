@@ -25,6 +25,11 @@ import org.bukkit.inventory.PlayerInventory;
  * 写入过程通过 {@link IoDispatcher} 异步执行, 避免阻塞 Folia 的 Region 线程
  */
 public final class BackupService {
+    @FunctionalInterface
+    public interface BackupCompletion {
+        void complete(boolean success, String backupId);
+    }
+
     private final PlayerInvBackupPlugin plugin;
     private final PluginConfig config;
     private final BackupStore store;
@@ -38,6 +43,10 @@ public final class BackupService {
     }
 
     public boolean requestBackup(Player player, TriggerType triggerType) {
+        return requestBackup(player, triggerType, null);
+    }
+
+    public boolean requestBackup(Player player, TriggerType triggerType, BackupCompletion completion) {
         if (!ioDispatcher.hasCapacity()) {
             return false;
         }
@@ -49,6 +58,7 @@ public final class BackupService {
         String backupId = BackupIdGenerator.newId(now);
 
         return ioDispatcher.submitWrite(() -> {
+            boolean success = false;
             try {
                 byte[] snapshotBytes = SnapshotCodec.encodeGzip(parts);
                 String sha256 = Hashing.sha256Hex(snapshotBytes);
@@ -73,6 +83,7 @@ public final class BackupService {
                     }
                 }
                 store.purgeBackups(playerUuid, config.keepPerPlayer(), keepAfterMillis);
+                success = true;
             } catch (IOException e) {
                 plugin.getLogger().severe(plugin.lang().plain(
                         "console.backup.encode-failed",
@@ -89,6 +100,10 @@ public final class BackupService {
                         Placeholder.unparsed("backup_id", backupId),
                         Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
                 ));
+            } finally {
+                if (completion != null) {
+                    completion.complete(success, backupId);
+                }
             }
         });
     }

@@ -652,7 +652,16 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 return;
             }
 
-            boolean queued = backupService.requestBackup(player, TriggerType.MANUAL);
+            boolean queued = backupService.requestBackup(player, TriggerType.MANUAL, (success, backupId) -> {
+                if (!success) {
+                    return;
+                }
+                runOnSender(sender, () -> Chat.success(
+                        sender,
+                        "success.self-backup-finished",
+                        Placeholder.unparsed("backup_id", backupId)
+                ));
+            });
             if (queued) {
                 long cooldownMillis = plugin.pluginConfig() == null ? 0L : Math.max(0L, plugin.pluginConfig().manualSelfBackupCooldown().toMillis());
                 if (cooldownMillis > 0L) {

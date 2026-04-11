@@ -86,6 +86,7 @@ info:
 success:
   reloaded: "<prefix><#66BB6A>✔ Config and language reloaded</#66BB6A>"
   backup-queued: "<prefix><#66BB6A>✔ Added to backup queue: <#FFCA28><player></#FFCA28></#66BB6A>"
+  self-backup-finished: "<prefix><#66BB6A>✔ Your backup has completed: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backupall-submitted: "<prefix><#66BB6A>✔ All online player backups submitted: queued <#FFCA28><queued></#FFCA28>, skipped/failed <#EF5350><skipped></#EF5350></#66BB6A>"
   backup-locked: "<prefix><#66BB6A>✔ Backup pinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backup-unlocked: "<prefix><#66BB6A>✔ Backup unpinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
