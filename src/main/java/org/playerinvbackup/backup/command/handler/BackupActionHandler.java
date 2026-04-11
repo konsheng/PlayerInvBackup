@@ -161,15 +161,18 @@ public final class BackupActionHandler implements SubcommandHandler {
             }
 
             long now = System.currentTimeMillis();
-            long remainingMillis = remainingSelfBackupCooldown(player.getUniqueId(), now);
-            if (remainingMillis > 0L) {
-                long remainingSeconds = Math.max(1L, (remainingMillis + 999L) / 1000L);
-                async.runOnSender(sender, () -> Chat.error(
-                        sender,
-                        "errors.backup-cooldown",
-                        Placeholder.unparsed("seconds", String.valueOf(remainingSeconds))
-                ));
-                return;
+            boolean bypassCooldown = Permissions.has(sender, Permissions.SELF_BACKUP_BYPASS);
+            if (!bypassCooldown) {
+                long remainingMillis = remainingSelfBackupCooldown(player.getUniqueId(), now);
+                if (remainingMillis > 0L) {
+                    long remainingSeconds = Math.max(1L, (remainingMillis + 999L) / 1000L);
+                    async.runOnSender(sender, () -> Chat.error(
+                            sender,
+                            "errors.backup-cooldown",
+                            Placeholder.unparsed("seconds", String.valueOf(remainingSeconds))
+                    ));
+                    return;
+                }
             }
 
             boolean queued = backupService.requestBackup(player, TriggerType.MANUAL, (success, backupId) -> {
@@ -184,13 +187,17 @@ public final class BackupActionHandler implements SubcommandHandler {
             });
 
             if (queued) {
-                long cooldownMillis = plugin.pluginConfig() == null
-                        ? 0L
-                        : Math.max(0L, plugin.pluginConfig().manualSelfBackupCooldown().toMillis());
-                if (cooldownMillis > 0L) {
-                    selfBackupCooldownUntilMillis.put(player.getUniqueId(), now + cooldownMillis);
-                } else {
+                if (bypassCooldown) {
                     selfBackupCooldownUntilMillis.remove(player.getUniqueId());
+                } else {
+                    long cooldownMillis = plugin.pluginConfig() == null
+                            ? 0L
+                            : Math.max(0L, plugin.pluginConfig().manualSelfBackupCooldown().toMillis());
+                    if (cooldownMillis > 0L) {
+                        selfBackupCooldownUntilMillis.put(player.getUniqueId(), now + cooldownMillis);
+                    } else {
+                        selfBackupCooldownUntilMillis.remove(player.getUniqueId());
+                    }
                 }
 
                 async.runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", player.getName())));

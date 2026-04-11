@@ -22,6 +22,7 @@ permissions:
       playerinvbackup.backup: true
       playerinvbackup.backupall: true
       playerinvbackup.self: true
+      playerinvbackup.backup.bypass: true
       playerinvbackup.restore: true
       playerinvbackup.pending: true
       playerinvbackup.status: true
@@ -44,6 +45,10 @@ permissions:
 
   playerinvbackup.self:
     description: 允许为自己手动备份
+    default: false
+
+  playerinvbackup.backup.bypass:
+    description: 允许为自己手动备份时跳过冷却
     default: false
 
   playerinvbackup.restore:
