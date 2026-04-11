@@ -17,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.Location;
 
 /**
  * 备份服务
@@ -52,6 +53,7 @@ public final class BackupService {
         }
 
         SnapshotParts parts = captureSnapshot(player);
+        Location location = player.getLocation();
         UUID playerUuid = player.getUniqueId();
         String playerName = player.getName();
         long now = System.currentTimeMillis();
@@ -71,7 +73,11 @@ public final class BackupService {
                         sha256,
                         snapshotBytes.length,
                         false,
-                        ""
+                        "",
+                        location.getWorld() == null ? null : location.getWorld().getName(),
+                        location.getX(),
+                        location.getY(),
+                        location.getZ()
                 );
                 store.saveBackup(new BackupRecord(meta, snapshotBytes));
                 long keepAfterMillis = 0L;

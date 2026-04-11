@@ -5,8 +5,10 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -41,6 +43,7 @@ public record PluginConfig(
         GuiMode guiMode,
         String languageFile,
         DateTimeFormatter backupTimeFormatter,
+        Map<String, String> worldAliases,
         boolean backupOnJoin,
         boolean backupOnQuit,
         boolean backupOnDeath,
@@ -88,6 +91,27 @@ public record PluginConfig(
                     )
             );
         }
+
+        Map<String, String> worldAliases = new LinkedHashMap<>();
+        var worldAliasesSection = config.getConfigurationSection("display.world-aliases");
+        if (worldAliasesSection != null) {
+            for (String key : worldAliasesSection.getKeys(false)) {
+                if (key == null || key.isBlank()) {
+                    continue;
+                }
+                String alias = worldAliasesSection.getString(key);
+                if (alias == null) {
+                    continue;
+                }
+                String normalizedKey = key.trim().toLowerCase(Locale.ROOT);
+                String trimmedAlias = alias.trim();
+                if (normalizedKey.isEmpty() || trimmedAlias.isEmpty()) {
+                    continue;
+                }
+                worldAliases.put(normalizedKey, trimmedAlias);
+            }
+        }
+        worldAliases = Map.copyOf(worldAliases);
 
         var storageType = StorageType.fromConfigValue(config.getString("storage.type", "sqlite"));
         var localBasePath = Path.of(config.getString("storage.local.base-path", "data"));
@@ -177,6 +201,7 @@ public record PluginConfig(
                 guiMode,
                 languageFile,
                 backupTimeFormatter,
+                worldAliases,
                 backupOnJoin,
                 backupOnQuit,
                 backupOnDeath,
@@ -186,5 +211,16 @@ public record PluginConfig(
                 guiClickSound,
                 guiButtonSounds
         );
+    }
+
+    public String displayWorldName(String worldName) {
+        if (worldName == null || worldName.isBlank()) {
+            return worldName;
+        }
+        String alias = worldAliases.get(worldName.toLowerCase(Locale.ROOT));
+        if (alias == null || alias.isBlank()) {
+            return worldName;
+        }
+        return alias;
     }
 }

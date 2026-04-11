@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -460,6 +461,10 @@ public final class GuiService {
                             parts,
                             claimedInv,
                             claimedEnder,
+                            record.meta().worldName(),
+                            record.meta().locationX(),
+                            record.meta().locationY(),
+                            record.meta().locationZ(),
                             record.meta().locked(),
                             record.meta().note()
                     );
@@ -1086,6 +1091,8 @@ public final class GuiService {
                             Placeholder.unparsed("id", meta.backupId()),
                             Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
                             Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
+                            Placeholder.unparsed("world", displayWorld(meta.worldName())),
+                            Placeholder.unparsed("position", displayPosition(meta.locationX(), meta.locationY(), meta.locationZ())),
                             Placeholder.unparsed("locked", lockedText),
                             Placeholder.unparsed("note", noteText)
                     )));
@@ -1196,7 +1203,9 @@ public final class GuiService {
                         lang.msgList(
                                 "gui.backup-view.lock.lore",
                                 Placeholder.unparsed("locked", lockedText),
-                                Placeholder.unparsed("note", noteText)
+                                Placeholder.unparsed("note", noteText),
+                                Placeholder.unparsed("world", displayWorld(holder.worldName())),
+                                Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ()))
                         )
                 )
         );
@@ -1294,6 +1303,8 @@ public final class GuiService {
                             Placeholder.unparsed("id", meta.backupId()),
                             Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
                             Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
+                            Placeholder.unparsed("world", displayWorld(meta.worldName())),
+                            Placeholder.unparsed("position", displayPosition(meta.locationX(), meta.locationY(), meta.locationZ())),
                             Placeholder.unparsed("locked", lockedText),
                             Placeholder.unparsed("note", noteText)
                     )));
@@ -1402,7 +1413,23 @@ public final class GuiService {
         String name = targetName == null ? targetUuid.toString() : targetName;
         Lang lang = plugin.lang();
         BackupQuery safeQuery = listQuery == null ? BackupQuery.all() : listQuery;
-        BackupViewHolder holder = new BackupViewHolder(targetUuid, name, backupId, listPage, safeQuery, view, parts, claimedInv, claimedEnder, locked, note);
+        BackupViewHolder holder = new BackupViewHolder(
+                targetUuid,
+                name,
+                backupId,
+                listPage,
+                safeQuery,
+                view,
+                parts,
+                claimedInv,
+                claimedEnder,
+                null,
+                null,
+                null,
+                null,
+                locked,
+                note
+        );
         Inventory inv = Bukkit.createInventory(
                 holder,
                 GUI_SIZE,
@@ -1459,7 +1486,9 @@ public final class GuiService {
                         lang.msgList(
                                 "gui.backup-view.lock.lore",
                                 Placeholder.unparsed("locked", lockedText),
-                                Placeholder.unparsed("note", noteText)
+                                Placeholder.unparsed("note", noteText),
+                                Placeholder.unparsed("world", displayWorld(holder.worldName())),
+                                Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ()))
                         )
                 )
         );
@@ -1476,7 +1505,11 @@ public final class GuiService {
                     holder.backupId(),
                     holder.listPage(),
                     holder.listQuery(),
-                    holder.view()
+                    holder.view(),
+                    holder.worldName(),
+                    holder.locationX(),
+                    holder.locationY(),
+                    holder.locationZ()
             );
             Component title = lang.msgNoPrefix("gui.restore-confirm.title", Placeholder.unparsed("target", titleName));
             Inventory inv = Bukkit.createInventory(
@@ -1493,7 +1526,9 @@ public final class GuiService {
                     lang.msgList(
                             "gui.restore-confirm.info.lore",
                             Placeholder.unparsed("target", titleName),
-                            Placeholder.unparsed("id", holder.backupId())
+                            Placeholder.unparsed("id", holder.backupId()),
+                            Placeholder.unparsed("world", displayWorld(holder.worldName())),
+                            Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ()))
                     )
             ));
             inv.setItem(CONFIRM_CANCEL, namedItem(Material.RED_CONCRETE, lang.msg("gui.restore-confirm.cancel.name"), lang.msgList("gui.restore-confirm.cancel.lore")));
@@ -1743,6 +1778,24 @@ public final class GuiService {
         }
         String safeTarget = targetName == null ? "-" : targetName;
         return lang.msgNoPrefix("gui.backup-view.title", Placeholder.unparsed("target", safeTarget));
+    }
+
+    private String displayWorld(String worldName) {
+        if (worldName == null || worldName.isBlank()) {
+            return plugin.lang().raw("common.none");
+        }
+        var config = plugin.pluginConfig();
+        if (config == null) {
+            return worldName;
+        }
+        return config.displayWorldName(worldName);
+    }
+
+    private String displayPosition(Double x, Double y, Double z) {
+        if (x == null || y == null || z == null) {
+            return plugin.lang().raw("common.none");
+        }
+        return String.format(Locale.ROOT, "%.2f, %.2f, %.2f", x, y, z);
     }
 
     private Inventory createLoading(Component title) {

@@ -68,6 +68,10 @@ public final class LocalBackupStore implements BackupStore {
         yaml.set("snapshot-size-bytes", meta.snapshotSizeBytes());
         yaml.set("locked", meta.locked());
         yaml.set("note", meta.note());
+        yaml.set("world-name", meta.worldName());
+        yaml.set("location.x", meta.locationX());
+        yaml.set("location.y", meta.locationY());
+        yaml.set("location.z", meta.locationZ());
 
         Path metaPath = playerDir.resolve(meta.backupId() + ".yml");
         AtomicFiles.writeStringAtomic(metaPath, yaml.saveToString(), StandardCharsets.UTF_8, true);
@@ -364,10 +368,14 @@ public final class LocalBackupStore implements BackupStore {
             int size = yaml.getInt("snapshot-size-bytes", 0);
             boolean locked = yaml.getBoolean("locked", false);
             String note = yaml.getString("note", "");
+            String worldName = yaml.getString("world-name", null);
+            Double locationX = yaml.contains("location.x") ? yaml.getDouble("location.x") : null;
+            Double locationY = yaml.contains("location.y") ? yaml.getDouble("location.y") : null;
+            Double locationZ = yaml.contains("location.z") ? yaml.getDouble("location.z") : null;
             if (note == null) {
                 note = "";
             }
-            return new BackupMeta(backupId, playerUuid, createdAt, trigger, schemaVersion, sha256, size, locked, note);
+            return new BackupMeta(backupId, playerUuid, createdAt, trigger, schemaVersion, sha256, size, locked, note, worldName, locationX, locationY, locationZ);
         } catch (Exception e) {
             return null;
         }

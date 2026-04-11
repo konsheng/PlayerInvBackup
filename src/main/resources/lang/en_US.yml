@@ -160,6 +160,8 @@ gui:
         - "<#90A4AE>ID: </#90A4AE><white><id></white>"
         - "<#90A4AE>Trigger: </#90A4AE><white><trigger></white>"
         - "<#90A4AE>Size: </#90A4AE><white><size></white><#78909C> bytes</#78909C>"
+        - "<#90A4AE>World: </#90A4AE><white><world></white>"
+        - "<#90A4AE>Position: </#90A4AE><white><position></white>"
         - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
         - "<#90A4AE>Note: </#90A4AE><white><note></white>"
         - "<#81C784>▶ Click to open</#81C784>"
@@ -253,6 +255,8 @@ gui:
       lore:
         - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
         - "<#90A4AE>Note: </#90A4AE><white><note></white>"
+        - "<#90A4AE>World: </#90A4AE><white><world></white>"
+        - "<#90A4AE>Position: </#90A4AE><white><position></white>"
         - "<#90A4AE>Pinned backups are not auto purged</#90A4AE>"
         - "<#90A4AE>Pinned backups appear at the top of the list</#90A4AE>"
         - "<#4FC3F7>▶ Click to toggle pin</#4FC3F7>"
@@ -270,6 +274,8 @@ gui:
       lore:
         - "<#90A4AE>Player: </#90A4AE><white><target></white>"
         - "<#90A4AE>Backup ID: </#90A4AE><white><id></white>"
+        - "<#90A4AE>World: </#90A4AE><white><world></white>"
+        - "<#90A4AE>Position: </#90A4AE><white><position></white>"
     cancel:
       name: "<#81C784>✖ Cancel</#81C784>"
       lore:

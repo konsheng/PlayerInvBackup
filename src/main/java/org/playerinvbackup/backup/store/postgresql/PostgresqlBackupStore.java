@@ -54,8 +54,8 @@ public final class PostgresqlBackupStore implements BackupStore {
     public void saveBackup(BackupRecord record) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
@@ -69,6 +69,10 @@ public final class PostgresqlBackupStore implements BackupStore {
                 ps.setInt(8, meta.snapshotSizeBytes());
                 ps.setBoolean(9, meta.locked());
                 ps.setString(10, meta.note());
+                ps.setString(11, meta.worldName());
+                ps.setObject(12, meta.locationX());
+                ps.setObject(13, meta.locationY());
+                ps.setObject(14, meta.locationZ());
                 ps.executeUpdate();
             }
         }
@@ -81,7 +85,7 @@ public final class PostgresqlBackupStore implements BackupStore {
         }
         synchronized (lock) {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note
+                    SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM backups
                     WHERE player_uuid=?
                     """);
@@ -121,7 +125,11 @@ public final class PostgresqlBackupStore implements BackupStore {
                                 rs.getString(5),
                                 rs.getInt(6),
                                 rs.getBoolean(7),
-                                defaultString(rs.getString(8))
+                                defaultString(rs.getString(8)),
+                                rs.getString(9),
+                                readNullableDouble(rs, 10),
+                                readNullableDouble(rs, 11),
+                                readNullableDouble(rs, 12)
                         ));
                     }
                     return out;
@@ -134,7 +142,7 @@ public final class PostgresqlBackupStore implements BackupStore {
     public Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         synchronized (lock) {
             String sql = """
-                    SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note
+                    SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM backups
                     WHERE player_uuid=? AND backup_id=?
                     """;
@@ -154,7 +162,11 @@ public final class PostgresqlBackupStore implements BackupStore {
                             rs.getString(4),
                             rs.getInt(6),
                             rs.getBoolean(7),
-                            defaultString(rs.getString(8))
+                            defaultString(rs.getString(8)),
+                            rs.getString(9),
+                            readNullableDouble(rs, 10),
+                            readNullableDouble(rs, 11),
+                            readNullableDouble(rs, 12)
                     );
                     return Optional.of(new BackupRecord(meta, rs.getBytes(5)));
                 }
@@ -395,7 +407,11 @@ public final class PostgresqlBackupStore implements BackupStore {
                       snapshot_blob BYTEA NOT NULL,
                       snapshot_size INT NOT NULL,
                       locked BOOLEAN NOT NULL DEFAULT FALSE,
-                      note TEXT
+                      note TEXT,
+                      world_name VARCHAR(255),
+                      location_x DOUBLE PRECISION,
+                      location_y DOUBLE PRECISION,
+                      location_z DOUBLE PRECISION
                     )
                     """);
 
@@ -424,6 +440,10 @@ public final class PostgresqlBackupStore implements BackupStore {
     private static void migrateSchema(Connection connection) throws SQLException {
         ensureBackupColumn(connection, "locked", "BOOLEAN NOT NULL DEFAULT FALSE");
         ensureBackupColumn(connection, "note", "TEXT");
+        ensureBackupColumn(connection, "world_name", "VARCHAR(255)");
+        ensureBackupColumn(connection, "location_x", "DOUBLE PRECISION");
+        ensureBackupColumn(connection, "location_y", "DOUBLE PRECISION");
+        ensureBackupColumn(connection, "location_z", "DOUBLE PRECISION");
     }
 
     private static void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
@@ -483,6 +503,11 @@ public final class PostgresqlBackupStore implements BackupStore {
                 return rs.next();
             }
         }
+    }
+
+    private static Double readNullableDouble(ResultSet rs, int columnIndex) throws SQLException {
+        double value = rs.getDouble(columnIndex);
+        return rs.wasNull() ? null : value;
     }
 
     private static boolean isConstraintViolation(SQLException e) {

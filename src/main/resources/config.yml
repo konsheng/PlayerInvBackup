@@ -11,6 +11,14 @@ display:
   # 示例: "yyyy-MM-dd HH:mm:ss"
   backup-time-format: "yyyy-MM-dd HH:mm:ss"
 
+  # 世界显示别名
+  # 键为实际世界名, 值为 GUI 中显示的别名
+  # 未配置的世界会显示原始世界名
+  world-aliases:
+    world: "主世界"
+    world_nether: "地狱"
+    world_the_end: "末地"
+
 backup:
   # 自动备份间隔 (分钟, 0 = 关闭自动备份)
   interval-minutes: 30

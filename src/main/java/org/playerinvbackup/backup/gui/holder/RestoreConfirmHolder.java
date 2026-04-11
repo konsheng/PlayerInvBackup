@@ -18,6 +18,10 @@ public final class RestoreConfirmHolder implements InventoryHolder {
     private final int listPage;
     private final BackupQuery listQuery;
     private final GuiView returnView;
+    private final String worldName;
+    private final Double locationX;
+    private final Double locationY;
+    private final Double locationZ;
     private Inventory inventory;
 
     public RestoreConfirmHolder(
@@ -26,7 +30,11 @@ public final class RestoreConfirmHolder implements InventoryHolder {
             String backupId,
             int listPage,
             BackupQuery listQuery,
-            GuiView returnView
+            GuiView returnView,
+            String worldName,
+            Double locationX,
+            Double locationY,
+            Double locationZ
     ) {
         this.targetUuid = targetUuid;
         this.targetName = targetName;
@@ -34,6 +42,10 @@ public final class RestoreConfirmHolder implements InventoryHolder {
         this.listPage = Math.max(0, listPage);
         this.listQuery = listQuery == null ? BackupQuery.all() : listQuery;
         this.returnView = returnView;
+        this.worldName = worldName;
+        this.locationX = locationX;
+        this.locationY = locationY;
+        this.locationZ = locationZ;
     }
 
     public UUID targetUuid() {
@@ -58,6 +70,22 @@ public final class RestoreConfirmHolder implements InventoryHolder {
 
     public GuiView returnView() {
         return returnView;
+    }
+
+    public String worldName() {
+        return worldName;
+    }
+
+    public Double locationX() {
+        return locationX;
+    }
+
+    public Double locationY() {
+        return locationY;
+    }
+
+    public Double locationZ() {
+        return locationZ;
     }
 
     public void setInventory(Inventory inventory) {

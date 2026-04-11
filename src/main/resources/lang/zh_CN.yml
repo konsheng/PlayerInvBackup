@@ -160,6 +160,8 @@ gui:
         - "<#90A4AE>编号: </#90A4AE><white><id></white>"
         - "<#90A4AE>触发: </#90A4AE><white><trigger></white>"
         - "<#90A4AE>大小: </#90A4AE><white><size></white><#78909C> 字节</#78909C>"
+        - "<#90A4AE>世界: </#90A4AE><white><world></white>"
+        - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
         - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
         - "<#90A4AE>备注: </#90A4AE><white><note></white>"
         - "<#81C784>▶ 点击打开</#81C784>"
@@ -253,6 +255,8 @@ gui:
       lore:
         - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
         - "<#90A4AE>备注: </#90A4AE><white><note></white>"
+        - "<#90A4AE>世界: </#90A4AE><white><world></white>"
+        - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
         - "<#90A4AE>置顶后, 不会被自动清理</#90A4AE>"
         - "<#90A4AE>置顶显示的备份会排在列表顶部</#90A4AE>"
         - "<#4FC3F7>▶ 点击切换置顶状态</#4FC3F7>"
@@ -270,6 +274,8 @@ gui:
       lore:
         - "<#90A4AE>玩家: </#90A4AE><white><target></white>"
         - "<#90A4AE>备份编号: </#90A4AE><white><id></white>"
+        - "<#90A4AE>世界: </#90A4AE><white><world></white>"
+        - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
     cancel:
       name: "<#81C784>✖ 取消</#81C784>"
       lore:

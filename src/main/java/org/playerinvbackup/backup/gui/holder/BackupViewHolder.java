@@ -23,6 +23,10 @@ public final class BackupViewHolder implements InventoryHolder {
     private final SnapshotParts parts;
     private final boolean[] claimedInv;
     private final boolean[] claimedEnder;
+    private final String worldName;
+    private final Double locationX;
+    private final Double locationY;
+    private final Double locationZ;
     // GUI 内部状态需要原地更新, 所以这里不使用 final
     private boolean locked;
     private String note;
@@ -38,6 +42,10 @@ public final class BackupViewHolder implements InventoryHolder {
             SnapshotParts parts,
             boolean[] claimedInv,
             boolean[] claimedEnder,
+            String worldName,
+            Double locationX,
+            Double locationY,
+            Double locationZ,
             boolean locked,
             String note
     ) {
@@ -50,6 +58,10 @@ public final class BackupViewHolder implements InventoryHolder {
         this.parts = parts;
         this.claimedInv = claimedInv;
         this.claimedEnder = claimedEnder;
+        this.worldName = worldName;
+        this.locationX = locationX;
+        this.locationY = locationY;
+        this.locationZ = locationZ;
         this.locked = locked;
         this.note = note == null ? "" : note;
     }
@@ -92,6 +104,22 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public boolean[] claimedEnder() {
         return claimedEnder;
+    }
+
+    public String worldName() {
+        return worldName;
+    }
+
+    public Double locationX() {
+        return locationX;
+    }
+
+    public Double locationY() {
+        return locationY;
+    }
+
+    public Double locationZ() {
+        return locationZ;
     }
 
     public boolean locked() {

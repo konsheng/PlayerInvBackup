@@ -64,8 +64,8 @@ public final class H2BackupStore implements BackupStore {
     public void saveBackup(BackupRecord record) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """;
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
@@ -79,6 +79,10 @@ public final class H2BackupStore implements BackupStore {
                 ps.setInt(8, meta.snapshotSizeBytes());
                 ps.setInt(9, meta.locked() ? 1 : 0);
                 ps.setString(10, meta.note());
+                ps.setString(11, meta.worldName());
+                ps.setObject(12, meta.locationX());
+                ps.setObject(13, meta.locationY());
+                ps.setObject(14, meta.locationZ());
                 ps.executeUpdate();
             }
         }
@@ -91,7 +95,7 @@ public final class H2BackupStore implements BackupStore {
         }
         synchronized (lock) {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note
+                    SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM backups
                     WHERE player_uuid=?
                     """);
@@ -130,6 +134,10 @@ public final class H2BackupStore implements BackupStore {
                         int size = rs.getInt(6);
                         boolean locked = rs.getInt(7) != 0;
                         String note = rs.getString(8);
+                        String worldName = rs.getString(9);
+                        Double locationX = readNullableDouble(rs, 10);
+                        Double locationY = readNullableDouble(rs, 11);
+                        Double locationZ = readNullableDouble(rs, 12);
                         out.add(new BackupMeta(
                                 backupId,
                                 playerUuid,
@@ -139,7 +147,11 @@ public final class H2BackupStore implements BackupStore {
                                 sha256,
                                 size,
                                 locked,
-                                note == null ? "" : note
+                                note == null ? "" : note,
+                                worldName,
+                                locationX,
+                                locationY,
+                                locationZ
                         ));
                     }
                     return out;
@@ -152,7 +164,7 @@ public final class H2BackupStore implements BackupStore {
     public Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         synchronized (lock) {
             String sql = """
-                    SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note
+                    SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM backups
                     WHERE player_uuid=? AND backup_id=?
                     """;
@@ -171,6 +183,10 @@ public final class H2BackupStore implements BackupStore {
                     int size = rs.getInt(6);
                     boolean locked = rs.getInt(7) != 0;
                     String note = rs.getString(8);
+                    String worldName = rs.getString(9);
+                    Double locationX = readNullableDouble(rs, 10);
+                    Double locationY = readNullableDouble(rs, 11);
+                    Double locationZ = readNullableDouble(rs, 12);
                     BackupMeta meta = new BackupMeta(
                             backupId,
                             playerUuid,
@@ -180,7 +196,11 @@ public final class H2BackupStore implements BackupStore {
                             sha256,
                             size,
                             locked,
-                            note == null ? "" : note
+                            note == null ? "" : note,
+                            worldName,
+                            locationX,
+                            locationY,
+                            locationZ
                     );
                     return Optional.of(new BackupRecord(meta, snapshot));
                 }
@@ -426,7 +446,11 @@ public final class H2BackupStore implements BackupStore {
                       snapshot_blob BLOB NOT NULL,
                       snapshot_size INT NOT NULL,
                       locked INT NOT NULL DEFAULT 0,
-                      note VARCHAR(1024)
+                      note VARCHAR(1024),
+                      world_name VARCHAR(255),
+                      location_x DOUBLE,
+                      location_y DOUBLE,
+                      location_z DOUBLE
                     )
                     """);
 
@@ -456,6 +480,10 @@ public final class H2BackupStore implements BackupStore {
     private static void migrateSchema(Connection connection) throws SQLException {
         ensureBackupColumn(connection, "locked", "INT NOT NULL DEFAULT 0");
         ensureBackupColumn(connection, "note", "VARCHAR(1024)");
+        ensureBackupColumn(connection, "world_name", "VARCHAR(255)");
+        ensureBackupColumn(connection, "location_x", "DOUBLE");
+        ensureBackupColumn(connection, "location_y", "DOUBLE");
+        ensureBackupColumn(connection, "location_z", "DOUBLE");
     }
 
     private static void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
@@ -526,6 +554,11 @@ public final class H2BackupStore implements BackupStore {
             }
             throw e;
         }
+    }
+
+    private static Double readNullableDouble(ResultSet rs, int columnIndex) throws SQLException {
+        double value = rs.getDouble(columnIndex);
+        return rs.wasNull() ? null : value;
     }
 
     private static boolean isIndexAlreadyExists(SQLException e) {

@@ -16,6 +16,31 @@ public record BackupMeta(
         String sha256Hex,
         int snapshotSizeBytes,
         boolean locked,
-        String note
+        String note,
+        String worldName,
+        Double locationX,
+        Double locationY,
+        Double locationZ
 ) {
+    public BackupMeta(
+            String backupId,
+            UUID playerUuid,
+            long createdAtMillis,
+            TriggerType trigger,
+            int schemaVersion,
+            String sha256Hex,
+            int snapshotSizeBytes,
+            boolean locked,
+            String note
+    ) {
+        this(backupId, playerUuid, createdAtMillis, trigger, schemaVersion, sha256Hex, snapshotSizeBytes, locked, note, null, null, null, null);
+    }
+
+    public boolean hasLocation() {
+        return worldName != null
+                && !worldName.isBlank()
+                && locationX != null
+                && locationY != null
+                && locationZ != null;
+    }
 }
