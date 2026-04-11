@@ -244,7 +244,7 @@ public final class QueryHandler implements SubcommandHandler {
         String serverVersion = serverVersion();
         String pluginVersion = plugin.getPluginMeta().getVersion();
 
-        Chat.plain(ctx.sender(), "status.title");
+        Chat.plain(ctx.sender(), "status.title", Placeholder.unparsed("version", pluginVersion));
         Chat.plain(ctx.sender(), "status.server-version", Placeholder.unparsed("version", serverVersion));
         Chat.plain(ctx.sender(), "status.plugin-version", Placeholder.unparsed("version", pluginVersion));
         Chat.plain(

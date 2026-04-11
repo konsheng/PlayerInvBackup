@@ -109,7 +109,7 @@ public final class AdminHandler implements SubcommandHandler {
         if (!guards.requirePermission(ctx, Permissions.ADMIN)) {
             return true;
         }
-        Chat.plain(ctx.sender(), "tips.header");
+        Chat.plain(ctx.sender(), "tips.header", Placeholder.unparsed("version", versionSupplier.get()));
         Chat.plainList(ctx.sender(), "tips.lines", Placeholder.unparsed("label", ctx.label()));
         return true;
     }
