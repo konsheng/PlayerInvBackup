@@ -242,10 +242,11 @@ public final class QueryHandler implements SubcommandHandler {
         String storagePath = storagePath();
         String backupScope = plugin.lang().raw("status.scope-value");
         String serverVersion = serverVersion();
+        String pluginVersion = plugin.getPluginMeta().getVersion();
 
         Chat.plain(ctx.sender(), "status.title");
         Chat.plain(ctx.sender(), "status.server-version", Placeholder.unparsed("version", serverVersion));
-        Chat.plain(ctx.sender(), "status.permission", Placeholder.unparsed("perm", Permissions.ADMIN));
+        Chat.plain(ctx.sender(), "status.plugin-version", Placeholder.unparsed("version", pluginVersion));
         Chat.plain(
                 ctx.sender(),
                 "status.config",
