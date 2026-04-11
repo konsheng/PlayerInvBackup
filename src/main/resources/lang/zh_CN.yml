@@ -92,6 +92,7 @@ success:
   reloaded: "<prefix><#66BB6A>✔ 已重载配置与语言</#66BB6A>"
   backup-queued: "<prefix><#66BB6A>✔ 已加入备份队列: <#FFCA28><player></#FFCA28></#66BB6A>"
   self-backup-finished: "<prefix><#66BB6A>✔ 你的备份已完成: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
+  self-backup-copy-hover: "<#FFCA28>点击复制备份编号</#FFCA28>"
   backupall-submitted: "<prefix><#66BB6A>✔ 全部在线玩家备份已提交: 成功 <#FFCA28><queued></#FFCA28> 人, 跳过/失败 <#EF5350><skipped></#EF5350> 人</#66BB6A>"
   backup-locked: "<prefix><#66BB6A>✔ 已置顶显示备份: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backup-unlocked: "<prefix><#66BB6A>✔ 已取消置顶显示: <#FFCA28><backup_id></#FFCA28></#66BB6A>"

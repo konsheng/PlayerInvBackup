@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -179,11 +182,10 @@ public final class BackupActionHandler implements SubcommandHandler {
                 if (!success) {
                     return;
                 }
-                async.runOnSender(sender, () -> Chat.success(
-                        sender,
+                async.runOnSender(sender, () -> sender.sendMessage(plugin.lang().msg(
                         "success.self-backup-finished",
-                        Placeholder.unparsed("backup_id", backupId)
-                ));
+                        Placeholder.component("backup_id", createCopyableBackupId(backupId))
+                )));
             });
 
             if (queued) {
@@ -287,5 +289,11 @@ public final class BackupActionHandler implements SubcommandHandler {
             return 0L;
         }
         return until - now;
+    }
+
+    private Component createCopyableBackupId(String backupId) {
+        return Component.text(backupId)
+                .clickEvent(ClickEvent.copyToClipboard(backupId))
+                .hoverEvent(HoverEvent.showText(plugin.lang().msg("success.self-backup-copy-hover")));
     }
 }
