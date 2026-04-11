@@ -33,6 +33,7 @@ public record PluginConfig(
         StorageType storageType,
         Path localBasePath,
         Path sqliteFile,
+        String sqliteTablePrefix,
         MysqlConfig mysql,
         PostgresqlConfig postgresql,
         H2Config h2,
@@ -116,6 +117,12 @@ public record PluginConfig(
         var storageType = StorageType.fromConfigValue(config.getString("storage.type", "sqlite"));
         var localBasePath = Path.of(config.getString("storage.local.base-path", "data"));
         var sqliteFile = Path.of(config.getString("storage.sqlite.file", "data/backups.db"));
+        String sqliteTablePrefix = config.getString("storage.sqlite.table-prefix", "");
+        if (sqliteTablePrefix == null) {
+            sqliteTablePrefix = "";
+        } else {
+            sqliteTablePrefix = sqliteTablePrefix.trim();
+        }
         MysqlConfig mysql = MysqlConfig.from(config);
         PostgresqlConfig postgresql = PostgresqlConfig.from(config);
         H2Config h2 = H2Config.from(config);
@@ -191,6 +198,7 @@ public record PluginConfig(
                 storageType,
                 localBasePath,
                 sqliteFile,
+                sqliteTablePrefix,
                 mysql,
                 postgresql,
                 h2,

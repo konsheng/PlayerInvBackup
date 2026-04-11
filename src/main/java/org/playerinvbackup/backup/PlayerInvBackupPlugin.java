@@ -27,6 +27,7 @@ import org.playerinvbackup.backup.metrics.BStatsService;
 import org.playerinvbackup.backup.platform.PlayerLifecycleListener;
 import org.playerinvbackup.backup.restore.RestoreService;
 import org.playerinvbackup.backup.store.BackupStore;
+import org.playerinvbackup.backup.store.SqlTableNames;
 import org.playerinvbackup.backup.store.h2.H2BackupStore;
 import org.playerinvbackup.backup.store.local.LocalBackupStore;
 import org.playerinvbackup.backup.store.mysql.MysqlBackupStore;
@@ -217,21 +218,32 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         Path dataFolder = getDataFolder().toPath();
         return switch (config.storageType()) {
             case LOCAL -> new LocalBackupStore(dataFolder.resolve(config.localBasePath()));
-            case SQLITE -> new SqliteBackupStore(dataFolder.resolve(config.sqliteFile()));
+            case SQLITE -> new SqliteBackupStore(
+                    dataFolder.resolve(config.sqliteFile()),
+                    new SqlTableNames(config.sqliteTablePrefix())
+            );
             case MYSQL -> new MysqlBackupStore(
                     config.mysql().jdbcUrl(),
                     config.mysql().username(),
-                    config.mysql().password()
+                    config.mysql().password(),
+                    new SqlTableNames(config.mysql().tablePrefix())
             );
             case POSTGRESQL -> new PostgresqlBackupStore(
                     config.postgresql().jdbcUrl(),
                     config.postgresql().username(),
-                    config.postgresql().password()
+                    config.postgresql().password(),
+                    new SqlTableNames(config.postgresql().tablePrefix())
             );
             case H2 -> {
                 Path fileBase = dataFolder.resolve(config.h2().file());
                 String jdbcUrl = config.h2().jdbcUrl(fileBase);
-                yield new H2BackupStore(fileBase, jdbcUrl, config.h2().username(), config.h2().password());
+                yield new H2BackupStore(
+                        fileBase,
+                        jdbcUrl,
+                        config.h2().username(),
+                        config.h2().password(),
+                        new SqlTableNames(config.h2().tablePrefix())
+                );
             }
         };
     }

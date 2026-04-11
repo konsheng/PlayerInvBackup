@@ -16,7 +16,8 @@ public record PostgresqlConfig(
         String database,
         String username,
         String password,
-        String parameters
+        String parameters,
+        String tablePrefix
 ) {
     public static PostgresqlConfig from(FileConfiguration config) {
         String url = normalizeBlankToNull(config.getString("storage.postgresql.url", null));
@@ -29,7 +30,8 @@ public record PostgresqlConfig(
                 "storage.postgresql.parameters",
                 "sslmode=disable"
         ));
-        return new PostgresqlConfig(url, host, port, database, username, password == null ? "" : password, parameters);
+        String tablePrefix = normalizeBlankToDefault(config.getString("storage.postgresql.table-prefix", ""), "");
+        return new PostgresqlConfig(url, host, port, database, username, password == null ? "" : password, parameters, tablePrefix);
     }
 
     /**

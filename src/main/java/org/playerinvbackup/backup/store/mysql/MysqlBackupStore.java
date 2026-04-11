@@ -20,25 +20,26 @@ import org.playerinvbackup.backup.domain.TriggerType;
 import org.playerinvbackup.backup.domain.UndeliveredClaim;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.playerinvbackup.backup.store.BackupStore;
+import org.playerinvbackup.backup.store.SqlTableNames;
 
 /**
  * MySQL/MariaDB 存储实现
  *
- * <p>说明:
- * 1) 使用单连接 + synchronized, 配合插件的单线程 I/O 队列即可满足顺序写入
- * 2) snapshot/item 数据使用 MEDIUMBLOB, 避免 BLOB 64KB 限制导致写入失败
+ * <p>使用单连接加 synchronized, 配合插件单线程 I/O 队列顺序写入
  */
 public final class MysqlBackupStore implements BackupStore {
     private final Object lock = new Object();
     private final String jdbcUrl;
     private final String username;
     private final String password;
+    private final SqlTableNames tables;
     private Connection connection;
 
-    public MysqlBackupStore(String jdbcUrl, String username, String password) {
+    public MysqlBackupStore(String jdbcUrl, String username, String password, SqlTableNames tables) {
         this.jdbcUrl = jdbcUrl;
         this.username = username;
         this.password = password;
+        this.tables = tables;
     }
 
     @Override
@@ -56,9 +57,9 @@ public final class MysqlBackupStore implements BackupStore {
     public void saveBackup(BackupRecord record) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
+                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """;
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
                 ps.setString(1, meta.backupId());
@@ -88,9 +89,9 @@ public final class MysqlBackupStore implements BackupStore {
         synchronized (lock) {
             StringBuilder sql = new StringBuilder("""
                     SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
-                    FROM backups
+                    FROM %s
                     WHERE player_uuid=?
-                    """);
+                    """.formatted(tables.backups()));
             TriggerType triggerFilter = query == null ? null : query.trigger();
             long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
             if (triggerFilter != null) {
@@ -118,32 +119,20 @@ public final class MysqlBackupStore implements BackupStore {
                 try (ResultSet rs = ps.executeQuery()) {
                     List<BackupMeta> out = new ArrayList<>();
                     while (rs.next()) {
-                        String backupId = rs.getString(1);
-                        long createdAt = rs.getLong(2);
-                        TriggerType trigger = TriggerType.valueOf(rs.getString(3));
-                        int schemaVersion = rs.getInt(4);
-                        String sha256 = rs.getString(5);
-                        int size = rs.getInt(6);
-                        boolean locked = rs.getInt(7) != 0;
-                        String note = rs.getString(8);
-                        String worldName = rs.getString(9);
-                        Double locationX = readNullableDouble(rs, 10);
-                        Double locationY = readNullableDouble(rs, 11);
-                        Double locationZ = readNullableDouble(rs, 12);
                         out.add(new BackupMeta(
-                                backupId,
+                                rs.getString(1),
                                 playerUuid,
-                                createdAt,
-                                trigger,
-                                schemaVersion,
-                                sha256,
-                                size,
-                                locked,
-                                note == null ? "" : note,
-                                worldName,
-                                locationX,
-                                locationY,
-                                locationZ
+                                rs.getLong(2),
+                                TriggerType.valueOf(rs.getString(3)),
+                                rs.getInt(4),
+                                rs.getString(5),
+                                rs.getInt(6),
+                                rs.getInt(7) != 0,
+                                defaultString(rs.getString(8)),
+                                rs.getString(9),
+                                readNullableDouble(rs, 10),
+                                readNullableDouble(rs, 11),
+                                readNullableDouble(rs, 12)
                         ));
                     }
                     return out;
@@ -157,9 +146,9 @@ public final class MysqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
-                    FROM backups
+                    FROM %s
                     WHERE player_uuid=? AND backup_id=?
-                    """;
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, playerUuid.toString());
                 ps.setString(2, backupId);
@@ -167,34 +156,22 @@ public final class MysqlBackupStore implements BackupStore {
                     if (!rs.next()) {
                         return Optional.empty();
                     }
-                    long createdAt = rs.getLong(1);
-                    TriggerType trigger = TriggerType.valueOf(rs.getString(2));
-                    int schemaVersion = rs.getInt(3);
-                    String sha256 = rs.getString(4);
-                    byte[] snapshot = rs.getBytes(5);
-                    int size = rs.getInt(6);
-                    boolean locked = rs.getInt(7) != 0;
-                    String note = rs.getString(8);
-                    String worldName = rs.getString(9);
-                    Double locationX = readNullableDouble(rs, 10);
-                    Double locationY = readNullableDouble(rs, 11);
-                    Double locationZ = readNullableDouble(rs, 12);
                     BackupMeta meta = new BackupMeta(
                             backupId,
                             playerUuid,
-                            createdAt,
-                            trigger,
-                            schemaVersion,
-                            sha256,
-                            size,
-                            locked,
-                            note == null ? "" : note,
-                            worldName,
-                            locationX,
-                            locationY,
-                            locationZ
+                            rs.getLong(1),
+                            TriggerType.valueOf(rs.getString(2)),
+                            rs.getInt(3),
+                            rs.getString(4),
+                            rs.getInt(6),
+                            rs.getInt(7) != 0,
+                            defaultString(rs.getString(8)),
+                            rs.getString(9),
+                            readNullableDouble(rs, 10),
+                            readNullableDouble(rs, 11),
+                            readNullableDouble(rs, 12)
                     );
-                    return Optional.of(new BackupRecord(meta, snapshot));
+                    return Optional.of(new BackupRecord(meta, rs.getBytes(5)));
                 }
             }
         }
@@ -203,7 +180,7 @@ public final class MysqlBackupStore implements BackupStore {
     @Override
     public boolean setBackupLocked(UUID playerUuid, String backupId, boolean locked) throws Exception {
         synchronized (lock) {
-            String sql = "UPDATE backups SET locked=? WHERE player_uuid=? AND backup_id=?";
+            String sql = "UPDATE " + tables.backups() + " SET locked=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, locked ? 1 : 0);
                 ps.setString(2, playerUuid.toString());
@@ -216,7 +193,7 @@ public final class MysqlBackupStore implements BackupStore {
     @Override
     public boolean setBackupNote(UUID playerUuid, String backupId, String note) throws Exception {
         synchronized (lock) {
-            String sql = "UPDATE backups SET note=? WHERE player_uuid=? AND backup_id=?";
+            String sql = "UPDATE " + tables.backups() + " SET note=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, note);
                 ps.setString(2, playerUuid.toString());
@@ -231,19 +208,21 @@ public final class MysqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT slot_type, slot_index, actor_uuid, claimed_at
-                    FROM claims
+                    FROM %s
                     WHERE backup_id=?
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, backupId);
                 try (ResultSet rs = ps.executeQuery()) {
                     List<SlotClaim> out = new ArrayList<>();
                     while (rs.next()) {
-                        SlotType slotType = SlotType.valueOf(rs.getString(1));
-                        int slotIndex = rs.getInt(2);
-                        UUID actorUuid = UUID.fromString(rs.getString(3));
-                        long claimedAt = rs.getLong(4);
-                        out.add(new SlotClaim(backupId, slotType, slotIndex, actorUuid, claimedAt));
+                        out.add(new SlotClaim(
+                                backupId,
+                                SlotType.valueOf(rs.getString(1)),
+                                rs.getInt(2),
+                                UUID.fromString(rs.getString(3)),
+                                rs.getLong(4)
+                        ));
                     }
                     return out;
                 }
@@ -264,9 +243,9 @@ public final class MysqlBackupStore implements BackupStore {
     ) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO claims(player_uuid, backup_id, slot_type, slot_index, actor_uuid, actor_name, claimed_at, item_blob, delivered, delivered_at)
+                    INSERT INTO %s(player_uuid, backup_id, slot_type, slot_index, actor_uuid, actor_name, claimed_at, item_blob, delivered, delivered_at)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, playerUuid.toString());
                 ps.setString(2, backupId);
@@ -295,33 +274,26 @@ public final class MysqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT player_uuid, backup_id, slot_type, slot_index, actor_name, claimed_at, item_blob
-                    FROM claims
+                    FROM %s
                     WHERE actor_uuid=? AND delivered=0
                     ORDER BY claimed_at ASC
                     LIMIT ?
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, actorUuid.toString());
                 ps.setInt(2, limit);
                 try (ResultSet rs = ps.executeQuery()) {
                     List<UndeliveredClaim> out = new ArrayList<>();
                     while (rs.next()) {
-                        UUID playerUuid = UUID.fromString(rs.getString(1));
-                        String backupId = rs.getString(2);
-                        SlotType slotType = SlotType.valueOf(rs.getString(3));
-                        int slotIndex = rs.getInt(4);
-                        String actorName = rs.getString(5);
-                        long claimedAt = rs.getLong(6);
-                        byte[] itemBytes = rs.getBytes(7);
                         out.add(new UndeliveredClaim(
-                                playerUuid,
-                                backupId,
-                                slotType,
-                                slotIndex,
+                                UUID.fromString(rs.getString(1)),
+                                rs.getString(2),
+                                SlotType.valueOf(rs.getString(3)),
+                                rs.getInt(4),
                                 actorUuid,
-                                actorName,
-                                claimedAt,
-                                itemBytes
+                                rs.getString(5),
+                                rs.getLong(6),
+                                rs.getBytes(7)
                         ));
                     }
                     return out;
@@ -341,10 +313,10 @@ public final class MysqlBackupStore implements BackupStore {
     ) throws Exception {
         synchronized (lock) {
             String sql = """
-                    UPDATE claims
+                    UPDATE %s
                     SET delivered=1, delivered_at=?
                     WHERE actor_uuid=? AND player_uuid=? AND backup_id=? AND slot_type=? AND slot_index=? AND delivered=0
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setLong(1, deliveredAtMillis);
                 ps.setString(2, actorUuid.toString());
@@ -368,39 +340,39 @@ public final class MysqlBackupStore implements BackupStore {
                 List<String> toDelete = new ArrayList<>();
                 String selectSql = """
                         SELECT backup_id, created_at
-                        FROM backups
+                        FROM %s
                         WHERE player_uuid=? AND locked=0
                         ORDER BY created_at DESC
-                        """;
+                        """.formatted(tables.backups());
                 try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
                     ps.setString(1, playerUuid.toString());
                     try (ResultSet rs = ps.executeQuery()) {
                         int idx = 0;
                         while (rs.next()) {
                             idx++;
-                            String backupId = rs.getString(1);
-                            if (backupId == null || backupId.isBlank()) {
+                            String currentBackupId = rs.getString(1);
+                            if (currentBackupId == null || currentBackupId.isBlank()) {
                                 continue;
                             }
                             long createdAt = rs.getLong(2);
                             boolean deleteByCount = keepPerPlayer > 0 && idx > keepPerPlayer;
                             boolean deleteByAge = keepAfterMillis > 0 && createdAt < keepAfterMillis;
                             if (deleteByCount || deleteByAge) {
-                                toDelete.add(backupId);
+                                toDelete.add(currentBackupId);
                             }
                         }
                     }
                 }
 
-                try (PreparedStatement deleteClaims = connection.prepareStatement("DELETE FROM claims WHERE backup_id=?");
-                     PreparedStatement deleteBackup = connection.prepareStatement("DELETE FROM backups WHERE backup_id=?")) {
-                    for (String backupId : toDelete) {
-                        if (hasUndeliveredClaims(connection, backupId)) {
+                try (PreparedStatement deleteClaims = connection.prepareStatement("DELETE FROM " + tables.claims() + " WHERE backup_id=?");
+                     PreparedStatement deleteBackup = connection.prepareStatement("DELETE FROM " + tables.backups() + " WHERE backup_id=?")) {
+                    for (String currentBackupId : toDelete) {
+                        if (hasUndeliveredClaims(connection, currentBackupId)) {
                             continue;
                         }
-                        deleteClaims.setString(1, backupId);
+                        deleteClaims.setString(1, currentBackupId);
                         deleteClaims.executeUpdate();
-                        deleteBackup.setString(1, backupId);
+                        deleteBackup.setString(1, currentBackupId);
                         deleteBackup.executeUpdate();
                     }
                 }
@@ -425,10 +397,10 @@ public final class MysqlBackupStore implements BackupStore {
         }
     }
 
-    private static void createSchema(Connection connection) throws SQLException {
+    private void createSchema(Connection connection) throws SQLException {
         try (Statement st = connection.createStatement()) {
             st.execute("""
-                    CREATE TABLE IF NOT EXISTS backups(
+                    CREATE TABLE IF NOT EXISTS %s(
                       backup_id VARCHAR(64) PRIMARY KEY,
                       player_uuid CHAR(36) NOT NULL,
                       created_at BIGINT NOT NULL,
@@ -444,10 +416,10 @@ public final class MysqlBackupStore implements BackupStore {
                       location_y DOUBLE,
                       location_z DOUBLE
                     )
-                    """);
+                    """.formatted(tables.backups()));
 
             st.execute("""
-                    CREATE TABLE IF NOT EXISTS claims(
+                    CREATE TABLE IF NOT EXISTS %s(
                       player_uuid CHAR(36) NOT NULL,
                       backup_id VARCHAR(64) NOT NULL,
                       slot_type VARCHAR(32) NOT NULL,
@@ -460,16 +432,15 @@ public final class MysqlBackupStore implements BackupStore {
                       delivered_at BIGINT,
                       PRIMARY KEY(backup_id, slot_type, slot_index)
                     )
-                    """);
+                    """.formatted(tables.claims()));
         }
 
-        // MySQL 不支持 CREATE INDEX IF NOT EXISTS, 这里通过捕获异常避免重复创建报错
-        createIndexIgnoreExists(connection, "CREATE INDEX idx_backups_player_created ON backups(player_uuid, created_at)");
-        createIndexIgnoreExists(connection, "CREATE INDEX idx_claims_backup ON claims(backup_id)");
-        createIndexIgnoreExists(connection, "CREATE INDEX idx_claims_actor_delivered ON claims(actor_uuid, delivered)");
+        createIndexIgnoreExists(connection, "CREATE INDEX " + tables.idxBackupsPlayerCreated() + " ON " + tables.backups() + "(player_uuid, created_at)");
+        createIndexIgnoreExists(connection, "CREATE INDEX " + tables.idxClaimsBackup() + " ON " + tables.claims() + "(backup_id)");
+        createIndexIgnoreExists(connection, "CREATE INDEX " + tables.idxClaimsActorDelivered() + " ON " + tables.claims() + "(actor_uuid, delivered)");
     }
 
-    private static void migrateSchema(Connection connection) throws SQLException {
+    private void migrateSchema(Connection connection) throws SQLException {
         ensureBackupColumn(connection, "locked", "TINYINT(1) NOT NULL DEFAULT 0");
         ensureBackupColumn(connection, "note", "TEXT");
         ensureBackupColumn(connection, "world_name", "VARCHAR(255)");
@@ -478,20 +449,18 @@ public final class MysqlBackupStore implements BackupStore {
         ensureBackupColumn(connection, "location_z", "DOUBLE");
     }
 
-    private static void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
-        if (columnExists(connection, "backups", column)) {
+    private void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
+        if (columnExists(connection, tables.backups(), column)) {
             return;
         }
         try (Statement st = connection.createStatement()) {
-            st.execute("ALTER TABLE backups ADD COLUMN " + column + " " + definition);
+            st.execute("ALTER TABLE " + tables.backups() + " ADD COLUMN " + column + " " + definition);
         }
     }
 
     private static boolean columnExists(Connection connection, String table, String column) throws SQLException {
         DatabaseMetaData meta = connection.getMetaData();
         String catalog = safeCatalog(connection);
-
-        // 某些驱动对 tableNamePattern 大小写敏感, 这里尝试常见大小写并在最后做一次全表扫描兜底
         String[] patterns = {table, table.toUpperCase(Locale.ROOT), table.toLowerCase(Locale.ROOT)};
         for (String pattern : patterns) {
             if (pattern == null || pattern.isBlank()) {
@@ -548,27 +517,9 @@ public final class MysqlBackupStore implements BackupStore {
         }
     }
 
-    private static Double readNullableDouble(ResultSet rs, int columnIndex) throws SQLException {
-        double value = rs.getDouble(columnIndex);
-        return rs.wasNull() ? null : value;
-    }
-
-    private static boolean isIndexAlreadyExists(SQLException e) {
-        // MySQL: Duplicate key name
-        if (e.getErrorCode() == 1061) {
-            return true;
-        }
-        String message = e.getMessage();
-        if (message == null) {
-            return false;
-        }
-        String m = message.toLowerCase();
-        return m.contains("duplicate") && m.contains("key name");
-    }
-
-    private static boolean hasUndeliveredClaims(Connection connection, String backupId) throws SQLException {
+    private boolean hasUndeliveredClaims(Connection connection, String backupId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT 1 FROM claims WHERE backup_id=? AND delivered=0 LIMIT 1"
+                "SELECT 1 FROM " + tables.claims() + " WHERE backup_id=? AND delivered=0 LIMIT 1"
         )) {
             ps.setString(1, backupId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -577,8 +528,24 @@ public final class MysqlBackupStore implements BackupStore {
         }
     }
 
+    private static Double readNullableDouble(ResultSet rs, int columnIndex) throws SQLException {
+        double value = rs.getDouble(columnIndex);
+        return rs.wasNull() ? null : value;
+    }
+
+    private static boolean isIndexAlreadyExists(SQLException e) {
+        if (e.getErrorCode() == 1061) {
+            return true;
+        }
+        String message = e.getMessage();
+        if (message == null) {
+            return false;
+        }
+        String lower = message.toLowerCase(Locale.ROOT);
+        return lower.contains("duplicate") && lower.contains("key name");
+    }
+
     private static boolean isConstraintViolation(SQLException e) {
-        // MySQL: duplicate entry for key (primary key/unique key)
         if (e.getErrorCode() == 1062) {
             return true;
         }
@@ -587,6 +554,10 @@ public final class MysqlBackupStore implements BackupStore {
             return true;
         }
         String message = e.getMessage();
-        return message != null && message.toLowerCase().contains("duplicate");
+        return message != null && message.toLowerCase(Locale.ROOT).contains("duplicate");
+    }
+
+    private static String defaultString(String value) {
+        return value == null ? "" : value;
     }
 }

@@ -15,7 +15,8 @@ public record H2Config(
         Path file,
         String username,
         String password,
-        String parameters
+        String parameters,
+        String tablePrefix
 ) {
     public static H2Config from(FileConfiguration config) {
         String url = normalizeBlankToNull(config.getString("storage.h2.url", null));
@@ -26,7 +27,8 @@ public record H2Config(
                 "storage.h2.parameters",
                 "MODE=MySQL;DATABASE_TO_UPPER=false"
         ));
-        return new H2Config(url, file, username, password == null ? "" : password, parameters);
+        String tablePrefix = normalizeBlankToDefault(config.getString("storage.h2.table-prefix", ""), "");
+        return new H2Config(url, file, username, password == null ? "" : password, parameters, tablePrefix);
     }
 
     /**

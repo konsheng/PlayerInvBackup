@@ -16,7 +16,8 @@ public record MysqlConfig(
         String database,
         String username,
         String password,
-        String parameters
+        String parameters,
+        String tablePrefix
 ) {
     public static MysqlConfig from(FileConfiguration config) {
         String url = normalizeBlankToNull(config.getString("storage.mysql.url", null));
@@ -29,7 +30,8 @@ public record MysqlConfig(
                 "storage.mysql.parameters",
                 "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
         ));
-        return new MysqlConfig(url, host, port, database, username, password == null ? "" : password, parameters);
+        String tablePrefix = normalizeBlankToDefault(config.getString("storage.mysql.table-prefix", ""), "");
+        return new MysqlConfig(url, host, port, database, username, password == null ? "" : password, parameters, tablePrefix);
     }
 
     /**

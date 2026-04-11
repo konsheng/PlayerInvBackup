@@ -20,23 +20,24 @@ import org.playerinvbackup.backup.domain.TriggerType;
 import org.playerinvbackup.backup.domain.UndeliveredClaim;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.playerinvbackup.backup.store.BackupStore;
+import org.playerinvbackup.backup.store.SqlTableNames;
 
 /**
  * PostgreSQL 存储实现
- *
- * <p>使用单连接 + synchronized, 配合插件的单线程 I/O 队列即可满足顺序写入
  */
 public final class PostgresqlBackupStore implements BackupStore {
     private final Object lock = new Object();
     private final String jdbcUrl;
     private final String username;
     private final String password;
+    private final SqlTableNames tables;
     private Connection connection;
 
-    public PostgresqlBackupStore(String jdbcUrl, String username, String password) {
+    public PostgresqlBackupStore(String jdbcUrl, String username, String password, SqlTableNames tables) {
         this.jdbcUrl = jdbcUrl;
         this.username = username;
         this.password = password;
+        this.tables = tables;
     }
 
     @Override
@@ -54,9 +55,9 @@ public final class PostgresqlBackupStore implements BackupStore {
     public void saveBackup(BackupRecord record) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO backups(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
+                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """;
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
                 ps.setString(1, meta.backupId());
@@ -86,9 +87,9 @@ public final class PostgresqlBackupStore implements BackupStore {
         synchronized (lock) {
             StringBuilder sql = new StringBuilder("""
                     SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
-                    FROM backups
+                    FROM %s
                     WHERE player_uuid=?
-                    """);
+                    """.formatted(tables.backups()));
             TriggerType triggerFilter = query == null ? null : query.trigger();
             long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
             if (triggerFilter != null) {
@@ -143,9 +144,9 @@ public final class PostgresqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
-                    FROM backups
+                    FROM %s
                     WHERE player_uuid=? AND backup_id=?
-                    """;
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, playerUuid.toString());
                 ps.setString(2, backupId);
@@ -177,7 +178,7 @@ public final class PostgresqlBackupStore implements BackupStore {
     @Override
     public boolean setBackupLocked(UUID playerUuid, String backupId, boolean locked) throws Exception {
         synchronized (lock) {
-            String sql = "UPDATE backups SET locked=? WHERE player_uuid=? AND backup_id=?";
+            String sql = "UPDATE " + tables.backups() + " SET locked=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setBoolean(1, locked);
                 ps.setString(2, playerUuid.toString());
@@ -190,7 +191,7 @@ public final class PostgresqlBackupStore implements BackupStore {
     @Override
     public boolean setBackupNote(UUID playerUuid, String backupId, String note) throws Exception {
         synchronized (lock) {
-            String sql = "UPDATE backups SET note=? WHERE player_uuid=? AND backup_id=?";
+            String sql = "UPDATE " + tables.backups() + " SET note=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, note);
                 ps.setString(2, playerUuid.toString());
@@ -205,9 +206,9 @@ public final class PostgresqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT slot_type, slot_index, actor_uuid, claimed_at
-                    FROM claims
+                    FROM %s
                     WHERE backup_id=?
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, backupId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -240,9 +241,9 @@ public final class PostgresqlBackupStore implements BackupStore {
     ) throws Exception {
         synchronized (lock) {
             String sql = """
-                    INSERT INTO claims(player_uuid, backup_id, slot_type, slot_index, actor_uuid, actor_name, claimed_at, item_blob, delivered, delivered_at)
+                    INSERT INTO %s(player_uuid, backup_id, slot_type, slot_index, actor_uuid, actor_name, claimed_at, item_blob, delivered, delivered_at)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, FALSE, NULL)
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, playerUuid.toString());
                 ps.setString(2, backupId);
@@ -271,11 +272,11 @@ public final class PostgresqlBackupStore implements BackupStore {
         synchronized (lock) {
             String sql = """
                     SELECT player_uuid, backup_id, slot_type, slot_index, actor_name, claimed_at, item_blob
-                    FROM claims
+                    FROM %s
                     WHERE actor_uuid=? AND delivered=FALSE
                     ORDER BY claimed_at ASC
                     LIMIT ?
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, actorUuid.toString());
                 ps.setInt(2, limit);
@@ -310,10 +311,10 @@ public final class PostgresqlBackupStore implements BackupStore {
     ) throws Exception {
         synchronized (lock) {
             String sql = """
-                    UPDATE claims
+                    UPDATE %s
                     SET delivered=TRUE, delivered_at=?
                     WHERE actor_uuid=? AND player_uuid=? AND backup_id=? AND slot_type=? AND slot_index=? AND delivered=FALSE
-                    """;
+                    """.formatted(tables.claims());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setLong(1, deliveredAtMillis);
                 ps.setString(2, actorUuid.toString());
@@ -337,39 +338,39 @@ public final class PostgresqlBackupStore implements BackupStore {
                 List<String> toDelete = new ArrayList<>();
                 String selectSql = """
                         SELECT backup_id, created_at
-                        FROM backups
+                        FROM %s
                         WHERE player_uuid=? AND locked=FALSE
                         ORDER BY created_at DESC
-                        """;
+                        """.formatted(tables.backups());
                 try (PreparedStatement ps = connection.prepareStatement(selectSql)) {
                     ps.setString(1, playerUuid.toString());
                     try (ResultSet rs = ps.executeQuery()) {
                         int idx = 0;
                         while (rs.next()) {
                             idx++;
-                            String backupId = rs.getString(1);
-                            if (backupId == null || backupId.isBlank()) {
+                            String currentBackupId = rs.getString(1);
+                            if (currentBackupId == null || currentBackupId.isBlank()) {
                                 continue;
                             }
                             long createdAt = rs.getLong(2);
                             boolean deleteByCount = keepPerPlayer > 0 && idx > keepPerPlayer;
                             boolean deleteByAge = keepAfterMillis > 0 && createdAt < keepAfterMillis;
                             if (deleteByCount || deleteByAge) {
-                                toDelete.add(backupId);
+                                toDelete.add(currentBackupId);
                             }
                         }
                     }
                 }
 
-                try (PreparedStatement deleteClaims = connection.prepareStatement("DELETE FROM claims WHERE backup_id=?");
-                     PreparedStatement deleteBackup = connection.prepareStatement("DELETE FROM backups WHERE backup_id=?")) {
-                    for (String backupId : toDelete) {
-                        if (hasUndeliveredClaims(connection, backupId)) {
+                try (PreparedStatement deleteClaims = connection.prepareStatement("DELETE FROM " + tables.claims() + " WHERE backup_id=?");
+                     PreparedStatement deleteBackup = connection.prepareStatement("DELETE FROM " + tables.backups() + " WHERE backup_id=?")) {
+                    for (String currentBackupId : toDelete) {
+                        if (hasUndeliveredClaims(connection, currentBackupId)) {
                             continue;
                         }
-                        deleteClaims.setString(1, backupId);
+                        deleteClaims.setString(1, currentBackupId);
                         deleteClaims.executeUpdate();
-                        deleteBackup.setString(1, backupId);
+                        deleteBackup.setString(1, currentBackupId);
                         deleteBackup.executeUpdate();
                     }
                 }
@@ -394,10 +395,10 @@ public final class PostgresqlBackupStore implements BackupStore {
         }
     }
 
-    private static void createSchema(Connection connection) throws SQLException {
+    private void createSchema(Connection connection) throws SQLException {
         try (Statement st = connection.createStatement()) {
             st.execute("""
-                    CREATE TABLE IF NOT EXISTS backups(
+                    CREATE TABLE IF NOT EXISTS %s(
                       backup_id VARCHAR(64) PRIMARY KEY,
                       player_uuid VARCHAR(36) NOT NULL,
                       created_at BIGINT NOT NULL,
@@ -413,10 +414,10 @@ public final class PostgresqlBackupStore implements BackupStore {
                       location_y DOUBLE PRECISION,
                       location_z DOUBLE PRECISION
                     )
-                    """);
+                    """.formatted(tables.backups()));
 
             st.execute("""
-                    CREATE TABLE IF NOT EXISTS claims(
+                    CREATE TABLE IF NOT EXISTS %s(
                       player_uuid VARCHAR(36) NOT NULL,
                       backup_id VARCHAR(64) NOT NULL,
                       slot_type VARCHAR(32) NOT NULL,
@@ -429,15 +430,15 @@ public final class PostgresqlBackupStore implements BackupStore {
                       delivered_at BIGINT,
                       PRIMARY KEY(backup_id, slot_type, slot_index)
                     )
-                    """);
+                    """.formatted(tables.claims()));
 
-            st.execute("CREATE INDEX IF NOT EXISTS idx_backups_player_created ON backups(player_uuid, created_at)");
-            st.execute("CREATE INDEX IF NOT EXISTS idx_claims_backup ON claims(backup_id)");
-            st.execute("CREATE INDEX IF NOT EXISTS idx_claims_actor_delivered ON claims(actor_uuid, delivered)");
+            st.execute("CREATE INDEX IF NOT EXISTS " + tables.idxBackupsPlayerCreated() + " ON " + tables.backups() + "(player_uuid, created_at)");
+            st.execute("CREATE INDEX IF NOT EXISTS " + tables.idxClaimsBackup() + " ON " + tables.claims() + "(backup_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS " + tables.idxClaimsActorDelivered() + " ON " + tables.claims() + "(actor_uuid, delivered)");
         }
     }
 
-    private static void migrateSchema(Connection connection) throws SQLException {
+    private void migrateSchema(Connection connection) throws SQLException {
         ensureBackupColumn(connection, "locked", "BOOLEAN NOT NULL DEFAULT FALSE");
         ensureBackupColumn(connection, "note", "TEXT");
         ensureBackupColumn(connection, "world_name", "VARCHAR(255)");
@@ -446,12 +447,12 @@ public final class PostgresqlBackupStore implements BackupStore {
         ensureBackupColumn(connection, "location_z", "DOUBLE PRECISION");
     }
 
-    private static void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
-        if (columnExists(connection, "backups", column)) {
+    private void ensureBackupColumn(Connection connection, String column, String definition) throws SQLException {
+        if (columnExists(connection, tables.backups(), column)) {
             return;
         }
         try (Statement st = connection.createStatement()) {
-            st.execute("ALTER TABLE backups ADD COLUMN " + column + " " + definition);
+            st.execute("ALTER TABLE " + tables.backups() + " ADD COLUMN " + column + " " + definition);
         }
     }
 
@@ -494,9 +495,9 @@ public final class PostgresqlBackupStore implements BackupStore {
         return false;
     }
 
-    private static boolean hasUndeliveredClaims(Connection connection, String backupId) throws SQLException {
+    private boolean hasUndeliveredClaims(Connection connection, String backupId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT 1 FROM claims WHERE backup_id=? AND delivered=FALSE LIMIT 1"
+                "SELECT 1 FROM " + tables.claims() + " WHERE backup_id=? AND delivered=FALSE LIMIT 1"
         )) {
             ps.setString(1, backupId);
             try (ResultSet rs = ps.executeQuery()) {
