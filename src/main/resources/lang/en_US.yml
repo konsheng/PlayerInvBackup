@@ -109,6 +109,7 @@ list:
 
 status:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Status</bold></gradient>"
+  server-version: "<prefix><#90A4AE>Server version: </#90A4AE><white><version></white>"
   permission: "<prefix><#90A4AE>Permission: </#90A4AE><white><perm></white> <#78909C>(default OP)</#78909C>"
   config: "<prefix><#90A4AE>Config: </#90A4AE><white><path></white>"
   scope: "<prefix><#90A4AE>Backup scope: </#90A4AE><white><scope></white>"

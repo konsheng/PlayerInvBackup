@@ -241,8 +241,10 @@ public final class QueryHandler implements SubcommandHandler {
         String storageName = storageName();
         String storagePath = storagePath();
         String backupScope = plugin.lang().raw("status.scope-value");
+        String serverVersion = serverVersion();
 
         Chat.plain(ctx.sender(), "status.title");
+        Chat.plain(ctx.sender(), "status.server-version", Placeholder.unparsed("version", serverVersion));
         Chat.plain(ctx.sender(), "status.permission", Placeholder.unparsed("perm", Permissions.ADMIN));
         Chat.plain(
                 ctx.sender(),
@@ -374,6 +376,15 @@ public final class QueryHandler implements SubcommandHandler {
         } catch (NumberFormatException ignored) {
             return fallback;
         }
+    }
+
+    private static String serverVersion() {
+        String version = Bukkit.getVersionMessage();
+        String prefix = "This server is running ";
+        if (version.startsWith(prefix)) {
+            return version.substring(prefix.length());
+        }
+        return version;
     }
 
     private static long tryGetFileSize(Path file) {

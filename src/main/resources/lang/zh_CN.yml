@@ -109,6 +109,7 @@ list:
 
 status:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 状态信息</bold></gradient>"
+  server-version: "<prefix><#90A4AE>服务器版本: </#90A4AE><white><version></white>"
   permission: "<prefix><#90A4AE>权限: </#90A4AE><white><perm></white> <#78909C>(默认 OP)</#78909C>"
   config: "<prefix><#90A4AE>配置文件: </#90A4AE><white><path></white>"
   scope: "<prefix><#90A4AE>备份范围: </#90A4AE><white><scope></white>"
