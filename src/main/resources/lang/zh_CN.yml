@@ -2,7 +2,8 @@ prefix: "<gradient:#FFB75E:#ED8F03>[PlayerInvBackup]</gradient> <#78909C>»</#78
 
 help:
   header: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 帮助</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
-  lines: []
+  lines:
+    - "<#78909C>-</#78909C> <#90A4AE>常用说明: 输入 </#90A4AE><#4FC3F7>/<label> tips</#4FC3F7><#90A4AE> 查看使用提示</#90A4AE>"
   commands:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> open [玩家名]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>不填参数时打开自己的备份列表, 填写后打开指定玩家</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> list <玩家名> [页码]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>列出备份(控制台友好)</#E0E0E0>"
@@ -15,7 +16,7 @@ help:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> pending</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>投递待领取物品到背包</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> restore <玩家名> <备份编号></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>直接恢复该备份(会扣除已领取格子)</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> status</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看运行状态</#E0E0E0>"
-    - "<#78909C>-</#78909C> <#4FC3F7>/<label> tips</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看提示内容</#E0E0E0>"
+    - "<#78909C>-</#78909C> <#4FC3F7>/<label> tips</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看使用提示与注意事项</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>重载配置/语言</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看本帮助</#E0E0E0>"
   example: "<#78909C>-</#78909C> <#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
