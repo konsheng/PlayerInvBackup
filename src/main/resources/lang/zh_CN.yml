@@ -2,13 +2,7 @@ prefix: "<gradient:#FFB75E:#ED8F03>[PlayerInvBackup]</gradient> <#78909C>»</#78
 
 help:
   header: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 帮助</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
-  lines:
-    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>命令参数默认显示为玩家名, 也支持填写 UUID; 目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名, 离线模式服务器可直接使用名字</#B0BEC5>"
-    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#B0BEC5>"
-    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#B0BEC5>"
-    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>Folia 下仅支持对在线玩家进行恢复</#B0BEC5>"
-    - "<prefix><#EF5350>⚠ 注意: </#EF5350><#FF8A65>恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FF8A65>"
-    - "<prefix><#78909C>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#78909C>"
+  lines: []
   commands:
     - "<prefix><#4FC3F7>/<label> open [玩家名]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>不填参数时打开自己的备份列表, 填写后打开指定玩家</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> list <玩家名> [页码]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>列出备份(控制台友好)</#E0E0E0>"
@@ -21,9 +15,20 @@ help:
     - "<prefix><#4FC3F7>/<label> pending</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>投递待领取物品到背包</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> restore <玩家名> <备份编号></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>直接恢复该备份(会扣除已领取格子)</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> status</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看运行状态</#E0E0E0>"
+    - "<prefix><#4FC3F7>/<label> tips</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看提示内容</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>重载配置/语言</#E0E0E0>"
     - "<prefix><#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看本帮助</#E0E0E0>"
   example: "<prefix><#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
+
+tips:
+  header: "<prefix><gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 提示</bold></gradient>"
+  lines:
+    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>命令参数默认显示为玩家名, 也支持填写 UUID; 目标离线时, 在线模式服务器需要 UUID 或服务器缓存的离线名, 离线模式服务器可直接使用名字</#B0BEC5>"
+    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>GUI 点击物品格子可整组领取; 背包满会进入待投递(/<label> pending)</#B0BEC5>"
+    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>备份编号可在'备份列表'纸片的'编号'一行查看; 恢复建议在 GUI 内点'恢复到玩家'并二次确认</#B0BEC5>"
+    - "<prefix><#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>Folia 下仅支持对在线玩家进行恢复</#B0BEC5>"
+    - "<prefix><#EF5350>⚠ 注意: </#EF5350><#FF8A65>恢复会覆盖目标玩家当前背包/末影箱(仅恢复未领取格子)</#FF8A65>"
+    - "<prefix><#78909C>控制台提示: open/pending 为 GUI/背包操作, 仅支持游戏内执行</#78909C>"
 
 errors:
   no-permission: "<prefix><#EF5350>✖ 你没有权限(需要 <#FFCA28><perm></#FFCA28>)</#EF5350>"

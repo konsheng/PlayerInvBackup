@@ -61,13 +61,14 @@ public final class AdminHandler implements SubcommandHandler {
 
     @Override
     public List<String> aliases() {
-        return List.of("reload");
+        return List.of("tips", "reload");
     }
 
     @Override
     public boolean execute(CommandContext ctx) {
         return switch (ctx.subcommand().toLowerCase(java.util.Locale.ROOT)) {
             case "help" -> executeHelp(ctx);
+            case "tips" -> executeTips(ctx);
             case "reload" -> executeReload(ctx);
             default -> false;
         };
@@ -102,6 +103,15 @@ public final class AdminHandler implements SubcommandHandler {
         Chat.plainList(ctx.sender(), "help.lines", Placeholder.unparsed("label", ctx.label()));
         Chat.plainList(ctx.sender(), "help.commands", Placeholder.unparsed("label", ctx.label()));
         Chat.plain(ctx.sender(), "help.example", Placeholder.unparsed("label", ctx.label()));
+    }
+
+    private boolean executeTips(CommandContext ctx) {
+        if (!guards.requirePermission(ctx, Permissions.ADMIN)) {
+            return true;
+        }
+        Chat.plain(ctx.sender(), "tips.header");
+        Chat.plainList(ctx.sender(), "tips.lines", Placeholder.unparsed("label", ctx.label()));
+        return true;
     }
 
     private boolean executeReload(CommandContext ctx) {
