@@ -63,7 +63,16 @@ public final class IoDispatcher implements AutoCloseable {
 
     @Override
     public void close() {
-        executor.shutdownNow();
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(3, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                executor.awaitTermination(1, TimeUnit.SECONDS);
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static final class NamedThreadFactory implements ThreadFactory {

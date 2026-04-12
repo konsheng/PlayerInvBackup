@@ -128,44 +128,126 @@ public final class RestoreService {
                 }
 
                 var backupService = plugin.backupService();
-                if (backupService != null) {
-                    boolean queued = backupService.requestBackup(target, TriggerType.MANUAL);
-                    if (!queued) {
-                        runOnActor(actor, () -> Chat.warn(actor, "warn.auto-backup-before-restore-failed"));
-                    }
-                }
-
-                try {
-                    applySnapshot(target, parts, claimed);
-                } catch (Exception e) {
-                    plugin.getLogger().log(
-                            Level.SEVERE,
-                            plugin.lang().plain(
-                                    "console.restore.apply-failed",
-                                    Placeholder.unparsed("actor", actorDetails),
-                                    Placeholder.unparsed("target", targetName),
-                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
-                                    Placeholder.unparsed("backup_id", backupId)
-                            ),
-                            e
-                    );
-                    runOnActor(actor, () -> Chat.error(actor, "errors.restore-failed"));
+                if (backupService == null || !plugin.isStoreReady()) {
+                    runOnActor(actor, () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "pib")));
                     return;
                 }
 
-                runOnActor(actor, () -> Chat.success(actor, "success.restore-success"));
-                Chat.warn(target, "warn.restored-notify-target");
+                boolean queued;
+                try {
+                    queued = backupService.requestBackup(target, TriggerType.MANUAL, (success, preRestoreBackupId) -> {
+                        if (!success) {
+                            cancelRestoreBecausePreBackupFailed(
+                                    actor,
+                                    actorDetails,
+                                    target,
+                                    backupId,
+                                    preRestoreBackupId,
+                                    "backup_task_failed"
+                            );
+                            return;
+                        }
 
-                plugin.auditService().log(
-                        "RESTORE",
-                        actor,
-                        target.getUniqueId(),
-                        target.getName(),
-                        backupId,
-                        "claimedSlots=" + claimed.size()
-                );
+                        plugin.getLogger().info(plugin.lang().plain(
+                                "console.restore.pre-backup-succeeded",
+                                Placeholder.unparsed("actor", actorDetails),
+                                Placeholder.unparsed("target", targetName),
+                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                Placeholder.unparsed("backup_id", backupId),
+                                Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId)
+                        ));
+
+                        runOnActor(actor, () -> Chat.info(
+                                actor,
+                                "info.restore-pre-backup-success",
+                                Placeholder.unparsed("backup_id", preRestoreBackupId)
+                        ));
+
+                        if (!target.isOnline()) {
+                            runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
+                            return;
+                        }
+
+                        runOnPlayer(target, () -> {
+                            if (!target.isOnline()) {
+                                runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
+                                return;
+                            }
+
+                            try {
+                                applySnapshot(target, parts, claimed);
+                            } catch (Exception e) {
+                                plugin.getLogger().log(
+                                        Level.SEVERE,
+                                        plugin.lang().plain(
+                                                "console.restore.apply-failed",
+                                                Placeholder.unparsed("actor", actorDetails),
+                                                Placeholder.unparsed("target", targetName),
+                                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                                Placeholder.unparsed("backup_id", backupId)
+                                        ),
+                                        e
+                                );
+                                runOnActor(actor, () -> Chat.error(actor, "errors.restore-failed"));
+                                return;
+                            }
+
+                            runOnActor(actor, () -> Chat.success(actor, "success.restore-success"));
+                            Chat.warn(target, "warn.restored-notify-target");
+
+                            plugin.auditService().log(
+                                    "RESTORE",
+                                    actor,
+                                    target.getUniqueId(),
+                                    target.getName(),
+                                    backupId,
+                                    "claimedSlots=" + claimed.size() + ",preRestoreBackupId=" + preRestoreBackupId
+                            );
+                        });
+                    });
+                } catch (RuntimeException e) {
+                    plugin.getLogger().log(
+                            Level.WARNING,
+                            plugin.lang().plain(
+                                    "console.restore.pre-backup-failed",
+                                    Placeholder.unparsed("actor", actorDetails),
+                                    Placeholder.unparsed("target", targetName),
+                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                    Placeholder.unparsed("backup_id", backupId),
+                                    Placeholder.unparsed("pre_restore_backup_id", "-"),
+                                    Placeholder.unparsed("reason", "request_threw:" + String.valueOf(e.getMessage()))
+                            ),
+                            e
+                    );
+                    runOnActor(actor, () -> Chat.error(actor, "errors.restore-pre-backup-failed"));
+                    return;
+                }
+
+                if (!queued) {
+                    cancelRestoreBecausePreBackupFailed(actor, actorDetails, target, backupId, "-", "queue_full");
+                }
             });
         });
+    }
+
+    private void cancelRestoreBecausePreBackupFailed(
+            CommandSender actor,
+            String actorDetails,
+            Player target,
+            String backupId,
+            String preRestoreBackupId,
+            String reason
+    ) {
+        plugin.getLogger().warning(plugin.lang().plain(
+                "console.restore.pre-backup-failed",
+                Placeholder.unparsed("actor", actorDetails),
+                Placeholder.unparsed("target", target.getName()),
+                Placeholder.unparsed("target_uuid", target.getUniqueId().toString()),
+                Placeholder.unparsed("backup_id", backupId),
+                Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId == null || preRestoreBackupId.isBlank() ? "-" : preRestoreBackupId),
+                Placeholder.unparsed("reason", reason)
+        ));
+        runOnActor(actor, () -> Chat.error(actor, "errors.restore-pre-backup-failed"));
     }
 
     private static void applySnapshot(Player target, SnapshotParts parts, Set<String> claimedKeys) {
