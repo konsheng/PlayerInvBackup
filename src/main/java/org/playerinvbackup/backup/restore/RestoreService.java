@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -140,7 +141,8 @@ public final class RestoreService {
                             cancelRestoreBecausePreBackupFailed(
                                     actor,
                                     actorDetails,
-                                    target,
+                                    targetUuid,
+                                    targetName,
                                     backupId,
                                     preRestoreBackupId,
                                     "backup_task_failed"
@@ -156,26 +158,15 @@ public final class RestoreService {
                                 Placeholder.unparsed("backup_id", backupId),
                                 Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId)
                         ));
-
-                        runOnActor(actor, () -> Chat.info(
-                                actor,
-                                "info.restore-pre-backup-success",
-                                Placeholder.unparsed("backup_id", preRestoreBackupId)
-                        ));
-
-                        if (!target.isOnline()) {
-                            runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
-                            return;
-                        }
-
-                        runOnPlayer(target, () -> {
-                            if (!target.isOnline()) {
-                                runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
-                                return;
-                            }
+                        runOnOnlineTarget(targetUuid, currentTarget -> {
+                            runOnActor(actor, () -> Chat.info(
+                                    actor,
+                                    "info.restore-pre-backup-success",
+                                    Placeholder.unparsed("backup_id", preRestoreBackupId)
+                            ));
 
                             try {
-                                applySnapshot(target, parts, claimed);
+                                applySnapshot(currentTarget, parts, claimed);
                             } catch (Exception e) {
                                 plugin.getLogger().log(
                                         Level.SEVERE,
@@ -193,17 +184,17 @@ public final class RestoreService {
                             }
 
                             runOnActor(actor, () -> Chat.success(actor, "success.restore-success"));
-                            Chat.warn(target, "warn.restored-notify-target");
+                            Chat.warn(currentTarget, "warn.restored-notify-target");
 
                             plugin.auditService().log(
                                     "RESTORE",
                                     actor,
-                                    target.getUniqueId(),
-                                    target.getName(),
+                                    targetUuid,
+                                    targetName,
                                     backupId,
                                     "claimedSlots=" + claimed.size() + ",preRestoreBackupId=" + preRestoreBackupId
                             );
-                        });
+                        }, () -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline")));
                     });
                 } catch (RuntimeException e) {
                     plugin.getLogger().log(
@@ -224,7 +215,7 @@ public final class RestoreService {
                 }
 
                 if (!queued) {
-                    cancelRestoreBecausePreBackupFailed(actor, actorDetails, target, backupId, "-", "queue_full");
+                    cancelRestoreBecausePreBackupFailed(actor, actorDetails, targetUuid, targetName, backupId, "-", "queue_full");
                 }
             });
         });
@@ -233,7 +224,8 @@ public final class RestoreService {
     private void cancelRestoreBecausePreBackupFailed(
             CommandSender actor,
             String actorDetails,
-            Player target,
+            UUID targetUuid,
+            String targetName,
             String backupId,
             String preRestoreBackupId,
             String reason
@@ -241,13 +233,26 @@ public final class RestoreService {
         plugin.getLogger().warning(plugin.lang().plain(
                 "console.restore.pre-backup-failed",
                 Placeholder.unparsed("actor", actorDetails),
-                Placeholder.unparsed("target", target.getName()),
-                Placeholder.unparsed("target_uuid", target.getUniqueId().toString()),
+                Placeholder.unparsed("target", targetName),
+                Placeholder.unparsed("target_uuid", targetUuid.toString()),
                 Placeholder.unparsed("backup_id", backupId),
                 Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId == null || preRestoreBackupId.isBlank() ? "-" : preRestoreBackupId),
                 Placeholder.unparsed("reason", reason)
         ));
         runOnActor(actor, () -> Chat.error(actor, "errors.restore-pre-backup-failed"));
+    }
+
+    private void runOnOnlineTarget(UUID targetUuid, Consumer<Player> consumer, Runnable ifOffline) {
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+            Player currentTarget = Bukkit.getPlayer(targetUuid);
+            if (currentTarget == null || !currentTarget.isOnline()) {
+                if (ifOffline != null) {
+                    ifOffline.run();
+                }
+                return;
+            }
+            currentTarget.getScheduler().run(plugin, ignored -> consumer.accept(currentTarget), null);
+        });
     }
 
     private static void applySnapshot(Player target, SnapshotParts parts, Set<String> claimedKeys) {
