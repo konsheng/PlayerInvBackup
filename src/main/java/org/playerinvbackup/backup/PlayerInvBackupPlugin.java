@@ -67,11 +67,16 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // 用于在启用提示中显示本次启动耗时
+        long startupStartedAt = System.nanoTime();
         if (checkUnsupportedServerAndDisable()) {
             return;
         }
 
         saveDefaultConfig();
+        // 启动横幅要紧跟在 Bukkit 的 Enabling 日志后面, 所以先做一次轻量语言初始化
+        initializeStartupLang();
+        logStartupBanner();
         this.auditService = new AuditService(this);
         this.bStatsService = new BStatsService(this);
         this.restoreService = new RestoreService(this);
@@ -85,8 +90,13 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BukkitGuiListener(guiService), this);
         getServer().getPluginManager().registerEvents(new GuiChatListener(guiService), this);
         getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this), this);
-
-        getLogger().info(lang.plain("console.plugin.enabled"));
+        // 启用成功提示附带本次启动耗时
+        long startupElapsedMs = (System.nanoTime() - startupStartedAt) / 1_000_000L;
+        Chat.plain(
+                Bukkit.getConsoleSender(),
+                "console.plugin.enabled",
+                Placeholder.unparsed("elapsed_ms", String.valueOf(startupElapsedMs))
+        );
     }
 
     @Override
@@ -112,7 +122,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
             store = null;
         }
         if (lang != null) {
-            getLogger().info(lang.plain("console.plugin.disabled"));
+            Chat.plain(Bukkit.getConsoleSender(), "console.plugin.disabled");
         } else {
             boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
             getLogger().info(chinese ? "PlayerInvBackup 已关闭" : "PlayerInvBackup has been disabled");
@@ -159,6 +169,27 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
 
         Bukkit.getPluginManager().disablePlugin(this);
         return true;
+    }
+
+    private void logStartupBanner() {
+        // 使用独立语言键直接向控制台发送组件消息, 保留 RGB 渐变与格式
+        Chat.plainList(
+                Bukkit.getConsoleSender(),
+                "console.plugin.banner",
+                Placeholder.unparsed("version", getPluginMeta().getVersion()),
+                Placeholder.unparsed("server", Bukkit.getName())
+        );
+    }
+
+    private void initializeStartupLang() {
+        // 横幅输出发生在 reload() 之前, 这里先初始化一次语言系统供启动日志使用
+        reloadConfig();
+        String languageFile = getConfig().getString("language");
+        if (languageFile != null) {
+            languageFile = languageFile.trim();
+        }
+        this.lang = loadLang(languageFile);
+        Chat.init(this.lang);
     }
 
     public void reload() {

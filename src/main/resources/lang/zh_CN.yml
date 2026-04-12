@@ -311,7 +311,12 @@ common:
 
 console:
   plugin:
-    enabled: "PlayerInvBackup 已启用"
+    banner:
+      - "<#90A4AE> __     __</#90A4AE>"
+      - "<#90A4AE>|__) | |__)</#90A4AE>   <gradient:#FFB75E:#ED8F03>PlayerInvBackup</gradient> <#90A4AE>v<version></#90A4AE>"
+      - "<#90A4AE>|    | |__)</#90A4AE>   <#90A4AE>运行于 </#90A4AE><#E0E0E0><server></#E0E0E0>"
+      - ""
+    enabled: "PlayerInvBackup 已启用 (耗时 <elapsed_ms> ms)"
     disabled: "PlayerInvBackup 已关闭"
 
   store:

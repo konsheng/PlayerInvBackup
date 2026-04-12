@@ -310,7 +310,12 @@ common:
 
 console:
   plugin:
-    enabled: "PlayerInvBackup enabled"
+    banner:
+      - "<#90A4AE> __     __</#90A4AE>"
+      - "<#90A4AE>|__) | |__)</#90A4AE>   <gradient:#FFB75E:#ED8F03>PlayerInvBackup</gradient> <#90A4AE>v<version></#90A4AE>"
+      - "<#90A4AE>|    | |__)</#90A4AE>   <#90A4AE>Running on </#90A4AE><#E0E0E0><server></#E0E0E0>"
+      - ""
+    enabled: "PlayerInvBackup enabled (in <elapsed_ms> ms)"
     disabled: "PlayerInvBackup disabled"
 
   store:
