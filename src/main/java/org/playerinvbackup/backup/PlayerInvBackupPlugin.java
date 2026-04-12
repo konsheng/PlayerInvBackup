@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -36,6 +37,7 @@ import org.playerinvbackup.backup.store.sqlite.SqliteBackupStore;
 import org.playerinvbackup.backup.text.Chat;
 import org.playerinvbackup.backup.text.Lang;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -65,6 +67,10 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if (checkUnsupportedServerAndDisable()) {
+            return;
+        }
+
         saveDefaultConfig();
         this.auditService = new AuditService(this);
         this.bStatsService = new BStatsService(this);
@@ -105,7 +111,54 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
             }
             store = null;
         }
-        getLogger().info(lang.plain("console.plugin.disabled"));
+        if (lang != null) {
+            getLogger().info(lang.plain("console.plugin.disabled"));
+        } else {
+            boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
+            getLogger().info(chinese ? "PlayerInvBackup 已关闭" : "PlayerInvBackup has been disabled");
+        }
+    }
+
+    private boolean checkUnsupportedServerAndDisable() {
+        String serverName = String.valueOf(Bukkit.getName());
+        String versionText = String.valueOf(Bukkit.getVersion());
+
+        String serverNameLower = serverName.toLowerCase(Locale.ROOT);
+        String versionTextLower = versionText.toLowerCase(Locale.ROOT);
+
+        boolean unsupported = serverNameLower.contains("spigot")
+                || serverNameLower.contains("craftbukkit")
+                || versionTextLower.contains("spigot")
+                || versionTextLower.contains("craftbukkit");
+        if (!unsupported) {
+            return false;
+        }
+
+        String color = ChatColor.YELLOW.toString();
+        String prefix = color + "[PlayerInvBackup] ";
+        boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
+        if (chinese) {
+            Bukkit.getConsoleSender().sendMessage(prefix + "========================================");
+            Bukkit.getConsoleSender().sendMessage(prefix + "检测到不受支持的服务端");
+            Bukkit.getConsoleSender().sendMessage(prefix + "当前服务端名称: " + serverName);
+            Bukkit.getConsoleSender().sendMessage(prefix + "当前版本信息: " + versionText);
+            Bukkit.getConsoleSender().sendMessage(prefix + "PlayerInvBackup 不支持 Spigot 或 CraftBukkit");
+            Bukkit.getConsoleSender().sendMessage(prefix + "请使用 Paper, Purpur, Leaf, Folia 或其他兼容服务端");
+            Bukkit.getConsoleSender().sendMessage(prefix + "插件已自动关闭");
+            Bukkit.getConsoleSender().sendMessage(prefix + "========================================");
+        } else {
+            Bukkit.getConsoleSender().sendMessage(prefix + "========================================");
+            Bukkit.getConsoleSender().sendMessage(prefix + "Detected unsupported server software");
+            Bukkit.getConsoleSender().sendMessage(prefix + "Server name: " + serverName);
+            Bukkit.getConsoleSender().sendMessage(prefix + "Server version: " + versionText);
+            Bukkit.getConsoleSender().sendMessage(prefix + "PlayerInvBackup does not support Spigot or CraftBukkit");
+            Bukkit.getConsoleSender().sendMessage(prefix + "Please use Paper, Purpur, Leaf, Folia, or another compatible server");
+            Bukkit.getConsoleSender().sendMessage(prefix + "The plugin has been disabled automatically");
+            Bukkit.getConsoleSender().sendMessage(prefix + "========================================");
+        }
+
+        Bukkit.getPluginManager().disablePlugin(this);
+        return true;
     }
 
     public void reload() {
