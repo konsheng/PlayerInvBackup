@@ -27,27 +27,53 @@ import org.playerinvbackup.backup.store.SqlTableNames;
  * <p>收敛各 SQL 后端通用的 CRUD, 映射与迁移流程
  */
 public abstract class AbstractJdbcBackupStore implements BackupStore {
-    private final Object lock = new Object();
+    private final Object sharedConnectionLock = new Object();
     private final JdbcDialect dialect;
     private final SqlTableNames tables;
-    private Connection connection;
+    private Connection sharedConnection;
 
     protected AbstractJdbcBackupStore(JdbcDialect dialect, SqlTableNames tables) {
         this.dialect = dialect;
         this.tables = tables;
     }
 
+    protected boolean useSharedConnection() {
+        return true;
+    }
+
+    protected final JdbcDialect dialect() {
+        return dialect;
+    }
+
+    protected final SqlTableNames tables() {
+        return tables;
+    }
+
     protected void beforeConnect() throws Exception {
+    }
+
+    protected void closeResources() throws Exception {
     }
 
     protected abstract Connection openConnection() throws Exception;
 
     @Override
     public final void init() throws Exception {
-        synchronized (lock) {
-            beforeConnect();
-            dialect.loadDriver();
-            connection = openConnection();
+        dialect.loadDriver();
+        beforeConnect();
+
+        if (useSharedConnection()) {
+            synchronized (sharedConnectionLock) {
+                sharedConnection = openConnection();
+                sharedConnection.setAutoCommit(true);
+                dialect.initializeConnection(sharedConnection);
+                createSchema(sharedConnection);
+                migrateSchema(sharedConnection);
+            }
+            return;
+        }
+
+        try (Connection connection = openConnection()) {
             connection.setAutoCommit(true);
             dialect.initializeConnection(connection);
             createSchema(connection);
@@ -57,7 +83,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
 
     @Override
     public final void saveBackup(BackupRecord record) throws Exception {
-        synchronized (lock) {
+        withConnection(connection -> {
             String sql = """
                     INSERT INTO %s(backup_id, player_uuid, created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -80,7 +106,8 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setObject(14, meta.locationZ());
                 ps.executeUpdate();
             }
-        }
+            return null;
+        });
     }
 
     @Override
@@ -88,7 +115,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         if (limit <= 0) {
             return List.of();
         }
-        synchronized (lock) {
+        return withConnection(connection -> {
             StringBuilder sql = new StringBuilder("""
                     SELECT backup_id, created_at, trigger, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM %s
@@ -126,12 +153,12 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     return out;
                 }
             }
-        }
+        });
     }
 
     @Override
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = """
                     SELECT created_at, trigger, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM %s
@@ -147,12 +174,12 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     return Optional.of(mapBackupRecord(rs, playerUuid, backupId));
                 }
             }
-        }
+        });
     }
 
     @Override
     public final boolean setBackupLocked(UUID playerUuid, String backupId, boolean locked) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = "UPDATE " + tables.backups() + " SET locked=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 dialect.bindBoolean(ps, 1, locked);
@@ -160,12 +187,12 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setString(3, backupId);
                 return ps.executeUpdate() > 0;
             }
-        }
+        });
     }
 
     @Override
     public final boolean setBackupNote(UUID playerUuid, String backupId, String note) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = "UPDATE " + tables.backups() + " SET note=? WHERE player_uuid=? AND backup_id=?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, note);
@@ -173,12 +200,12 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setString(3, backupId);
                 return ps.executeUpdate() > 0;
             }
-        }
+        });
     }
 
     @Override
     public final List<SlotClaim> listClaims(UUID playerUuid, String backupId) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = """
                     SELECT slot_type, slot_index, actor_uuid, claimed_at
                     FROM %s
@@ -194,7 +221,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     return out;
                 }
             }
-        }
+        });
     }
 
     @Override
@@ -208,7 +235,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
             long claimedAtMillis,
             byte[] itemBytes
     ) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = """
                     INSERT INTO %s(player_uuid, backup_id, slot_type, slot_index, actor_uuid, actor_name, claimed_at, item_blob, delivered, delivered_at)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, %s, NULL)
@@ -230,7 +257,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 }
                 throw e;
             }
-        }
+        });
     }
 
     @Override
@@ -238,7 +265,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         if (limit <= 0) {
             return List.of();
         }
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = """
                     SELECT player_uuid, backup_id, slot_type, slot_index, actor_name, claimed_at, item_blob
                     FROM %s
@@ -257,7 +284,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     return out;
                 }
             }
-        }
+        });
     }
 
     @Override
@@ -269,7 +296,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
             int slotIndex,
             long deliveredAtMillis
     ) throws Exception {
-        synchronized (lock) {
+        return withConnection(connection -> {
             String sql = """
                     UPDATE %s
                     SET delivered=%s, delivered_at=?
@@ -284,7 +311,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setInt(6, slotIndex);
                 return ps.executeUpdate() > 0;
             }
-        }
+        });
     }
 
     @Override
@@ -292,59 +319,80 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         if (keepPerPlayer <= 0 && keepAfterMillis <= 0) {
             return;
         }
-        synchronized (lock) {
-            inTransaction(conn -> {
-                Set<String> toDelete = new LinkedHashSet<>();
-                String selectSql = """
-                        SELECT backup_id, created_at
-                        FROM %s
-                        WHERE player_uuid=? AND locked=%s
-                        ORDER BY created_at DESC
-                        """.formatted(tables.backups(), dialect.falseLiteral());
-                try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
-                    ps.setString(1, playerUuid.toString());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        int idx = 0;
-                        while (rs.next()) {
-                            idx++;
-                            String currentBackupId = rs.getString(1);
-                            if (currentBackupId == null || currentBackupId.isBlank()) {
-                                continue;
-                            }
-                            long createdAt = rs.getLong(2);
-                            boolean deleteByCount = keepPerPlayer > 0 && idx > keepPerPlayer;
-                            boolean deleteByAge = keepAfterMillis > 0 && createdAt < keepAfterMillis;
-                            if (deleteByCount || deleteByAge) {
-                                toDelete.add(currentBackupId);
-                            }
-                        }
-                    }
-                }
-
-                try (PreparedStatement deleteClaims = conn.prepareStatement("DELETE FROM " + tables.claims() + " WHERE backup_id=?");
-                     PreparedStatement deleteBackup = conn.prepareStatement("DELETE FROM " + tables.backups() + " WHERE backup_id=?")) {
-                    for (String currentBackupId : toDelete) {
-                        if (hasUndeliveredClaims(conn, currentBackupId)) {
+        withTransaction(conn -> {
+            Set<String> toDelete = new LinkedHashSet<>();
+            String selectSql = """
+                    SELECT backup_id, created_at
+                    FROM %s
+                    WHERE player_uuid=? AND locked=%s
+                    ORDER BY created_at DESC
+                    """.formatted(tables.backups(), dialect.falseLiteral());
+            try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+                ps.setString(1, playerUuid.toString());
+                try (ResultSet rs = ps.executeQuery()) {
+                    int idx = 0;
+                    while (rs.next()) {
+                        idx++;
+                        String currentBackupId = rs.getString(1);
+                        if (currentBackupId == null || currentBackupId.isBlank()) {
                             continue;
                         }
-                        deleteClaims.setString(1, currentBackupId);
-                        deleteClaims.executeUpdate();
-                        deleteBackup.setString(1, currentBackupId);
-                        deleteBackup.executeUpdate();
+                        long createdAt = rs.getLong(2);
+                        boolean deleteByCount = keepPerPlayer > 0 && idx > keepPerPlayer;
+                        boolean deleteByAge = keepAfterMillis > 0 && createdAt < keepAfterMillis;
+                        if (deleteByCount || deleteByAge) {
+                            toDelete.add(currentBackupId);
+                        }
                     }
                 }
-                return null;
-            });
-        }
+            }
+
+            try (PreparedStatement deleteClaims = conn.prepareStatement("DELETE FROM " + tables.claims() + " WHERE backup_id=?");
+                 PreparedStatement deleteBackup = conn.prepareStatement("DELETE FROM " + tables.backups() + " WHERE backup_id=?")) {
+                for (String currentBackupId : toDelete) {
+                    if (hasUndeliveredClaims(conn, currentBackupId)) {
+                        continue;
+                    }
+                    deleteClaims.setString(1, currentBackupId);
+                    deleteClaims.executeUpdate();
+                    deleteBackup.setString(1, currentBackupId);
+                    deleteBackup.executeUpdate();
+                }
+            }
+            return null;
+        });
     }
 
     @Override
     public final void close() throws Exception {
-        synchronized (lock) {
-            if (connection != null) {
-                connection.close();
-                connection = null;
+        Exception closeError = null;
+
+        if (useSharedConnection()) {
+            synchronized (sharedConnectionLock) {
+                if (sharedConnection != null) {
+                    try {
+                        sharedConnection.close();
+                    } catch (Exception e) {
+                        closeError = e;
+                    } finally {
+                        sharedConnection = null;
+                    }
+                }
             }
+        }
+
+        try {
+            closeResources();
+        } catch (Exception e) {
+            if (closeError == null) {
+                closeError = e;
+            } else {
+                closeError.addSuppressed(e);
+            }
+        }
+
+        if (closeError != null) {
+            throw closeError;
         }
     }
 
@@ -502,17 +550,51 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         );
     }
 
-    private <T> T inTransaction(SqlTransaction<T> task) throws Exception {
+    protected final <T> T withConnection(SqlWork<T> work) throws Exception {
+        if (useSharedConnection()) {
+            synchronized (sharedConnectionLock) {
+                return work.run(requireSharedConnection());
+            }
+        }
+        try (Connection connection = openConnection()) {
+            return work.run(connection);
+        }
+    }
+
+    protected final <T> T withTransaction(SqlWork<T> work) throws Exception {
+        if (useSharedConnection()) {
+            synchronized (sharedConnectionLock) {
+                return inTransaction(requireSharedConnection(), work);
+            }
+        }
+        try (Connection connection = openConnection()) {
+            return inTransaction(connection, work);
+        }
+    }
+
+    private Connection requireSharedConnection() {
+        if (sharedConnection == null) {
+            throw new IllegalStateException("shared JDBC connection is not initialized");
+        }
+        return sharedConnection;
+    }
+
+    private <T> T inTransaction(Connection connection, SqlWork<T> work) throws Exception {
+        boolean previousAutoCommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
         try {
-            T result = task.run(connection);
+            T result = work.run(connection);
             connection.commit();
             return result;
         } catch (Exception e) {
-            connection.rollback();
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackError) {
+                e.addSuppressed(rollbackError);
+            }
             throw e;
         } finally {
-            connection.setAutoCommit(true);
+            connection.setAutoCommit(previousAutoCommit);
         }
     }
 
@@ -526,7 +608,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     }
 
     @FunctionalInterface
-    private interface SqlTransaction<T> {
+    protected interface SqlWork<T> {
         T run(Connection connection) throws Exception;
     }
 }

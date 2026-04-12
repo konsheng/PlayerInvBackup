@@ -33,6 +33,8 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.5")
     // H2 驱动
     implementation("com.h2database:h2:2.2.224")
+    // HikariCP 连接池
+    implementation("com.zaxxer:HikariCP:5.1.0")
 
     // JUnit 5
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
