@@ -61,6 +61,20 @@ public final class IoDispatcher implements AutoCloseable {
         }
     }
 
+    public int discardQueuedAndAwaitRunning() {
+        int discarded = executor.getQueue().size();
+        executor.getQueue().clear();
+        executor.shutdown();
+        try {
+            while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                // 等待当前正在执行的写入自然完成, 不主动中断
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return discarded;
+    }
+
     @Override
     public void close() {
         executor.shutdown();

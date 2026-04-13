@@ -31,6 +31,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
     private final PlayerInvBackupPlugin plugin;
     private final BackupCommandDispatcher dispatcher;
+    private final BackupActionHandler backupActionHandler;
 
     public BackupCommand(PlayerInvBackupPlugin plugin) {
         this.plugin = plugin;
@@ -43,12 +44,16 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 ? DEFAULT_TIME_FORMAT
                 : plugin.pluginConfig().backupTimeFormatter();
 
+        this.backupActionHandler = new BackupActionHandler(plugin, guards, async, targetResolver, suggestions);
+
         List<SubcommandHandler> handlers = List.of(
                 new AdminHandler(
                         () -> plugin.getPluginMeta().getVersion(),
                         plugin::reload,
                         plugin::isEnabled,
                         plugin::isStoreReady,
+                        plugin::lastReloadCancelledBackupTargets,
+                        plugin::lastReloadDiscardedIoTasks,
                         guards,
                         suggestions,
                         plugin.getLogger(),
@@ -56,7 +61,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 ),
                 new MetadataHandler(plugin.store(), plugin.auditService(), guards, async, targetResolver, suggestions),
                 new QueryHandler(plugin, guards, async, targetResolver, suggestions, timeFormatter),
-                new BackupActionHandler(plugin, guards, async, targetResolver, suggestions),
+                backupActionHandler,
                 new BrowseHandler(plugin.guiService(), guards, targetResolver, suggestions),
                 new RestoreHandler(plugin.restoreService(), guards, targetResolver, suggestions)
         );
@@ -82,5 +87,9 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
             @NotNull String[] args
     ) {
         return dispatcher.onTabComplete(new CommandContext(plugin, sender, command, alias, args));
+    }
+
+    public int cancelActiveOperationsForReload() {
+        return backupActionHandler.cancelActiveBackupAllForReload();
     }
 }

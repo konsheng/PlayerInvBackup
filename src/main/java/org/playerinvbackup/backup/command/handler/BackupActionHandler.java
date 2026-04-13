@@ -257,6 +257,17 @@ public final class BackupActionHandler implements SubcommandHandler {
         }
     }
 
+    public int cancelActiveBackupAllForReload() {
+        BackupAllQueue queueToCancel;
+        synchronized (backupAllLock) {
+            queueToCancel = runningBackupAllQueue;
+        }
+        if (queueToCancel != null) {
+            return queueToCancel.cancelForReload();
+        }
+        return 0;
+    }
+
     private boolean canUseBackupCommand(CommandSender sender) {
         return Permissions.has(sender, Permissions.BACKUP) || Permissions.has(sender, Permissions.SELF_BACKUP);
     }
@@ -276,16 +287,40 @@ public final class BackupActionHandler implements SubcommandHandler {
                 .hoverEvent(HoverEvent.showText(plugin.lang().msg("success.self-backup-copy-hover")));
     }
 
+    private static String formatElapsed(long elapsedMillis) {
+        long safeMillis = Math.max(0L, elapsedMillis);
+        long totalSeconds = safeMillis / 1000L;
+        long millisPart = safeMillis % 1000L;
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+
+        if (hours > 0L) {
+            return String.format("%dh %dm %ds", hours, minutes, seconds);
+        }
+        if (minutes > 0L) {
+            return String.format("%dm %ds", minutes, seconds);
+        }
+        if (seconds > 0L) {
+            return String.format("%d.%03ds", seconds, millisPart);
+        }
+        return safeMillis + "ms";
+    }
+
     private final class BackupAllQueue {
         private final CommandSender sender;
         private final Deque<BackupAllTarget> pendingTargets;
         private final int totalTargets;
+        private final long startedAtMillis;
 
         private int succeeded;
         private int skipped;
         private int failed;
+        private int cancelled;
         private int inFlight;
         private boolean finished;
+        private boolean cancelledForReload;
+        private boolean silentFinish;
         private boolean pumpScheduled;
         private boolean progressScheduled;
 
@@ -293,6 +328,7 @@ public final class BackupActionHandler implements SubcommandHandler {
             this.sender = sender;
             this.pendingTargets = new ArrayDeque<>(targets);
             this.totalTargets = targets.size();
+            this.startedAtMillis = System.currentTimeMillis();
         }
 
         private void start() {
@@ -302,7 +338,7 @@ public final class BackupActionHandler implements SubcommandHandler {
 
         private void schedulePump(long delayTicks) {
             synchronized (this) {
-                if (finished || pumpScheduled) {
+                if (finished || cancelledForReload || pumpScheduled) {
                     return;
                 }
                 pumpScheduled = true;
@@ -349,7 +385,7 @@ public final class BackupActionHandler implements SubcommandHandler {
             int remainingCount;
             synchronized (this) {
                 progressScheduled = false;
-                if (finished) {
+                if (finished || cancelledForReload) {
                     return;
                 }
                 successCount = succeeded;
@@ -373,6 +409,12 @@ public final class BackupActionHandler implements SubcommandHandler {
         }
 
         private void pump() {
+            synchronized (this) {
+                if (cancelledForReload) {
+                    finishIfComplete();
+                    return;
+                }
+            }
             BackupService backupService = plugin.backupService();
             if (!plugin.isStoreReady() || backupService == null) {
                 failRemainingPending("store-unavailable");
@@ -433,6 +475,12 @@ public final class BackupActionHandler implements SubcommandHandler {
 
         private void attemptTargetBackup(Player player, BackupAllTarget target) {
             try {
+                synchronized (this) {
+                    if (cancelledForReload) {
+                        onTargetCancelled(target, "reload-cancelled");
+                        return;
+                    }
+                }
                 BackupService backupService = plugin.backupService();
                 if (!player.isOnline()) {
                     onTargetSkipped(target, "offline");
@@ -454,6 +502,12 @@ public final class BackupActionHandler implements SubcommandHandler {
                     return;
                 }
 
+                synchronized (this) {
+                    if (cancelledForReload) {
+                        onTargetCancelled(target, "reload-cancelled");
+                        return;
+                    }
+                }
                 requeueTargetAfterQueueFull(target);
                 schedulePump(BACKUP_ALL_RETRY_DELAY_TICKS);
             } catch (RuntimeException e) {
@@ -474,6 +528,24 @@ public final class BackupActionHandler implements SubcommandHandler {
                     target.playerName(),
                     backupId,
                     "success=true"
+            );
+            finishIfComplete();
+        }
+
+        private void onTargetCancelled(BackupAllTarget target, String reason) {
+            synchronized (this) {
+                cancelled++;
+                if (inFlight > 0) {
+                    inFlight--;
+                }
+            }
+            plugin.auditService().log(
+                    "MANUAL_BACKUP_ALL",
+                    sender,
+                    target.playerUuid(),
+                    target.playerName(),
+                    null,
+                    "cancelled=true, reason=" + reason
             );
             finishIfComplete();
         }
@@ -554,10 +626,30 @@ public final class BackupActionHandler implements SubcommandHandler {
             finishIfComplete();
         }
 
+        private int cancelForReload() {
+            int dropped;
+            synchronized (this) {
+                if (finished || cancelledForReload) {
+                    return 0;
+                }
+                cancelledForReload = true;
+                silentFinish = true;
+                dropped = pendingTargets.size();
+                cancelled += dropped;
+                pendingTargets.clear();
+                pumpScheduled = false;
+                progressScheduled = false;
+            }
+            finishIfComplete();
+            return dropped;
+        }
+
         private void finishIfComplete() {
             int successCount;
             int skippedCount;
             int failedCount;
+            String elapsedText;
+            boolean suppressMessage;
             synchronized (this) {
                 if (finished || !pendingTargets.isEmpty() || inFlight > 0) {
                     return;
@@ -566,15 +658,20 @@ public final class BackupActionHandler implements SubcommandHandler {
                 successCount = succeeded;
                 skippedCount = skipped;
                 failedCount = failed;
+                elapsedText = formatElapsed(System.currentTimeMillis() - startedAtMillis);
+                suppressMessage = silentFinish;
             }
 
-            async.runOnSender(sender, () -> Chat.plainList(
-                    sender,
-                    "success.backupall-submitted",
-                    Placeholder.unparsed("success", String.valueOf(successCount)),
-                    Placeholder.unparsed("skipped", String.valueOf(skippedCount)),
-                    Placeholder.unparsed("failed", String.valueOf(failedCount))
-            ));
+            if (!suppressMessage) {
+                async.runOnSender(sender, () -> Chat.plainList(
+                        sender,
+                        "success.backupall-submitted",
+                        Placeholder.unparsed("elapsed", elapsedText),
+                        Placeholder.unparsed("success", String.valueOf(successCount)),
+                        Placeholder.unparsed("skipped", String.valueOf(skippedCount)),
+                        Placeholder.unparsed("failed", String.valueOf(failedCount))
+                ));
+            }
             onBackupAllQueueFinished(this);
         }
 

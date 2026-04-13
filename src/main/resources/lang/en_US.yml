@@ -80,6 +80,7 @@ info:
   checking-pending: "<prefix><#4FC3F7>ℹ Checking pending items...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore...</#4FC3F7>"
   restore-pre-backup-success: "<prefix><#4FC3F7>ℹ Pre-restore safety backup created successfully (<backup_id>), running restore...</#4FC3F7>"
+  reload-backup-discarded: "<prefix><#4FC3F7>ℹ Cancelled <#FFCA28><queue_targets></#FFCA28> batch backup target(s) and discarded <#FFCA28><io_tasks></#FFCA28> queued I/O task(s) that had not started yet</#4FC3F7>"
   backupall-progress: "<prefix><#4FC3F7>ℹ Running backup for all online players: completed <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, success <#66BB6A><success></#66BB6A>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350>, remaining <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ Enter backup ID (e.g., <#FFCA28>1730000000000-abc12345</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup Info</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(<id>)</#90A4AE>"
@@ -101,7 +102,7 @@ success:
   self-backup-copy-hover: "<#FFCA28>Click to copy backup ID</#FFCA28>"
   backupall-enqueued: "<prefix><#66BB6A>✔ Running backup for all online players, total <#FFCA28><total></#FFCA28></#66BB6A>"
   backupall-submitted:
-    - "<prefix><#66BB6A>✔ Batch backup queue finished</#66BB6A>"
+    - "<prefix><#66BB6A>✔ Batch backup queue finished</#66BB6A> <#90A4AE>(elapsed <elapsed>)</#90A4AE>"
     - "<prefix><#90A4AE>Success <#FFCA28><success></#FFCA28>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350></#90A4AE>"
   backup-locked: "<prefix><#66BB6A>✔ Backup pinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backup-unlocked: "<prefix><#66BB6A>✔ Backup unpinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"

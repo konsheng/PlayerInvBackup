@@ -2,6 +2,7 @@ package org.playerinvbackup.backup.command.handler;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +30,8 @@ public final class AdminHandler implements SubcommandHandler {
     private final ReloadAction reloadAction;
     private final BooleanSupplier pluginEnabled;
     private final BooleanSupplier storeReady;
+    private final IntSupplier reloadCancelledBackupTargetsSupplier;
+    private final IntSupplier reloadDiscardedIoTasksSupplier;
     private final CommandGuards guards;
     private final CommandSuggestions suggestions;
     private final Logger logger;
@@ -39,6 +42,8 @@ public final class AdminHandler implements SubcommandHandler {
             ReloadAction reloadAction,
             BooleanSupplier pluginEnabled,
             BooleanSupplier storeReady,
+            IntSupplier reloadCancelledBackupTargetsSupplier,
+            IntSupplier reloadDiscardedIoTasksSupplier,
             CommandGuards guards,
             CommandSuggestions suggestions,
             Logger logger,
@@ -48,6 +53,8 @@ public final class AdminHandler implements SubcommandHandler {
         this.reloadAction = reloadAction;
         this.pluginEnabled = pluginEnabled;
         this.storeReady = storeReady;
+        this.reloadCancelledBackupTargetsSupplier = reloadCancelledBackupTargetsSupplier;
+        this.reloadDiscardedIoTasksSupplier = reloadDiscardedIoTasksSupplier;
         this.guards = guards;
         this.suggestions = suggestions;
         this.logger = logger;
@@ -139,6 +146,16 @@ public final class AdminHandler implements SubcommandHandler {
             return true;
         }
         Chat.success(ctx.sender(), "success.reloaded");
+        int cancelledTargets = reloadCancelledBackupTargetsSupplier.getAsInt();
+        int discardedIoTasks = reloadDiscardedIoTasksSupplier.getAsInt();
+        if (cancelledTargets > 0 || discardedIoTasks > 0) {
+            Chat.info(
+                    ctx.sender(),
+                    "info.reload-backup-discarded",
+                    Placeholder.unparsed("queue_targets", String.valueOf(cancelledTargets)),
+                    Placeholder.unparsed("io_tasks", String.valueOf(discardedIoTasks))
+            );
+        }
         return true;
     }
 }

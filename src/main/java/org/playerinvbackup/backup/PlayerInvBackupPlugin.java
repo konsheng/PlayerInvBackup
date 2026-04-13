@@ -62,6 +62,9 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
     private RestoreService restoreService;
     private Lang lang;
     private PacketGuiManager packetGuiManager;
+    private BackupCommand backupCommand;
+    private volatile int lastReloadCancelledBackupTargets;
+    private volatile int lastReloadDiscardedIoTasks;
     // 最近一次存储初始化失败原因, 用于 status 与 reload 反馈
     private volatile String storeInitFailedReason;
 
@@ -193,9 +196,14 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
     }
 
     public void reload() {
+        lastReloadCancelledBackupTargets = 0;
+        lastReloadDiscardedIoTasks = 0;
         if (backupScheduler != null) {
             backupScheduler.stop();
             backupScheduler = null;
+        }
+        if (backupCommand != null) {
+            lastReloadCancelledBackupTargets = backupCommand.cancelActiveOperationsForReload();
         }
 
         reloadConfig();
@@ -242,11 +250,12 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         applyGuiMode();
 
         try {
+            if (ioDispatcher != null) {
+                int discarded = ioDispatcher.discardQueuedAndAwaitRunning();
+                lastReloadDiscardedIoTasks = discarded;
+            }
             if (store != null) {
                 store.close();
-            }
-            if (ioDispatcher != null) {
-                ioDispatcher.close();
             }
         } catch (Exception ignored) {
         }
@@ -290,12 +299,20 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
             logStartupConfig();
         }
 
-        var command = new BackupCommand(this);
+        this.backupCommand = new BackupCommand(this);
         var pluginCommand = getCommand("playerinvbackup");
         if (pluginCommand != null) {
-            pluginCommand.setExecutor(command);
-            pluginCommand.setTabCompleter(command);
+            pluginCommand.setExecutor(backupCommand);
+            pluginCommand.setTabCompleter(backupCommand);
         }
+    }
+
+    public int lastReloadCancelledBackupTargets() {
+        return lastReloadCancelledBackupTargets;
+    }
+
+    public int lastReloadDiscardedIoTasks() {
+        return lastReloadDiscardedIoTasks;
     }
 
     private BackupStore createStore(PluginConfig config) {
