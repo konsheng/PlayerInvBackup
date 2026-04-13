@@ -7,6 +7,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.codec.SnapshotCodec;
@@ -159,11 +162,14 @@ public final class RestoreService {
                                 Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId)
                         ));
                         runOnOnlineTarget(targetUuid, currentTarget -> {
-                            runOnActor(actor, () -> Chat.info(
-                                    actor,
-                                    "info.restore-pre-backup-success",
-                                    Placeholder.unparsed("backup_id", preRestoreBackupId)
-                            ));
+                            runOnActor(actor, () -> {
+                                Chat.info(
+                                        actor,
+                                        "info.restore-pre-backup-success",
+                                        Placeholder.component("backup_id", createCopyableBackupId(preRestoreBackupId))
+                                );
+                                Chat.info(actor, "info.restore-running");
+                            });
 
                             try {
                                 applySnapshot(currentTarget, parts, claimed);
@@ -253,6 +259,12 @@ public final class RestoreService {
             }
             currentTarget.getScheduler().run(plugin, ignored -> consumer.accept(currentTarget), null);
         });
+    }
+
+    private Component createCopyableBackupId(String backupId) {
+        return Component.text(backupId)
+                .clickEvent(ClickEvent.copyToClipboard(backupId))
+                .hoverEvent(HoverEvent.showText(plugin.lang().msg("success.restore-pre-backup-copy-hover")));
     }
 
     private static void applySnapshot(Player target, SnapshotParts parts, Set<String> claimedKeys) {
