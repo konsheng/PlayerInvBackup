@@ -365,6 +365,7 @@ console:
   backup:
     encode-failed: "Failed to encode snapshot: player=<player>(<uuid>), backup_id=<backup_id>, reason=<reason>"
     write-failed: "Failed to write backup: player=<player>(<uuid>), backup_id=<backup_id>, reason=<reason>"
+    purge-failed: "Failed to purge old backups: player=<player>(<uuid>), current_backup_id=<backup_id>, reason=<reason>"
 
   audit:
     line: "[Audit] action=<action>, actor=<actor>, target=<target>, backup_id=<backup_id>"

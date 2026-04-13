@@ -366,6 +366,7 @@ console:
   backup:
     encode-failed: "编码备份快照失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"
     write-failed: "写入备份失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"
+    purge-failed: "清理旧备份失败: 玩家=<player>(<uuid>), 当前备份编号=<backup_id>, 原因=<reason>"
 
   audit:
     line: "[审计] 操作=<action>, 操作者=<actor>, 目标=<target>, 备份编号=<backup_id>"

@@ -2,7 +2,10 @@ package org.playerinvbackup.backup.app;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.UUID;
+import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.codec.SnapshotCodec;
@@ -26,6 +29,8 @@ import org.bukkit.Location;
  * 写入过程通过 {@link IoDispatcher} 异步执行, 避免阻塞 Folia 的 Region 线程
  */
 public final class BackupService {
+    private static final int PURGE_TRIGGER_THRESHOLD = 10;
+
     @FunctionalInterface
     public interface BackupCompletion {
         void complete(boolean success, String backupId);
@@ -35,6 +40,7 @@ public final class BackupService {
     private final PluginConfig config;
     private final BackupStore store;
     private final IoDispatcher ioDispatcher;
+    private final ConcurrentHashMap<UUID, AtomicInteger> pendingPurgeCounts = new ConcurrentHashMap<>();
 
     public BackupService(PlayerInvBackupPlugin plugin, PluginConfig config, BackupStore store, IoDispatcher ioDispatcher) {
         this.plugin = plugin;
@@ -61,6 +67,7 @@ public final class BackupService {
 
         return ioDispatcher.submitWrite(() -> {
             boolean success = false;
+            boolean completionDelivered = false;
             try {
                 byte[] snapshotBytes = SnapshotCodec.encodeGzip(parts);
                 String sha256 = Hashing.sha256Hex(snapshotBytes);
@@ -80,16 +87,10 @@ public final class BackupService {
                         location.getZ()
                 );
                 store.saveBackup(new BackupRecord(meta, snapshotBytes));
-                long keepAfterMillis = 0L;
-                Duration keepDuration = config.keepDuration();
-                if (keepDuration != null) {
-                    long millis = keepDuration.toMillis();
-                    if (millis > 0) {
-                        keepAfterMillis = Math.max(0L, now - millis);
-                    }
-                }
-                store.purgeBackups(playerUuid, config.keepPerPlayer(), keepAfterMillis);
                 success = true;
+                notifyCompletion(completion, true, backupId);
+                completionDelivered = true;
+                maybePurgeBackups(playerUuid, playerName, now, backupId);
             } catch (IOException e) {
                 plugin.getLogger().severe(plugin.lang().plain(
                         "console.backup.encode-failed",
@@ -107,11 +108,73 @@ public final class BackupService {
                         Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
                 ));
             } finally {
-                if (completion != null) {
-                    completion.complete(success, backupId);
+                if (!completionDelivered) {
+                    notifyCompletion(completion, success, backupId);
                 }
             }
         });
+    }
+
+    private void maybePurgeBackups(UUID playerUuid, String playerName, long createdAtMillis, String backupId) {
+        if (!isPurgeEnabled()) {
+            return;
+        }
+
+        AtomicInteger counter = pendingPurgeCounts.computeIfAbsent(playerUuid, ignored -> new AtomicInteger());
+        int current = counter.incrementAndGet();
+        if (current < PURGE_TRIGGER_THRESHOLD) {
+            return;
+        }
+
+        long keepAfterMillis = computeKeepAfterMillis(createdAtMillis);
+        try {
+            store.purgeBackups(playerUuid, config.keepPerPlayer(), keepAfterMillis);
+            counter.set(0);
+        } catch (Exception e) {
+            counter.set(PURGE_TRIGGER_THRESHOLD - 1);
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    plugin.lang().plain(
+                            "console.backup.purge-failed",
+                            Placeholder.unparsed("player", playerName),
+                            Placeholder.unparsed("uuid", playerUuid.toString()),
+                            Placeholder.unparsed("backup_id", backupId),
+                            Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
+                    ),
+                    e
+            );
+        }
+    }
+
+    private boolean isPurgeEnabled() {
+        return config.keepPerPlayer() > 0 || computeKeepAfterMillis(System.currentTimeMillis()) > 0;
+    }
+
+    private long computeKeepAfterMillis(long referenceMillis) {
+        Duration keepDuration = config.keepDuration();
+        if (keepDuration == null) {
+            return 0L;
+        }
+        long millis = keepDuration.toMillis();
+        if (millis <= 0L) {
+            return 0L;
+        }
+        return Math.max(0L, referenceMillis - millis);
+    }
+
+    private void notifyCompletion(BackupCompletion completion, boolean success, String backupId) {
+        if (completion == null) {
+            return;
+        }
+        try {
+            completion.complete(success, backupId);
+        } catch (Exception e) {
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    "Backup completion callback failed: backupId=" + backupId + ", success=" + success,
+                    e
+            );
+        }
     }
 
     private static SnapshotParts captureSnapshot(Player player) {
