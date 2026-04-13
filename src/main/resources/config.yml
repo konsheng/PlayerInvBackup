@@ -27,6 +27,9 @@ backup:
   # 仅对无参数的自助备份生效
   manual-self-cooldown-seconds: 5
 
+  # /pib backupall 进行中的进度提醒间隔(秒, 0 = 关闭)
+  backupall-progress-interval-seconds: 3
+
   # 错峰秒数: 每个玩家每轮备份会加上随机延迟, 避免 200 人同一刻写入造成 I/O 峰值
   jitter-seconds: 300
 

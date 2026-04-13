@@ -43,6 +43,7 @@ errors:
   usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open [player]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backup [player]</#FFCA28></#EF5350>"
   usage-backupall: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backupall</#FFCA28></#EF5350>"
+  backupall-running: "<prefix><#EF5350>A backup task is already in progress, wait until the current backup task finishes before trying again</#EF5350>"
   usage-restore: "<prefix><#EF5350>Usage: <#FFCA28>/<label> restore <player> <backup id></#FFCA28></#EF5350>"
   usage-list: "<prefix><#EF5350>Usage: <#FFCA28>/<label> list <player> [page]</#FFCA28></#EF5350>"
   usage-info: "<prefix><#EF5350>Usage: <#FFCA28>/<label> info <player> <backup id></#FFCA28></#EF5350>"
@@ -79,6 +80,7 @@ info:
   checking-pending: "<prefix><#4FC3F7>ℹ Checking pending items...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore...</#4FC3F7>"
   restore-pre-backup-success: "<prefix><#4FC3F7>ℹ Pre-restore safety backup created successfully (<backup_id>), running restore...</#4FC3F7>"
+  backupall-progress: "<prefix><#4FC3F7>ℹ Running backup for all online players: completed <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, success <#66BB6A><success></#66BB6A>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350>, remaining <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ Enter backup ID (e.g., <#FFCA28>1730000000000-abc12345</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup Info</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(<id>)</#90A4AE>"
   lines:
@@ -93,10 +95,14 @@ info:
 
 success:
   reloaded: "<prefix><#66BB6A>✔ Config and language reloaded</#66BB6A>"
-  backup-queued: "<prefix><#66BB6A>✔ Added to backup queue: <#FFCA28><player></#FFCA28></#66BB6A>"
+  backup-queued: "<prefix><#66BB6A>✔ Backing up player <#FFCA28><player></#FFCA28></#66BB6A>"
+  self-backup-queued: "<prefix><#66BB6A>✔ Backing up your data</#66BB6A>"
   self-backup-finished: "<prefix><#66BB6A>✔ Your backup has completed: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   self-backup-copy-hover: "<#FFCA28>Click to copy backup ID</#FFCA28>"
-  backupall-submitted: "<prefix><#66BB6A>✔ All online player backups submitted: queued <#FFCA28><queued></#FFCA28>, skipped/failed <#EF5350><skipped></#EF5350></#66BB6A>"
+  backupall-enqueued: "<prefix><#66BB6A>✔ Running backup for all online players, total <#FFCA28><total></#FFCA28></#66BB6A>"
+  backupall-submitted:
+    - "<prefix><#66BB6A>✔ Batch backup queue finished</#66BB6A>"
+    - "<prefix><#90A4AE>Success <#FFCA28><success></#FFCA28>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350></#90A4AE>"
   backup-locked: "<prefix><#66BB6A>✔ Backup pinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backup-unlocked: "<prefix><#66BB6A>✔ Backup unpinned: <#FFCA28><backup_id></#FFCA28></#66BB6A>"
   backup-note-set: "<prefix><#66BB6A>✔ Note updated: <#FFCA28><backup_id></#FFCA28></#66BB6A>"

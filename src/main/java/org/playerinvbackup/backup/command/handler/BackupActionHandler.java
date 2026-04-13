@@ -1,11 +1,12 @@
 package org.playerinvbackup.backup.command.handler;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -31,12 +32,16 @@ import org.playerinvbackup.backup.text.Chat;
  * <p>负责 backup, backupall
  */
 public final class BackupActionHandler implements SubcommandHandler {
+    private static final long BACKUP_ALL_RETRY_DELAY_TICKS = 20L;
+
     private final PlayerInvBackupPlugin plugin;
     private final CommandGuards guards;
     private final CommandAsync async;
     private final TargetResolver targetResolver;
     private final CommandSuggestions suggestions;
     private final Map<UUID, Long> selfBackupCooldownUntilMillis = new ConcurrentHashMap<>();
+    private final Object backupAllLock = new Object();
+    private BackupAllQueue runningBackupAllQueue;
 
     public BackupActionHandler(
             PlayerInvBackupPlugin plugin,
@@ -202,7 +207,7 @@ public final class BackupActionHandler implements SubcommandHandler {
                     }
                 }
 
-                async.runOnSender(sender, () -> Chat.success(sender, "success.backup-queued", Placeholder.unparsed("player", player.getName())));
+                async.runOnSender(sender, () -> Chat.success(sender, "success.self-backup-queued"));
                 plugin.auditService().log("SELF_BACKUP", sender, player.getUniqueId(), player.getName(), null, "queued=true");
             } else {
                 async.runOnSender(sender, () -> Chat.error(sender, "errors.backup-queue-full"));
@@ -212,7 +217,10 @@ public final class BackupActionHandler implements SubcommandHandler {
     }
 
     private void queueManualBackupAll(CommandSender sender, String label) {
-        List<Player> targets = new ArrayList<>(Bukkit.getOnlinePlayers());
+        List<BackupAllTarget> targets = new ArrayList<>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            targets.add(new BackupAllTarget(player.getUniqueId(), player.getName()));
+        }
         if (targets.isEmpty()) {
             Chat.error(sender, "errors.no-online-players");
             return;
@@ -224,58 +232,29 @@ public final class BackupActionHandler implements SubcommandHandler {
             return;
         }
 
-        AtomicInteger queued = new AtomicInteger();
-        AtomicInteger skipped = new AtomicInteger();
-        AtomicInteger remaining = new AtomicInteger(targets.size());
-
-        for (Player target : targets) {
-            target.getScheduler().run(
-                    plugin,
-                    ignored -> {
-                        boolean queuedThisTime = target.isOnline()
-                                && plugin.isStoreReady()
-                                && plugin.backupService() != null
-                                && plugin.backupService().requestBackup(target, TriggerType.MANUAL);
-                        finishManualBackupAllOne(sender, target, queuedThisTime, queued, skipped, remaining);
-                    },
-                    () -> finishManualBackupAllOne(sender, target, false, queued, skipped, remaining)
-            );
-        }
-    }
-
-    private void finishManualBackupAllOne(
-            CommandSender sender,
-            Player target,
-            boolean queuedThisTime,
-            AtomicInteger queued,
-            AtomicInteger skipped,
-            AtomicInteger remaining
-    ) {
-        if (queuedThisTime) {
-            queued.incrementAndGet();
-        } else {
-            skipped.incrementAndGet();
+        synchronized (backupAllLock) {
+            if (runningBackupAllQueue != null) {
+                Chat.error(sender, "errors.backupall-running");
+                return;
+            }
+            runningBackupAllQueue = new BackupAllQueue(sender, targets);
         }
 
-        plugin.auditService().log(
-                "MANUAL_BACKUP_ALL",
+        Chat.success(
                 sender,
-                target.getUniqueId(),
-                target.getName(),
-                null,
-                "queued=" + queuedThisTime
+                "success.backupall-enqueued",
+                Placeholder.unparsed("total", String.valueOf(targets.size()))
         );
 
-        if (remaining.decrementAndGet() != 0) {
-            return;
-        }
+        runningBackupAllQueue.start();
+    }
 
-        async.runOnSender(sender, () -> Chat.success(
-                sender,
-                "success.backupall-submitted",
-                Placeholder.unparsed("queued", String.valueOf(queued.get())),
-                Placeholder.unparsed("skipped", String.valueOf(skipped.get()))
-        ));
+    private void onBackupAllQueueFinished(BackupAllQueue queue) {
+        synchronized (backupAllLock) {
+            if (runningBackupAllQueue == queue) {
+                runningBackupAllQueue = null;
+            }
+        }
     }
 
     private boolean canUseBackupCommand(CommandSender sender) {
@@ -295,5 +274,322 @@ public final class BackupActionHandler implements SubcommandHandler {
         return Component.text(backupId)
                 .clickEvent(ClickEvent.copyToClipboard(backupId))
                 .hoverEvent(HoverEvent.showText(plugin.lang().msg("success.self-backup-copy-hover")));
+    }
+
+    private final class BackupAllQueue {
+        private final CommandSender sender;
+        private final Deque<BackupAllTarget> pendingTargets;
+        private final int totalTargets;
+
+        private int succeeded;
+        private int skipped;
+        private int failed;
+        private int inFlight;
+        private boolean finished;
+        private boolean pumpScheduled;
+        private boolean progressScheduled;
+
+        private BackupAllQueue(CommandSender sender, List<BackupAllTarget> targets) {
+            this.sender = sender;
+            this.pendingTargets = new ArrayDeque<>(targets);
+            this.totalTargets = targets.size();
+        }
+
+        private void start() {
+            schedulePump(0L);
+            scheduleProgressReminder();
+        }
+
+        private void schedulePump(long delayTicks) {
+            synchronized (this) {
+                if (finished || pumpScheduled) {
+                    return;
+                }
+                pumpScheduled = true;
+            }
+
+            if (delayTicks <= 0L) {
+                Bukkit.getGlobalRegionScheduler().execute(plugin, this::runPump);
+                return;
+            }
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, ignored -> runPump(), delayTicks);
+        }
+
+        private void runPump() {
+            synchronized (this) {
+                pumpScheduled = false;
+                if (finished) {
+                    return;
+                }
+            }
+            pump();
+        }
+
+        private void scheduleProgressReminder() {
+            long intervalTicks = progressIntervalTicks();
+            if (intervalTicks <= 0L) {
+                return;
+            }
+
+            synchronized (this) {
+                if (finished || progressScheduled) {
+                    return;
+                }
+                progressScheduled = true;
+            }
+
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, ignored -> runProgressReminder(), intervalTicks);
+        }
+
+        private void runProgressReminder() {
+            int completed;
+            int successCount;
+            int skippedCount;
+            int failedCount;
+            int remainingCount;
+            synchronized (this) {
+                progressScheduled = false;
+                if (finished) {
+                    return;
+                }
+                successCount = succeeded;
+                skippedCount = skipped;
+                failedCount = failed;
+                completed = successCount + skippedCount + failedCount;
+                remainingCount = Math.max(0, totalTargets - completed);
+            }
+
+            async.runOnSender(sender, () -> Chat.info(
+                    sender,
+                    "info.backupall-progress",
+                    Placeholder.unparsed("completed", String.valueOf(completed)),
+                    Placeholder.unparsed("total", String.valueOf(totalTargets)),
+                    Placeholder.unparsed("success", String.valueOf(successCount)),
+                    Placeholder.unparsed("skipped", String.valueOf(skippedCount)),
+                    Placeholder.unparsed("failed", String.valueOf(failedCount)),
+                    Placeholder.unparsed("remaining", String.valueOf(remainingCount))
+            ));
+            scheduleProgressReminder();
+        }
+
+        private void pump() {
+            BackupService backupService = plugin.backupService();
+            if (!plugin.isStoreReady() || backupService == null) {
+                failRemainingPending("store-unavailable");
+                return;
+            }
+
+            int permits = plugin.ioDispatcher().queueRemainingCapacity();
+            if (permits <= 0) {
+                schedulePump(BACKUP_ALL_RETRY_DELAY_TICKS);
+                return;
+            }
+
+            List<BackupAllTarget> batch = new ArrayList<>();
+            synchronized (this) {
+                while (!finished && permits > 0 && !pendingTargets.isEmpty()) {
+                    batch.add(pendingTargets.pollFirst());
+                    permits--;
+                }
+            }
+
+            if (batch.isEmpty()) {
+                finishIfComplete();
+                return;
+            }
+
+            for (BackupAllTarget target : batch) {
+                dispatchTarget(target);
+            }
+
+            synchronized (this) {
+                if (!finished && !pendingTargets.isEmpty()) {
+                    schedulePump(BACKUP_ALL_RETRY_DELAY_TICKS);
+                }
+            }
+            finishIfComplete();
+        }
+
+        private void dispatchTarget(BackupAllTarget target) {
+            Player player = Bukkit.getPlayer(target.playerUuid());
+            if (player == null || !player.isOnline()) {
+                onTargetSkipped(target, "offline");
+                return;
+            }
+
+            synchronized (this) {
+                if (finished) {
+                    failed++;
+                    return;
+                }
+                inFlight++;
+            }
+            player.getScheduler().run(
+                    plugin,
+                    ignored -> attemptTargetBackup(player, target),
+                    () -> onTargetSkipped(target, "retired")
+            );
+        }
+
+        private void attemptTargetBackup(Player player, BackupAllTarget target) {
+            try {
+                BackupService backupService = plugin.backupService();
+                if (!player.isOnline()) {
+                    onTargetSkipped(target, "offline");
+                    return;
+                }
+                if (!plugin.isStoreReady() || backupService == null) {
+                    onTargetFailed(target, "store-unavailable");
+                    return;
+                }
+
+                boolean queued = backupService.requestBackup(player, TriggerType.MANUAL, (success, backupId) -> {
+                    if (success) {
+                        onTargetSucceeded(target, backupId);
+                        return;
+                    }
+                    onTargetFailed(target, "save-failed");
+                });
+                if (queued) {
+                    return;
+                }
+
+                requeueTargetAfterQueueFull(target);
+                schedulePump(BACKUP_ALL_RETRY_DELAY_TICKS);
+            } catch (RuntimeException e) {
+                onTargetFailed(target, "dispatch-exception");
+                throw e;
+            }
+        }
+
+        private void onTargetSucceeded(BackupAllTarget target, String backupId) {
+            synchronized (this) {
+                succeeded++;
+                inFlight--;
+            }
+            plugin.auditService().log(
+                    "MANUAL_BACKUP_ALL",
+                    sender,
+                    target.playerUuid(),
+                    target.playerName(),
+                    backupId,
+                    "success=true"
+            );
+            finishIfComplete();
+        }
+
+        private void onTargetSkipped(BackupAllTarget target, String reason) {
+            synchronized (this) {
+                skipped++;
+                if (inFlight > 0) {
+                    inFlight--;
+                }
+            }
+            plugin.auditService().log(
+                    "MANUAL_BACKUP_ALL",
+                    sender,
+                    target.playerUuid(),
+                    target.playerName(),
+                    null,
+                    "skipped=true, reason=" + reason
+            );
+            finishIfComplete();
+        }
+
+        private void onTargetFailed(BackupAllTarget target, String reason) {
+            synchronized (this) {
+                failed++;
+                if (inFlight > 0) {
+                    inFlight--;
+                }
+            }
+            plugin.auditService().log(
+                    "MANUAL_BACKUP_ALL",
+                    sender,
+                    target.playerUuid(),
+                    target.playerName(),
+                    null,
+                    "failed=true, reason=" + reason
+            );
+            finishIfComplete();
+        }
+
+        private void requeueTarget(BackupAllTarget target) {
+            synchronized (this) {
+                if (finished) {
+                    failed++;
+                    return;
+                }
+                pendingTargets.addFirst(target);
+            }
+        }
+
+        private void requeueTargetAfterQueueFull(BackupAllTarget target) {
+            synchronized (this) {
+                if (inFlight > 0) {
+                    inFlight--;
+                }
+            }
+            requeueTarget(target);
+        }
+
+        private void failRemainingPending(String reason) {
+            List<BackupAllTarget> remaining = new ArrayList<>();
+            synchronized (this) {
+                while (!pendingTargets.isEmpty()) {
+                    remaining.add(pendingTargets.pollFirst());
+                    failed++;
+                }
+            }
+            for (BackupAllTarget target : remaining) {
+                plugin.auditService().log(
+                        "MANUAL_BACKUP_ALL",
+                        sender,
+                        target.playerUuid(),
+                        target.playerName(),
+                        null,
+                        "failed=true, reason=" + reason
+                );
+            }
+            finishIfComplete();
+        }
+
+        private void finishIfComplete() {
+            int successCount;
+            int skippedCount;
+            int failedCount;
+            synchronized (this) {
+                if (finished || !pendingTargets.isEmpty() || inFlight > 0) {
+                    return;
+                }
+                finished = true;
+                successCount = succeeded;
+                skippedCount = skipped;
+                failedCount = failed;
+            }
+
+            async.runOnSender(sender, () -> Chat.plainList(
+                    sender,
+                    "success.backupall-submitted",
+                    Placeholder.unparsed("success", String.valueOf(successCount)),
+                    Placeholder.unparsed("skipped", String.valueOf(skippedCount)),
+                    Placeholder.unparsed("failed", String.valueOf(failedCount))
+            ));
+            onBackupAllQueueFinished(this);
+        }
+
+        private long progressIntervalTicks() {
+            if (plugin.pluginConfig() == null || plugin.pluginConfig().backupAllProgressInterval() == null) {
+                return 60L;
+            }
+            long seconds = plugin.pluginConfig().backupAllProgressInterval().toSeconds();
+            if (seconds <= 0L) {
+                return 0L;
+            }
+            return Math.max(1L, seconds * 20L);
+        }
+    }
+
+    private record BackupAllTarget(UUID playerUuid, String playerName) {
     }
 }
