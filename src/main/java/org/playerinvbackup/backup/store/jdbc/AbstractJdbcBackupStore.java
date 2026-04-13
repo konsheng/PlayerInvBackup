@@ -27,7 +27,6 @@ import org.playerinvbackup.backup.store.SqlTableNames;
  * <p>收敛各 SQL 后端通用的 CRUD, 映射与迁移流程
  */
 public abstract class AbstractJdbcBackupStore implements BackupStore {
-    private static final String TRIGGER_COLUMN = "trigger_type";
     private final Object sharedConnectionLock = new Object();
     private final JdbcDialect dialect;
     private final SqlTableNames tables;
@@ -86,9 +85,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final void saveBackup(BackupRecord record) throws Exception {
         withConnection(connection -> {
             String sql = """
-                    INSERT INTO %s(backup_id, player_uuid, created_at, %s, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
+                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """.formatted(tables.backups(), TRIGGER_COLUMN);
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
                 ps.setString(1, meta.backupId());
@@ -118,14 +117,14 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         }
         return withConnection(connection -> {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, %s, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
+                    SELECT backup_id, created_at, trigger_type, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM %s
                     WHERE player_uuid=?
-                    """.formatted(TRIGGER_COLUMN, tables.backups()));
+                    """.formatted(tables.backups()));
             TriggerType triggerFilter = query == null ? null : query.trigger();
             long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
             if (triggerFilter != null) {
-                sql.append(" AND ").append(TRIGGER_COLUMN).append("=?");
+                sql.append(" AND trigger_type=?");
             }
             if (createdAfterMillis > 0) {
                 sql.append(" AND created_at>=?");
@@ -161,10 +160,10 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         return withConnection(connection -> {
             String sql = """
-                    SELECT created_at, %s, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
+                    SELECT created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
                     FROM %s
                     WHERE player_uuid=? AND backup_id=?
-                    """.formatted(TRIGGER_COLUMN, tables.backups());
+                    """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, playerUuid.toString());
                 ps.setString(2, backupId);
@@ -404,7 +403,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                       backup_id %s PRIMARY KEY,
                       player_uuid %s NOT NULL,
                       created_at BIGINT NOT NULL,
-                      %s %s NOT NULL,
+                      trigger_type %s NOT NULL,
                       schema_version INT NOT NULL,
                       sha256 %s NOT NULL,
                       snapshot_blob %s NOT NULL,
@@ -420,7 +419,6 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     tables.backups(),
                     dialect.backupIdType(),
                     dialect.uuidType(),
-                    TRIGGER_COLUMN,
                     dialect.triggerType(),
                     dialect.sha256Type(),
                     dialect.blobType(),
