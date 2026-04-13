@@ -21,6 +21,8 @@ repositories {
 dependencies {
     // Paper API
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    // 测试运行时也需要 Paper API
+    testImplementation("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     // ProtocolLib API
     compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
     // bStats
