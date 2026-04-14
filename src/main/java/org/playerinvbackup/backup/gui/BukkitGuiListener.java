@@ -1,8 +1,5 @@
 package org.playerinvbackup.backup.gui;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.LoadingHolder;
@@ -12,9 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 
@@ -26,13 +21,7 @@ import org.bukkit.inventory.InventoryView;
  * <p>该监听器负责拦截点击与拖拽, 阻止玩家移动 GUI 内的物品, 并把按钮点击转发给 GuiService 的处理逻辑
  */
 public final class BukkitGuiListener implements Listener {
-    private static final long CLICK_DEBOUNCE_MILLIS = 150;
-
     private final GuiService guiService;
-    private final Map<UUID, LastClick> lastClicks = new ConcurrentHashMap<>();
-
-    private record LastClick(int rawSlot, long millis) {
-    }
 
     public BukkitGuiListener(GuiService guiService) {
         this.guiService = guiService;
@@ -69,10 +58,6 @@ public final class BukkitGuiListener implements Listener {
         }
 
         if (holder instanceof LoadingHolder) {
-            return;
-        }
-
-        if (isDebounced(player.getUniqueId(), rawSlot)) {
             return;
         }
 
@@ -118,30 +103,5 @@ public final class BukkitGuiListener implements Listener {
                 break;
             }
         }
-    }
-
-    @EventHandler
-    public void onClose(InventoryCloseEvent event) {
-        if (event.getPlayer() instanceof Player player) {
-            lastClicks.remove(player.getUniqueId());
-        }
-    }
-
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        lastClicks.remove(event.getPlayer().getUniqueId());
-    }
-
-    private boolean isDebounced(UUID playerUuid, int rawSlot) {
-        if (playerUuid == null) {
-            return false;
-        }
-        long now = System.currentTimeMillis();
-        LastClick last = lastClicks.get(playerUuid);
-        if (last != null && last.rawSlot() == rawSlot && now - last.millis() < CLICK_DEBOUNCE_MILLIS) {
-            return true;
-        }
-        lastClicks.put(playerUuid, new LastClick(rawSlot, now));
-        return false;
     }
 }

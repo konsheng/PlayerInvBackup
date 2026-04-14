@@ -54,7 +54,6 @@ public final class PacketGuiManager {
     private static final int PLAYER_INV_SLOT_COUNT = 36;
     private static final int WINDOW_ID_MIN = 200;
     private static final int WINDOW_ID_RANGE = 50; // 200-249, 避免与常规容器 ID 冲突.
-    private static final long CLICK_DEBOUNCE_MILLIS = 150;
     private static final Object UNRESOLVED_MENU_TYPE = new Object();
     private static final ItemStack EMPTY_ITEM = new ItemStack(Material.AIR);
 
@@ -62,15 +61,11 @@ public final class PacketGuiManager {
     private final ProtocolManager protocolManager;
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
     private final AtomicInteger windowIdCounter = new AtomicInteger(WINDOW_ID_MIN);
-    private final Map<UUID, LastClick> lastClicks = new ConcurrentHashMap<>();
     // 缓存已解析的 MenuType, 避免每次打开 GUI 都反射扫描注册表
     private final Map<String, Object> menuTypeHandleCache = new ConcurrentHashMap<>();
 
     private volatile GuiService guiService;
     private PacketAdapter packetListener;
-
-    private record LastClick(int rawSlot, long millis) {
-    }
 
     private static final class Session {
         private final int windowId;
@@ -122,7 +117,6 @@ public final class PacketGuiManager {
             @EventHandler
             public void onQuit(PlayerQuitEvent event) {
                 sessions.remove(event.getPlayer().getUniqueId());
-                lastClicks.remove(event.getPlayer().getUniqueId());
             }
         }, plugin);
     }
@@ -150,7 +144,6 @@ public final class PacketGuiManager {
             }
         }
         sessions.clear();
-        lastClicks.clear();
     }
 
     public Component currentTitle(Player player) {
@@ -307,7 +300,6 @@ public final class PacketGuiManager {
                 return;
             }
             sessions.remove(uuid);
-            lastClicks.remove(uuid);
             return;
         }
 
@@ -326,18 +318,6 @@ public final class PacketGuiManager {
         int clickedSlot = extractClickedSlot(packet, totalSlots);
         if (clickedSlot < -999 || clickedSlot >= totalSlots) {
             clickedSlot = -999;
-        }
-
-        // 去抖, 防止双击/连续点击导致重复触发
-        if (clickedSlot >= 0 && clickedSlot < session.top.getSize()) {
-            long now = System.currentTimeMillis();
-            LastClick last = lastClicks.get(uuid);
-            if (last != null && last.rawSlot() == clickedSlot && now - last.millis() < CLICK_DEBOUNCE_MILLIS) {
-                // 仍然需要同步一次, 用于回滚客户端可能出现的“拿起物品”假象
-                player.getScheduler().run(plugin, ignored -> sendWindowItemsIfStill(player, session.windowId), null);
-                return;
-            }
-            lastClicks.put(uuid, new LastClick(clickedSlot, now));
         }
 
         int windowId = session.windowId;
