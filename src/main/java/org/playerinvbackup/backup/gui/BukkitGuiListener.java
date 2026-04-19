@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -58,6 +59,12 @@ public final class BukkitGuiListener implements Listener {
         }
 
         if (holder instanceof LoadingHolder) {
+            return;
+        }
+
+        // 只接受普通 LEFT / RIGHT, 避免 DOUBLE_CLICK 等特殊点击额外触发一次按钮逻辑
+        ClickType click = event.getClick();
+        if (click != ClickType.LEFT && click != ClickType.RIGHT) {
             return;
         }
 

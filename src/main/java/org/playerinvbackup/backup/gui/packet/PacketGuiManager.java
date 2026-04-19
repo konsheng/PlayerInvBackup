@@ -51,6 +51,16 @@ import org.bukkit.inventory.PlayerInventory;
  * 3) 由于服务端没有真实容器, 所有点击包都会被拦截并取消, 再通过重发内容来“回滚”客户端的拖拽/拾取行为
  */
 public final class PacketGuiManager {
+    private enum InventoryClickType {
+        PICKUP,
+        QUICK_MOVE,
+        SWAP,
+        CLONE,
+        THROW,
+        QUICK_CRAFT,
+        PICKUP_ALL
+    }
+
     private static final int PLAYER_INV_SLOT_COUNT = 36;
     private static final int WINDOW_ID_MIN = 200;
     private static final int WINDOW_ID_RANGE = 50; // 200-249, 避免与常规容器 ID 冲突.
@@ -314,15 +324,17 @@ public final class PacketGuiManager {
         // 拦截并取消点击包, 防止客户端移动/拿起物品
         event.setCancelled(true);
 
-        int totalSlots = session.top.getSize() + PLAYER_INV_SLOT_COUNT;
-        int clickedSlot = extractClickedSlot(packet, totalSlots);
-        if (clickedSlot < -999 || clickedSlot >= totalSlots) {
-            clickedSlot = -999;
+        int topSize = session.top.getSize();
+        int clickedSlot = extractClickedSlot(packet, topSize);
+        int windowId = session.windowId;
+
+        // 只接受普通 LEFT / RIGHT, 避免 DOUBLE_CLICK 等特殊点击额外触发一次按钮逻辑
+        if (!isPlainMenuClick(packet, clickedSlot)) {
+            player.getScheduler().run(plugin, ignored -> sendWindowItemsIfStill(player, windowId), null);
+            return;
         }
 
-        int windowId = session.windowId;
-        int finalClickedSlot = clickedSlot;
-        player.getScheduler().run(plugin, ignored -> handleClickOnPlayerThread(player, windowId, finalClickedSlot), null);
+        player.getScheduler().run(plugin, ignored -> handleClickOnPlayerThread(player, windowId, clickedSlot), null);
     }
 
     private void handleClickOnPlayerThread(Player player, int windowId, int clickedSlot) {
@@ -404,76 +416,85 @@ public final class PacketGuiManager {
     }
 
     /**
-     * 尽量从 WINDOW_CLICK 包里提取点击的 slot
+     * 直接按 ServerboundContainerClickPacket 的正式字段顺序读取 slotNum.
      *
-     * <p>ProtocolLib 会对不同版本做字段适配, 但字段顺序并不保证一致
-     * 这里优先走比较稳定的:
-     * - 新协议通常 slot 在 Integers[2]
-     * - 老协议通常 slot 在 Shorts[0]
+     * <p>这里只接受顶部菜单区域的槽位, 其他点击统一视为无效按钮点击.
      */
-    private int extractClickedSlot(PacketContainer packet, int totalSlots) {
+    private int extractClickedSlot(PacketContainer packet, int topSize) {
         if (packet == null) {
             return -999;
         }
 
         try {
-            StructureModifier<Integer> ints = packet.getIntegers();
-            if (ints.size() >= 3) {
-                Integer candidate = ints.read(2);
-                if (candidate != null && (candidate == -999 || (candidate >= 0 && candidate < totalSlots))) {
-                    return candidate;
-                }
+            StructureModifier<Object> modifier = packet.getModifier();
+            if (modifier.size() <= 2) {
+                return -999;
             }
+
+            Object value = modifier.readSafely(2);
+            if (!(value instanceof Number number)) {
+                return -999;
+            }
+
+            int slot = number.intValue();
+            return slot >= 0 && slot < topSize ? slot : -999;
         } catch (Exception ignored) {
+            return -999;
+        }
+    }
+
+    private boolean isPlainMenuClick(PacketContainer packet, int clickedSlot) {
+        if (packet == null || clickedSlot < 0) {
+            return false;
+        }
+
+        InventoryClickType mode = extractClickType(packet);
+        Integer button = extractClickButton(packet);
+        return mode == InventoryClickType.PICKUP && button != null && (button == 0 || button == 1);
+    }
+
+    private InventoryClickType extractClickType(PacketContainer packet) {
+        if (packet == null) {
+            return null;
         }
 
         try {
-            StructureModifier<Short> shorts = packet.getShorts();
-            if (shorts.size() > 0) {
-                Short candidate = shorts.read(0);
-                if (candidate != null) {
-                    int slot = candidate;
-                    if (slot == -999 || (slot >= 0 && slot < totalSlots)) {
-                        return slot;
-                    }
-                }
+            StructureModifier<Object> modifier = packet.getModifier();
+            if (modifier.size() <= 4) {
+                return null;
             }
+
+            Object value = modifier.readSafely(4);
+            if (!(value instanceof Enum<?> enumValue)) {
+                return null;
+            }
+
+            return InventoryClickType.valueOf(enumValue.name());
         } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Integer extractClickButton(PacketContainer packet) {
+        if (packet == null) {
+            return null;
         }
 
-        // 兜底: 扫描所有 shorts, 取第一个像 slot 的值
         try {
-            StructureModifier<Short> shorts = packet.getShorts();
-            for (int i = 0; i < shorts.size(); i++) {
-                Short candidate = shorts.read(i);
-                if (candidate == null) {
-                    continue;
-                }
-                int slot = candidate;
-                if (slot == -999 || (slot >= 0 && slot < totalSlots)) {
-                    return slot;
-                }
+            StructureModifier<Object> modifier = packet.getModifier();
+            if (modifier.size() <= 3) {
+                return null;
             }
-        } catch (Exception ignored) {
-        }
 
-        // 兜底: 扫描所有 ints, 取第一个像 slot 的值
-        try {
-            StructureModifier<Integer> ints = packet.getIntegers();
-            for (int i = 0; i < ints.size(); i++) {
-                Integer candidate = ints.read(i);
-                if (candidate == null) {
-                    continue;
-                }
-                int slot = candidate;
-                if (slot == -999 || (slot >= 0 && slot < totalSlots)) {
-                    return slot;
-                }
+            Object value = modifier.readSafely(3);
+            if (!(value instanceof Number number)) {
+                return null;
             }
-        } catch (Exception ignored) {
-        }
 
-        return -999;
+            return number.intValue();
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private boolean sendOpenWindow(Player player, Session session) {
