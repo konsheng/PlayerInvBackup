@@ -129,10 +129,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
             if (createdAfterMillis > 0) {
                 sql.append(" AND created_at>=?");
             }
-            sql.append("""
-                    ORDER BY locked DESC, created_at DESC
-                    LIMIT ? OFFSET ?
-                    """);
+            sql.append(" ORDER BY locked DESC, created_at DESC LIMIT ? OFFSET ?");
 
             try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
                 int idx = 1;
