@@ -76,7 +76,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
             return;
         }
 
-        saveDefaultConfig();
+        saveLocalizedDefaultConfig();
         // 启动横幅要紧跟在 Bukkit 的 Enabling 日志后面, 所以先做一次轻量语言初始化
         initializeStartupLang();
         logStartupBanner();
@@ -193,6 +193,37 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         }
         this.lang = loadLang(languageFile);
         Chat.init(this.lang);
+    }
+
+    private void saveLocalizedDefaultConfig() {
+        Path dataFolder = getDataFolder().toPath();
+        Path configFile = dataFolder.resolve("config.yml");
+        if (Files.exists(configFile)) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(dataFolder);
+        } catch (Exception ignored) {
+        }
+
+        String resourcePath = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage())
+                ? "config.zh_CN.yml"
+                : "config.yml";
+        try (InputStream in = getResource(resourcePath)) {
+            if (in == null) {
+                saveDefaultConfig();
+                return;
+            }
+            Files.copy(in, configFile);
+        } catch (Exception e) {
+            getLogger().log(
+                    Level.WARNING,
+                    "Failed to save default config from " + resourcePath + ", falling back to bundled config.yml",
+                    e
+            );
+            saveDefaultConfig();
+        }
     }
 
     public void reload() {

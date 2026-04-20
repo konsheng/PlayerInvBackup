@@ -1,37 +1,37 @@
-# PlayerInvBackup config (Paper / Folia 1.21.1+)
-# Backup scope: player inventory (including armor/offhand), ender chest, and experience
-# After editing, run /pib reload or restart the server.
+# PlayerInvBackup 配置 (Paper / Folia 1.21.1+)
+# 备份范围: 玩家背包 (含盔甲/副手), 末影箱, 经验值
+# 修改后执行 /pib reload 或重启服务器生效
 
-# Available languages: zh_CN.yml, en_US.yml
-language: "en_US.yml"
+# 可选语言: zh_CN.yml, en_US.yml
+language: "zh_CN.yml"
 
 display:
-  # Java DateTimeFormatter pattern used to display backup time.
+  # 备份时间显示格式 (Java DateTimeFormatter pattern)
   backup-time-format: "yyyy-MM-dd HH:mm:ss"
 
-  # Display aliases for world names shown in GUI/messages.
+  # GUI/消息中的世界显示别名
   world-aliases:
-    world: "Overworld"
-    world_nether: "Nether"
-    world_the_end: "The End"
+    world: "主世界"
+    world_nether: "地狱"
+    world_the_end: "末地"
 
 backup:
-  # Automatic backup interval in minutes. 0 disables timer backups.
+  # 自动备份间隔(分钟)，0 表示关闭定时备份
   interval-minutes: 30
 
-  # Cooldown in seconds for /pib backup with no target argument.
+  # /pib backup 无目标参数时的自助备份冷却(秒)
   manual-self-cooldown-seconds: 5
 
-  # Progress reminder interval for /pib backupall in seconds. 0 disables reminders.
+  # /pib backupall 进度提醒间隔(秒)，0 表示关闭
   backupall-progress-interval-seconds: 3
 
-  # Random delay added per player to spread writes.
+  # 每个玩家附加的随机错峰延迟(秒)
   jitter-seconds: 300
 
-  # Keep the latest N backups per player. 0 disables count-based cleanup.
+  # 每玩家保留最近 N 份备份，0 表示不按份数清理
   keep-per-player: 0
 
-  # Keep backups from the latest N days. 0 disables age-based cleanup.
+  # 每玩家保留最近 N 天备份，0 表示不按天数清理
   keep-days: 0
 
   triggers:
@@ -40,17 +40,17 @@ backup:
     death: true
     world-change: true
 
-  # Worlds excluded from timer/event backups.
+  # 定时/事件备份排除世界
   excluded-worlds: []
 
 audit:
-  # Write audit logs under plugins/PlayerInvBackup/logs.
+  # 写入审计日志到 plugins/PlayerInvBackup/logs
   enabled: true
 
-  # Also mirror audit entries to console.
+  # 是否同步输出到控制台
   console: true
 
-  # Keep audit logs for N days. 0 disables cleanup.
+  # 审计日志保留天数，0 表示不清理
   keep-days: 30
 
 bstats:
@@ -61,7 +61,7 @@ storage:
   type: sqlite
 
   local:
-    # Relative to plugins/PlayerInvBackup/
+    # 相对 plugins/PlayerInvBackup/
     base-path: "data"
 
   sqlite:
@@ -69,56 +69,56 @@ storage:
     table-prefix: ""
 
   mysql:
-    # If url is set, it takes priority over host/port/database.
+    # 如果填写 url，则优先使用 url
     url: ""
     host: "127.0.0.1"
     port: 3306
     database: "playerinvbackup"
     username: "root"
     password: ""
-    # Extra parameters joined with &.
+    # 额外参数使用 & 连接
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
     table-prefix: ""
 
   postgresql:
-    # If url is set, it takes priority over host/port/database.
+    # 如果填写 url，则优先使用 url
     url: ""
     host: "127.0.0.1"
     port: 5432
     database: "playerinvbackup"
     username: "postgres"
     password: ""
-    # Extra parameters joined with &.
+    # 额外参数使用 & 连接
     parameters: "sslmode=disable"
     table-prefix: ""
 
   h2:
-    # If url is set, it takes priority over file.
+    # 如果填写 url，则优先使用 url
     url: ""
-    # Relative to plugins/PlayerInvBackup/, without the .mv.db suffix.
+    # 相对 plugins/PlayerInvBackup/，不要写 .mv.db 后缀
     file: "data/backups_h2"
     username: "sa"
     password: ""
-    # Extra parameters joined with ;.
+    # 额外参数使用 ; 连接
     parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
     table-prefix: ""
 
 performance:
-  # Maximum queued I/O write tasks before new backup requests are rejected.
+  # 最大 I/O 写入队列长度，超过后新备份请求会被拒绝
   queue-limit: 500
 
-  # Soft write rate limit.
+  # 软写入速率限制
   max-writes-per-second: 20
 
 gui:
   # auto | bukkit | packet
   mode: "auto"
 
-  # Maximum backups shown per page. Must be <= 45.
+  # 每页显示备份数量，必须 <= 45
   list-page-size: 45
 
   backup-list:
-    # Supported entries: all, 30m, 1h, 6h, 12h, 24h, 7d, 30d ...
+    # 支持: all, 30m, 1h, 6h, 12h, 24h, 7d, 30d ...
     time-filters:
       - "all"
       - "30m"
@@ -133,21 +133,21 @@ sounds:
   gui:
     enabled: true
 
-    # Default GUI click sound.
+    # 默认 GUI 点击音效
     click:
       name: "UI_BUTTON_CLICK"
       volume: 1.0
       pitch: 1.0
 
-    # Played when clicking a blocked/unavailable slot.
+    # 点击不可操作槽位时的音效
     barrier-slot:
       name: "BLOCK_NOTE_BLOCK_BASS"
       volume: 1.0
       pitch: 1.0
 
-    # INHERIT = use sounds.gui.click
-    # NONE = disable this sound
-    # Otherwise use a Bukkit Sound enum name.
+    # INHERIT = 继承 sounds.gui.click
+    # NONE = 关闭该音效
+    # 其他值 = Bukkit Sound 枚举名
     backup-list:
       entry-open:
         name: "INHERIT"
