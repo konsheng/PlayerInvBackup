@@ -60,7 +60,7 @@ public record PluginConfig(
         var jitterSeconds = Math.max(0, config.getLong("backup.jitter-seconds", 300));
         var manualSelfBackupCooldownSeconds = Math.max(0, config.getLong("backup.manual-self-cooldown-seconds", 5));
         var backupAllProgressIntervalSeconds = Math.max(0, config.getLong("backup.backupall-progress-interval-seconds", 3));
-        var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 50));
+        var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 0));
         var keepDays = Math.max(0, config.getLong("backup.keep-days", 0));
         var keepDuration = Duration.ofDays(keepDays);
 
