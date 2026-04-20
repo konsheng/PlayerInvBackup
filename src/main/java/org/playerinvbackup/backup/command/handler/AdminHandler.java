@@ -1,11 +1,16 @@
 package org.playerinvbackup.backup.command.handler;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.Permissions;
 import org.playerinvbackup.backup.command.CommandContext;
@@ -21,11 +26,28 @@ import org.playerinvbackup.backup.text.Lang;
  * <p>当前负责 help 和 reload
  */
 public final class AdminHandler implements SubcommandHandler {
+    private record AuthorLink(String name, String url) {
+    }
+
+    private static final List<AuthorLink> AUTHORS = List.of(
+            new AuthorLink("Konsheng", "https://github.com/konsheng"),
+            new AuthorLink("", "")
+    );
+    private static final String MODRINTH_URL = "";
+    private static final String SPIGOTMC_URL = "";
+    private static final String PAPERMC_URL = "";
+    private static final String BUILTBYBIT_URL = "";
+    private static final String GITHUB_URL = "https://github.com/konsheng/PlayerInvBackup";
+    private static final String AUTHOR_HOVER_KEY = "info.plugin-info-author-hover";
+    private static final String DOWNLOAD_LINK_HOVER_KEY = "info.plugin-info-link-hover-download";
+    private static final String SUPPORT_LINK_HOVER_KEY = "info.plugin-info-link-hover-support";
+
     @FunctionalInterface
     public interface ReloadAction {
         void reload() throws Exception;
     }
 
+    private final Supplier<String> pluginNameSupplier;
     private final Supplier<String> versionSupplier;
     private final ReloadAction reloadAction;
     private final BooleanSupplier pluginEnabled;
@@ -38,6 +60,7 @@ public final class AdminHandler implements SubcommandHandler {
     private final Lang lang;
 
     public AdminHandler(
+            Supplier<String> pluginNameSupplier,
             Supplier<String> versionSupplier,
             ReloadAction reloadAction,
             BooleanSupplier pluginEnabled,
@@ -49,6 +72,7 @@ public final class AdminHandler implements SubcommandHandler {
             Logger logger,
             Lang lang
     ) {
+        this.pluginNameSupplier = pluginNameSupplier;
         this.versionSupplier = versionSupplier;
         this.reloadAction = reloadAction;
         this.pluginEnabled = pluginEnabled;
@@ -73,7 +97,7 @@ public final class AdminHandler implements SubcommandHandler {
 
     @Override
     public boolean execute(CommandContext ctx) {
-        return switch (ctx.subcommand().toLowerCase(java.util.Locale.ROOT)) {
+        return switch (ctx.subcommand().toLowerCase(Locale.ROOT)) {
             case "help" -> executeHelp(ctx);
             case "tips" -> executeTips(ctx);
             case "reload" -> executeReload(ctx);
@@ -105,11 +129,51 @@ public final class AdminHandler implements SubcommandHandler {
         return true;
     }
 
+    public boolean sendPluginInfoDirect(CommandContext ctx) {
+        sendPluginInfoContents(ctx);
+        return true;
+    }
+
     private void sendHelpContents(CommandContext ctx) {
         Chat.plain(ctx.sender(), "help.header", Placeholder.unparsed("version", versionSupplier.get()));
         Chat.plainList(ctx.sender(), "help.lines", Placeholder.unparsed("label", ctx.label()));
         Chat.plainList(ctx.sender(), "help.commands", Placeholder.unparsed("label", ctx.label()));
         Chat.plain(ctx.sender(), "help.example", Placeholder.unparsed("label", ctx.label()));
+    }
+
+    private void sendPluginInfoContents(CommandContext ctx) {
+        Chat.plain(
+                ctx.sender(),
+                "info.plugin-info-header",
+                Placeholder.unparsed("name", pluginNameSupplier.get()),
+                Placeholder.unparsed("version", versionSupplier.get())
+        );
+        if (hasAuthorLink()) {
+            Chat.plain(
+                    ctx.sender(),
+                    "info.plugin-info-author",
+                    Placeholder.component("author", createAuthorLinks())
+            );
+        }
+        if (hasDownloadLinks()) {
+            Chat.plain(
+                    ctx.sender(),
+                    "info.plugin-info-download",
+                    Placeholder.component("download_links", createDownloadLinks())
+            );
+        }
+        if (hasSupportLinks()) {
+            Chat.plain(
+                    ctx.sender(),
+                    "info.plugin-info-support",
+                    Placeholder.component("support_links", createSupportLinks())
+            );
+        }
+        Chat.plain(
+                ctx.sender(),
+                "info.plugin-info-help",
+                Placeholder.component("help_command", createHelpCommand(ctx.label()))
+        );
     }
 
     private boolean executeTips(CommandContext ctx) {
@@ -183,5 +247,82 @@ public final class AdminHandler implements SubcommandHandler {
             return String.format("%d.%03ds", seconds, millisPart);
         }
         return safeMillis + "ms";
+    }
+
+    private Component createDownloadLinks() {
+        return joinLinks(
+                createLink("Modrinth", MODRINTH_URL, DOWNLOAD_LINK_HOVER_KEY),
+                createLink("SpigotMC", SPIGOTMC_URL, DOWNLOAD_LINK_HOVER_KEY),
+                createLink("PaperMC", PAPERMC_URL, DOWNLOAD_LINK_HOVER_KEY),
+                createLink("BuiltByBit", BUILTBYBIT_URL, DOWNLOAD_LINK_HOVER_KEY)
+        );
+    }
+
+    private Component createSupportLinks() {
+        return createLink("GitHub", GITHUB_URL, SUPPORT_LINK_HOVER_KEY);
+    }
+
+    private Component createAuthorLinks() {
+        return joinComponents(
+                ", ",
+                AUTHORS.stream()
+                        .map(author -> createLink(author.name(), author.url(), AUTHOR_HOVER_KEY))
+                        .toArray(Component[]::new)
+        );
+    }
+
+    private static Component joinLinks(Component... links) {
+        return joinComponents(" | ", links);
+    }
+
+    private static Component joinComponents(String separator, Component... components) {
+        Component joined = Component.empty();
+        boolean first = true;
+        for (Component component : components) {
+            if (component == null) {
+                continue;
+            }
+            if (!first) {
+                joined = joined.append(Component.text(separator).color(TextColor.color(0x78909C)));
+            }
+            joined = joined.append(component);
+            first = false;
+        }
+        return joined;
+    }
+
+    private Component createLink(String label, String url, String hoverKey) {
+        if (!hasText(label) || !hasText(url)) {
+            return null;
+        }
+        return Component.text(label)
+                .color(TextColor.color(0x4FC3F7))
+                .clickEvent(ClickEvent.openUrl(url))
+                .hoverEvent(HoverEvent.showText(lang.msg(hoverKey)));
+    }
+
+    private Component createHelpCommand(String label) {
+        String safeLabel = hasText(label) ? label : "playerinvbackup";
+        String command = "/" + safeLabel + " help";
+        return Component.text(command)
+                .color(TextColor.color(0x4FC3F7))
+                .clickEvent(ClickEvent.runCommand(command))
+                .hoverEvent(HoverEvent.showText(lang.msg("info.plugin-info-help-hover")));
+    }
+
+    private static boolean hasDownloadLinks() {
+        return hasText(MODRINTH_URL) || hasText(SPIGOTMC_URL) || hasText(PAPERMC_URL) || hasText(BUILTBYBIT_URL);
+    }
+
+    private static boolean hasAuthorLink() {
+        return AUTHORS.stream().anyMatch(author -> hasText(author.name()) && hasText(author.url()));
+    }
+
+    private static boolean hasSupportLinks() {
+        return hasText(GITHUB_URL);
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

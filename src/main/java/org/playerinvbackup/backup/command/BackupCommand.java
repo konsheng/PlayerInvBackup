@@ -48,6 +48,7 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
 
         List<SubcommandHandler> handlers = List.of(
                 new AdminHandler(
+                        plugin::getName,
                         () -> plugin.getPluginMeta().getVersion(),
                         plugin::reload,
                         plugin::isEnabled,

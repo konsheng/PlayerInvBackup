@@ -19,6 +19,7 @@ import org.playerinvbackup.backup.text.Chat;
 public final class BackupCommandDispatcher {
     private final CommandSuggestions suggestions;
     private final SubcommandHandler helpHandler;
+    private final AdminHandler adminHandler;
     private final Map<String, SubcommandHandler> handlersByToken;
 
     public BackupCommandDispatcher(List<SubcommandHandler> handlers, CommandSuggestions suggestions) {
@@ -26,6 +27,7 @@ public final class BackupCommandDispatcher {
         this.handlersByToken = new LinkedHashMap<>();
 
         SubcommandHandler resolvedHelpHandler = null;
+        AdminHandler resolvedAdminHandler = null;
         for (SubcommandHandler handler : handlers) {
             for (String token : handler.commandTokens()) {
                 handlersByToken.put(token.toLowerCase(Locale.ROOT), handler);
@@ -33,13 +35,17 @@ public final class BackupCommandDispatcher {
             if ("help".equalsIgnoreCase(handler.name())) {
                 resolvedHelpHandler = handler;
             }
+            if (handler instanceof AdminHandler candidate) {
+                resolvedAdminHandler = candidate;
+            }
         }
         this.helpHandler = resolvedHelpHandler;
+        this.adminHandler = resolvedAdminHandler;
     }
 
     public boolean onCommand(CommandContext ctx) {
         if (ctx.rawArgCount() == 0) {
-            return fallbackToHelp(ctx, false);
+            return fallbackToPluginInfo(ctx);
         }
 
         String token = ctx.subcommand().toLowerCase(Locale.ROOT);
@@ -79,5 +85,12 @@ public final class BackupCommandDispatcher {
             return adminHandler.sendHelpDirect(helpContext);
         }
         return helpHandler.execute(helpContext);
+    }
+
+    private boolean fallbackToPluginInfo(CommandContext ctx) {
+        if (adminHandler != null) {
+            return adminHandler.sendPluginInfoDirect(ctx);
+        }
+        return fallbackToHelp(ctx, false);
     }
 }

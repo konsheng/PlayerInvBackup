@@ -79,6 +79,15 @@ errors:
   snapshot-hash-mismatch: "<prefix><#EF5350>✖ Backup is corrupted (SHA256 mismatch), restore blocked: <#FFCA28><backup_id></#FFCA28></#EF5350>"
 
 info:
+  plugin-info-header: "<gradient:#FFB75E:#ED8F03><bold><name></bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
+  plugin-info-author: "<#78909C>-</#78909C> <#90A4AE>Author: </#90A4AE><author>"
+  plugin-info-author-hover: "<#FFCA28>Click to open author page</#FFCA28>"
+  plugin-info-download: "<#78909C>-</#78909C> <#90A4AE>Download: </#90A4AE><download_links>"
+  plugin-info-support: "<#78909C>-</#78909C> <#90A4AE>Support: </#90A4AE><support_links>"
+  plugin-info-help: "<#78909C>-</#78909C> <#90A4AE>Use </#90A4AE><help_command><#90A4AE> to view help</#90A4AE>"
+  plugin-info-help-hover: "<#FFCA28>Click to view help</#FFCA28>"
+  plugin-info-link-hover-download: "<#FFCA28>Click to open download page</#FFCA28>"
+  plugin-info-link-hover-support: "<#FFCA28>Click to open support page</#FFCA28>"
   checking-pending: "<prefix><#4FC3F7>ℹ Checking pending items...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore...</#4FC3F7>"
   restoring-experience-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore experience...</#4FC3F7>"
