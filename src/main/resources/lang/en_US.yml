@@ -100,7 +100,7 @@ info:
     - "<prefix><#90A4AE>Note: </#90A4AE><white><note></white>"
 
 success:
-  reloaded: "<prefix><#66BB6A>✔ Config and language reloaded</#66BB6A>"
+  reloaded: "<prefix><#66BB6A>✔ Config and language reloaded</#66BB6A> <#90A4AE>(elapsed <elapsed>)</#90A4AE>"
   backup-queued: "<prefix><#66BB6A>✔ Backing up player <#FFCA28><player></#FFCA28></#66BB6A>"
   self-backup-queued: "<prefix><#66BB6A>✔ Backing up your data</#66BB6A>"
   self-backup-finished: "<prefix><#66BB6A>✔ Your backup has completed: <#FFCA28><backup_id></#FFCA28></#66BB6A>"

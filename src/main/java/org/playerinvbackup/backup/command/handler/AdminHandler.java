@@ -126,6 +126,7 @@ public final class AdminHandler implements SubcommandHandler {
             return true;
         }
 
+        long startedAtNanos = System.nanoTime();
         boolean reloaded = false;
         try {
             reloadAction.reload();
@@ -145,7 +146,12 @@ public final class AdminHandler implements SubcommandHandler {
             Chat.error(ctx.sender(), "errors.reload-failed");
             return true;
         }
-        Chat.success(ctx.sender(), "success.reloaded");
+        long elapsedMillis = (System.nanoTime() - startedAtNanos) / 1_000_000L;
+        Chat.success(
+                ctx.sender(),
+                "success.reloaded",
+                Placeholder.unparsed("elapsed", formatElapsed(elapsedMillis))
+        );
         int cancelledTargets = reloadCancelledBackupTargetsSupplier.getAsInt();
         int discardedIoTasks = reloadDiscardedIoTasksSupplier.getAsInt();
         if (cancelledTargets > 0 || discardedIoTasks > 0) {
@@ -157,5 +163,25 @@ public final class AdminHandler implements SubcommandHandler {
             );
         }
         return true;
+    }
+
+    private static String formatElapsed(long elapsedMillis) {
+        long safeMillis = Math.max(0L, elapsedMillis);
+        long totalSeconds = safeMillis / 1000L;
+        long millisPart = safeMillis % 1000L;
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+
+        if (hours > 0L) {
+            return String.format("%dh %dm %ds", hours, minutes, seconds);
+        }
+        if (minutes > 0L) {
+            return String.format("%dm %ds", minutes, seconds);
+        }
+        if (seconds > 0L) {
+            return String.format("%d.%03ds", seconds, millisPart);
+        }
+        return safeMillis + "ms";
     }
 }
