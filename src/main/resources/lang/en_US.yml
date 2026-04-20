@@ -64,6 +64,8 @@ errors:
   lang-key-missing: "<prefix><#EF5350>✖ Missing language text: <key></#EF5350>"
   restore-failed: "<prefix><#EF5350>✖ Restore failed, check console logs</#EF5350>"
   restore-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current items</#EF5350>"
+  restore-experience-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current experience</#EF5350>"
+  backup-experience-unavailable: "<prefix><#EF5350>✖ This backup does not contain experience data and cannot restore experience separately</#EF5350>"
   claim-failed: "<prefix><#EF5350>✖ Claim failed, check console logs</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ This item has already been claimed</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
@@ -79,8 +81,10 @@ errors:
 info:
   checking-pending: "<prefix><#4FC3F7>ℹ Checking pending items...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore...</#4FC3F7>"
+  restoring-experience-loading: "<prefix><#4FC3F7>ℹ Loading backup and preparing to restore experience...</#4FC3F7>"
   restore-pre-backup-success: "<prefix><#4FC3F7>ℹ Pre-restore safety backup created successfully (</#4FC3F7><#FFCA28><backup_id></#FFCA28><#4FC3F7>)</#4FC3F7>"
   restore-running: "<prefix><#4FC3F7>ℹ Running restore...</#4FC3F7>"
+  restore-experience-running: "<prefix><#4FC3F7>ℹ Running experience restore...</#4FC3F7>"
   reload-backup-discarded: "<prefix><#4FC3F7>ℹ Cancelled <#FFCA28><queue_targets></#FFCA28> batch backup target(s) and discarded <#FFCA28><io_tasks></#FFCA28> queued I/O task(s) that had not started yet</#4FC3F7>"
   backupall-progress: "<prefix><#4FC3F7>ℹ Running backup for all online players: completed <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, success <#66BB6A><success></#66BB6A>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350>, remaining <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ Enter backup ID (e.g., <#FFCA28>1730000000000-abc12345</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
@@ -113,11 +117,13 @@ success:
   pending-delivered: "<prefix><#66BB6A>✔ Delivered: <#FFCA28><count></#FFCA28> items</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ Claimed this slot (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
+  restore-experience-success: "<prefix><#66BB6A>✔ Player experience restored</#66BB6A>"
 
 warn:
   auto-backup-before-restore-failed: "<prefix><#FFA726>⚠ Auto backup before restore failed (queue full), continuing restore</#FFA726>"
   no-more-backups-back: "<prefix><#FFA726>⚠ No more backups, returned to previous page</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ An admin restored your inventory and ender chest</#FFA726>"
+  restored-experience-notify-target: "<prefix><#FFA726>⚠ An admin restored your experience</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ Please enter a backup ID, or type <#FFCA28><cancel></#FFCA28> to cancel</#FFA726>"
 
 list:
@@ -257,6 +263,17 @@ gui:
       name: "<#78909C>⚠ Target is offline</#78909C>"
       lore:
         - "<#90A4AE>On Folia, only online restore is supported</#90A4AE>"
+    experience:
+      name: "<#4FC3F7>🧪 Restore experience</#4FC3F7>"
+      lore:
+        - "<#90A4AE>Level: </#90A4AE><white><level></white>"
+        - "<#90A4AE>Progress: </#90A4AE><white><progress></white>"
+        - "<#90A4AE>Total XP: </#90A4AE><white><total></white>"
+        - "<#FF8A65>Click requires confirmation</#FF8A65>"
+    experience-unavailable:
+      name: "<#78909C>🧪 No experience data</#78909C>"
+      lore:
+        - "<#90A4AE>This backup does not contain experience data</#90A4AE>"
     pending:
       name: "<#FFCA28>📦 Claim pending</#FFCA28>"
       lore:
@@ -287,6 +304,21 @@ gui:
         - "<#90A4AE>Backup ID: </#90A4AE><white><id></white>"
         - "<#90A4AE>World: </#90A4AE><white><world></white>"
         - "<#90A4AE>Position: </#90A4AE><white><position></white>"
+    experience:
+      title: "<gradient:#4FC3F7:#29B6F6><bold>Confirm experience restore</bold></gradient> <#78909C>▸</#78909C> <target>"
+      ok:
+        name: "<#4FC3F7>✔ Confirm experience restore</#4FC3F7>"
+        lore:
+          - "<#90A4AE>This will restore the backup's experience to the target player</#90A4AE>"
+          - "<#FF8A65>Will overwrite the player's current level and exp bar</#FF8A65>"
+      info:
+        name: "<#FFCA28>ℹ Experience info</#FFCA28>"
+        lore:
+          - "<#90A4AE>Player: </#90A4AE><white><target></white>"
+          - "<#90A4AE>Backup ID: </#90A4AE><white><id></white>"
+          - "<#90A4AE>Level: </#90A4AE><white><level></white>"
+          - "<#90A4AE>Progress: </#90A4AE><white><progress></white>"
+          - "<#90A4AE>Total XP: </#90A4AE><white><total></white>"
     cancel:
       name: "<#81C784>✖ Cancel</#81C784>"
       lore:

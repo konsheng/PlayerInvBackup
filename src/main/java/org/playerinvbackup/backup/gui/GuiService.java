@@ -72,6 +72,7 @@ public final class GuiService {
     private static final int SLOT_VIEW_BACK = 45;
     private static final int SLOT_VIEW_TOGGLE = 46;
     private static final int SLOT_VIEW_RESTORE = 47;
+    private static final int SLOT_VIEW_EXPERIENCE = 48;
     private static final int SLOT_VIEW_LOCK = 52;
     private static final int SLOT_VIEW_PENDING = 53;
 
@@ -733,7 +734,25 @@ public final class GuiService {
                 Chat.error(admin, "errors.restore-target-offline");
                 return;
             }
-            openRestoreConfirm(admin, holder);
+            openRestoreConfirm(admin, holder, RestoreConfirmHolder.RestoreKind.ITEMS);
+            return;
+        }
+        if (slot == SLOT_VIEW_EXPERIENCE) {
+            playGuiSound(admin, GuiSoundAction.VIEW_RESTORE);
+            if (!holder.parts().hasExperienceData()) {
+                Chat.error(admin, "errors.backup-experience-unavailable");
+                return;
+            }
+            if (!Permissions.has(admin, Permissions.RESTORE)) {
+                Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.RESTORE));
+                return;
+            }
+            Player target = Bukkit.getPlayer(holder.targetUuid());
+            if (target == null) {
+                Chat.error(admin, "errors.restore-target-offline");
+                return;
+            }
+            openRestoreConfirm(admin, holder, RestoreConfirmHolder.RestoreKind.EXPERIENCE);
             return;
         }
         if (slot == SLOT_VIEW_LOCK) {
@@ -858,6 +877,10 @@ public final class GuiService {
         }
 
         closeMenu(admin);
+        if (holder.kind() == RestoreConfirmHolder.RestoreKind.EXPERIENCE) {
+            restoreService.restoreExperienceToPlayer(admin, target, holder.backupId());
+            return;
+        }
         restoreService.restoreToPlayer(admin, target, holder.backupId());
     }
 
@@ -1181,6 +1204,7 @@ public final class GuiService {
         inv.setItem(SLOT_VIEW_RESTORE, online
                 ? namedItem(Material.REDSTONE_BLOCK, lang.msg("gui.backup-view.restore.name"), lang.msgList("gui.backup-view.restore.lore"))
                 : namedItem(Material.BARRIER, lang.msg("gui.backup-view.restore-offline.name"), lang.msgList("gui.backup-view.restore-offline.lore")));
+        renderBackupViewExperienceItem(inv, holder);
         inv.setItem(SLOT_VIEW_PENDING, namedItem(Material.CHEST, lang.msg("gui.backup-view.pending.name"), lang.msgList("gui.backup-view.pending.lore")));
 
         renderBackupViewLockItem(inv, holder);
@@ -1475,6 +1499,7 @@ public final class GuiService {
         inv.setItem(SLOT_VIEW_RESTORE, online
                 ? namedItem(Material.REDSTONE_BLOCK, lang.msg("gui.backup-view.restore.name"), lang.msgList("gui.backup-view.restore.lore"))
                 : namedItem(Material.BARRIER, lang.msg("gui.backup-view.restore-offline.name"), lang.msgList("gui.backup-view.restore-offline.lore")));
+        renderBackupViewExperienceItem(inv, holder);
         inv.setItem(SLOT_VIEW_PENDING, namedItem(Material.CHEST, lang.msg("gui.backup-view.pending.name"), lang.msgList("gui.backup-view.pending.lore")));
         String lockedText = lang.raw(locked ? "common.yes_text" : "common.no_text");
         String noteText = note == null || note.isBlank() ? lang.raw("common.none") : note;
@@ -1495,7 +1520,40 @@ public final class GuiService {
         return inv;
     }
 
-    private void openRestoreConfirm(Player admin, BackupViewHolder holder) {
+    private void renderBackupViewExperienceItem(Inventory inv, BackupViewHolder holder) {
+        if (inv == null || holder == null) {
+            return;
+        }
+
+        Lang lang = plugin.lang();
+        if (!holder.parts().hasExperienceData()) {
+            inv.setItem(
+                    SLOT_VIEW_EXPERIENCE,
+                    namedItem(
+                            Material.GLASS_BOTTLE,
+                            lang.msg("gui.backup-view.experience-unavailable.name"),
+                            lang.msgList("gui.backup-view.experience-unavailable.lore")
+                    )
+            );
+            return;
+        }
+
+        inv.setItem(
+                SLOT_VIEW_EXPERIENCE,
+                namedItem(
+                        Material.EXPERIENCE_BOTTLE,
+                        lang.msg("gui.backup-view.experience.name"),
+                        lang.msgList(
+                                "gui.backup-view.experience.lore",
+                                Placeholder.unparsed("level", String.valueOf(holder.parts().experienceLevel())),
+                                Placeholder.unparsed("progress", displayExperienceProgress(holder.parts().experienceProgress())),
+                                Placeholder.unparsed("total", String.valueOf(holder.parts().totalExperience()))
+                        )
+                )
+        );
+    }
+
+    private void openRestoreConfirm(Player admin, BackupViewHolder holder, RestoreConfirmHolder.RestoreKind kind) {
         runOnPlayer(admin, () -> {
             String titleName = holder.targetName() == null ? holder.targetUuid().toString() : holder.targetName();
             Lang lang = plugin.lang();
@@ -1506,12 +1564,31 @@ public final class GuiService {
                     holder.listPage(),
                     holder.listQuery(),
                     holder.view(),
+                    kind,
                     holder.worldName(),
                     holder.locationX(),
                     holder.locationY(),
-                    holder.locationZ()
+                    holder.locationZ(),
+                    holder.parts().experienceLevel(),
+                    holder.parts().experienceProgress(),
+                    holder.parts().totalExperience()
             );
-            Component title = lang.msgNoPrefix("gui.restore-confirm.title", Placeholder.unparsed("target", titleName));
+            String titleKey = kind == RestoreConfirmHolder.RestoreKind.EXPERIENCE
+                    ? "gui.restore-confirm.experience.title"
+                    : "gui.restore-confirm.title";
+            String okNameKey = kind == RestoreConfirmHolder.RestoreKind.EXPERIENCE
+                    ? "gui.restore-confirm.experience.ok.name"
+                    : "gui.restore-confirm.ok.name";
+            String okLoreKey = kind == RestoreConfirmHolder.RestoreKind.EXPERIENCE
+                    ? "gui.restore-confirm.experience.ok.lore"
+                    : "gui.restore-confirm.ok.lore";
+            String infoNameKey = kind == RestoreConfirmHolder.RestoreKind.EXPERIENCE
+                    ? "gui.restore-confirm.experience.info.name"
+                    : "gui.restore-confirm.info.name";
+            String infoLoreKey = kind == RestoreConfirmHolder.RestoreKind.EXPERIENCE
+                    ? "gui.restore-confirm.experience.info.lore"
+                    : "gui.restore-confirm.info.lore";
+            Component title = lang.msgNoPrefix(titleKey, Placeholder.unparsed("target", titleName));
             Inventory inv = Bukkit.createInventory(
                     confirmHolder,
                     CONFIRM_GUI_SIZE,
@@ -1519,16 +1596,19 @@ public final class GuiService {
             );
             confirmHolder.setInventory(inv);
 
-            inv.setItem(CONFIRM_OK, namedItem(Material.GREEN_CONCRETE, lang.msg("gui.restore-confirm.ok.name"), lang.msgList("gui.restore-confirm.ok.lore")));
+            inv.setItem(CONFIRM_OK, namedItem(Material.GREEN_CONCRETE, lang.msg(okNameKey), lang.msgList(okLoreKey)));
             inv.setItem(CONFIRM_INFO, namedItem(
                     Material.PAPER,
-                    lang.msg("gui.restore-confirm.info.name"),
+                    lang.msg(infoNameKey),
                     lang.msgList(
-                            "gui.restore-confirm.info.lore",
+                            infoLoreKey,
                             Placeholder.unparsed("target", titleName),
                             Placeholder.unparsed("id", holder.backupId()),
                             Placeholder.unparsed("world", displayWorld(holder.worldName())),
-                            Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ()))
+                            Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ())),
+                            Placeholder.unparsed("level", String.valueOf(holder.parts().experienceLevel())),
+                            Placeholder.unparsed("progress", displayExperienceProgress(holder.parts().experienceProgress())),
+                            Placeholder.unparsed("total", String.valueOf(holder.parts().totalExperience()))
                     )
             ));
             inv.setItem(CONFIRM_CANCEL, namedItem(Material.RED_CONCRETE, lang.msg("gui.restore-confirm.cancel.name"), lang.msgList("gui.restore-confirm.cancel.lore")));
@@ -1796,6 +1876,10 @@ public final class GuiService {
             return plugin.lang().raw("common.none");
         }
         return String.format(Locale.ROOT, "%.2f, %.2f, %.2f", x, y, z);
+    }
+
+    private String displayExperienceProgress(float progress) {
+        return String.format(Locale.ROOT, "%.1f%%", Math.max(0.0f, progress) * 100.0f);
     }
 
     private Inventory createLoading(Component title) {

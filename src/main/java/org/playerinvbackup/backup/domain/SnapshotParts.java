@@ -7,6 +7,10 @@ package org.playerinvbackup.backup.domain;
  */
 public record SnapshotParts(
         byte[][] inventorySlotBytes,
-        byte[][] enderChestSlotBytes
+        byte[][] enderChestSlotBytes,
+        boolean hasExperienceData,
+        int experienceLevel,
+        float experienceProgress,
+        int totalExperience
 ) {
 }

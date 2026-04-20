@@ -16,7 +16,7 @@ import org.playerinvbackup.backup.domain.SnapshotParts;
  * 采用自定义 header (magic + schemaVersion + slotCounts) 便于做兼容校验
  */
 public final class SnapshotCodec {
-    public static final int SCHEMA_VERSION = 1;
+    public static final int SCHEMA_VERSION = 2;
 
     public static final int INVENTORY_SLOT_COUNT = 41;
     public static final int ENDER_CHEST_SLOT_COUNT = 27;
@@ -43,6 +43,12 @@ public final class SnapshotCodec {
             data.writeInt(ENDER_CHEST_SLOT_COUNT);
             writeSlots(data, parts.inventorySlotBytes());
             writeSlots(data, parts.enderChestSlotBytes());
+            data.writeBoolean(parts.hasExperienceData());
+            if (parts.hasExperienceData()) {
+                data.writeInt(parts.experienceLevel());
+                data.writeFloat(parts.experienceProgress());
+                data.writeInt(parts.totalExperience());
+            }
         }
         return out.toByteArray();
     }
@@ -55,7 +61,7 @@ public final class SnapshotCodec {
                 throw new IOException("备份快照标识不匹配: " + Integer.toHexString(magic));
             }
             int schemaVersion = data.readInt();
-            if (schemaVersion != SCHEMA_VERSION) {
+            if (schemaVersion != 1 && schemaVersion != SCHEMA_VERSION) {
                 throw new IOException("不支持的快照版本: " + schemaVersion);
             }
             int invCount = data.readInt();
@@ -65,7 +71,27 @@ public final class SnapshotCodec {
             }
             byte[][] inv = readSlots(data, invCount);
             byte[][] ender = readSlots(data, enderCount);
-            return new SnapshotParts(inv, ender);
+            if (schemaVersion == 1) {
+                return new SnapshotParts(inv, ender, false, 0, 0.0f, 0);
+            }
+
+            boolean hasExperienceData = data.readBoolean();
+            int experienceLevel = 0;
+            float experienceProgress = 0.0f;
+            int totalExperience = 0;
+            if (hasExperienceData) {
+                experienceLevel = data.readInt();
+                experienceProgress = data.readFloat();
+                totalExperience = data.readInt();
+            }
+            return new SnapshotParts(
+                    inv,
+                    ender,
+                    hasExperienceData,
+                    experienceLevel,
+                    experienceProgress,
+                    totalExperience
+            );
         }
     }
 

@@ -200,7 +200,14 @@ public final class BackupService {
             enderSlots[i] = toBytes(ender[i]);
         }
 
-        return new SnapshotParts(invSlots, enderSlots);
+        return new SnapshotParts(
+                invSlots,
+                enderSlots,
+                true,
+                player.getLevel(),
+                player.getExp(),
+                player.getTotalExperience()
+        );
     }
 
     private static byte[] toBytes(ItemStack item) {

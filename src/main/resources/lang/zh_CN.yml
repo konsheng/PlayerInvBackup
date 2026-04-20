@@ -64,6 +64,8 @@ errors:
   lang-key-missing: "<prefix><#EF5350>✖ 语言文本缺失: <key></#EF5350>"
   restore-failed: "<prefix><#EF5350>✖ 恢复失败, 请查看控制台日志</#EF5350>"
   restore-pre-backup-failed: "<prefix><#EF5350>✖ 恢复前自动备份失败, 为避免覆盖当前物品, 已取消恢复</#EF5350>"
+  restore-experience-pre-backup-failed: "<prefix><#EF5350>✖ 恢复前自动备份失败, 为避免覆盖当前经验值, 已取消恢复</#EF5350>"
+  backup-experience-unavailable: "<prefix><#EF5350>✖ 该备份不包含经验值数据, 无法单独恢复经验值</#EF5350>"
   claim-failed: "<prefix><#EF5350>✖ 领取失败, 请查看控制台日志</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ 该物品已被领取</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ 投递失败(数据库更新失败), 已回滚该物品, 请稍后重试</#EF5350>"
@@ -79,8 +81,10 @@ errors:
 info:
   checking-pending: "<prefix><#4FC3F7>ℹ 正在检查待投递物品...</#4FC3F7>"
   restoring-loading: "<prefix><#4FC3F7>ℹ 正在加载备份并准备恢复...</#4FC3F7>"
+  restoring-experience-loading: "<prefix><#4FC3F7>ℹ 正在加载备份并准备恢复经验值...</#4FC3F7>"
   restore-pre-backup-success: "<prefix><#4FC3F7>ℹ 恢复前保底备份已创建成功(</#4FC3F7><#FFCA28><backup_id></#FFCA28><#4FC3F7>)</#4FC3F7>"
   restore-running: "<prefix><#4FC3F7>ℹ 正在执行恢复...</#4FC3F7>"
+  restore-experience-running: "<prefix><#4FC3F7>ℹ 正在执行经验值恢复...</#4FC3F7>"
   reload-backup-discarded: "<prefix><#4FC3F7>ℹ 已取消 <#FFCA28><queue_targets></#FFCA28> 个批量备份目标, 丢弃 I/O 队列中 <#FFCA28><io_tasks></#FFCA28> 个未开始任务</#4FC3F7>"
   backupall-progress: "<prefix><#4FC3F7>ℹ 正在对所有在线玩家进行备份: 已完成 <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, 成功 <#66BB6A><success></#66BB6A>, 跳过 <#EF5350><skipped></#EF5350>, 失败 <#EF5350><failed></#EF5350>, 剩余 <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ 请输入备份编号(例如 <#FFCA28>1730000000000-abc12345</#FFCA28>), 输入 <#FFCA28><cancel></#FFCA28> 取消</#4FC3F7>"
@@ -113,11 +117,13 @@ success:
   pending-delivered: "<prefix><#66BB6A>✔ 已投递: <#FFCA28><count></#FFCA28> 个物品</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ 已领取该格物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ 已恢复玩家背包/末影箱(已扣除已领取格子)</#66BB6A>"
+  restore-experience-success: "<prefix><#66BB6A>✔ 已恢复玩家经验值</#66BB6A>"
 
 warn:
   auto-backup-before-restore-failed: "<prefix><#FFA726>⚠ 恢复前自动备份失败(队列满), 仍继续恢复</#FFA726>"
   no-more-backups-back: "<prefix><#FFA726>⚠ 没有更多备份, 已返回上一页</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的背包/末影箱</#FFA726>"
+  restored-experience-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的经验值</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ 请输入备份编号, 或输入 <#FFCA28><cancel></#FFCA28> 取消</#FFA726>"
 
 list:
@@ -257,6 +263,17 @@ gui:
       name: "<#78909C>⚠ 目标不在线</#78909C>"
       lore:
         - "<#90A4AE>Folia 下仅支持在线恢复</#90A4AE>"
+    experience:
+      name: "<#4FC3F7>🧪 恢复经验值</#4FC3F7>"
+      lore:
+        - "<#90A4AE>等级: </#90A4AE><white><level></white>"
+        - "<#90A4AE>当前进度: </#90A4AE><white><progress></white>"
+        - "<#90A4AE>总经验: </#90A4AE><white><total></white>"
+        - "<#FF8A65>点击后需要二次确认</#FF8A65>"
+    experience-unavailable:
+      name: "<#78909C>🧪 无经验值数据</#78909C>"
+      lore:
+        - "<#90A4AE>这份备份不包含经验值数据</#90A4AE>"
     pending:
       name: "<#FFCA28>📦 领取待投递</#FFCA28>"
       lore:
@@ -287,6 +304,21 @@ gui:
         - "<#90A4AE>备份编号: </#90A4AE><white><id></white>"
         - "<#90A4AE>世界: </#90A4AE><white><world></white>"
         - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
+    experience:
+      title: "<gradient:#4FC3F7:#29B6F6><bold>确认恢复经验值</bold></gradient> <#78909C>▸</#78909C> <target>"
+      ok:
+        name: "<#4FC3F7>✔ 确认恢复经验值</#4FC3F7>"
+        lore:
+          - "<#90A4AE>将把这份备份中的经验值恢复到目标玩家</#90A4AE>"
+          - "<#FF8A65>会覆盖玩家当前经验等级与经验条</#FF8A65>"
+      info:
+        name: "<#FFCA28>ℹ 经验值信息</#FFCA28>"
+        lore:
+          - "<#90A4AE>玩家: </#90A4AE><white><target></white>"
+          - "<#90A4AE>备份编号: </#90A4AE><white><id></white>"
+          - "<#90A4AE>等级: </#90A4AE><white><level></white>"
+          - "<#90A4AE>当前进度: </#90A4AE><white><progress></white>"
+          - "<#90A4AE>总经验: </#90A4AE><white><total></white>"
     cancel:
       name: "<#81C784>✖ 取消</#81C784>"
       lore:
