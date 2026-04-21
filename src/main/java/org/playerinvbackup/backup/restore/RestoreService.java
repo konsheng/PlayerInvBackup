@@ -4,10 +4,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.domain.SlotClaim;
 import org.playerinvbackup.backup.domain.SnapshotParts;
+import org.playerinvbackup.backup.text.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,9 +19,8 @@ import org.bukkit.entity.Player;
 /**
  * 恢复流程编排器
  *
- * <p>这个类保留 restore 域对外公开入口, 负责把记录加载, 恢复前保护性备份, 物品恢复, 经验恢复
- * 通知和审计这些协作者按既定顺序组织起来
- * 底层读取, 应用和消息细节都委派给同包下的协作者类
+ * <p>这个类只保留 restore 域的对外入口, 主流程编排, 线程切换, 最终消息通知和审计日志
+ * 读取, 校验, 恢复前自动备份, 物品恢复, 经验恢复这些实现细节都委派给同包下的协作者
  */
 public final class RestoreService {
     private final PlayerInvBackupPlugin plugin;
@@ -25,7 +28,6 @@ public final class RestoreService {
     private final PreRestoreBackupGuard preRestoreBackupGuard;
     private final InventoryRestoreApplier inventoryRestoreApplier;
     private final ExperienceRestoreApplier experienceRestoreApplier;
-    private final RestoreNotifier notifier;
 
     public RestoreService(PlayerInvBackupPlugin plugin) {
         this.plugin = plugin;
@@ -33,243 +35,349 @@ public final class RestoreService {
         this.preRestoreBackupGuard = new PreRestoreBackupGuard(plugin);
         this.inventoryRestoreApplier = new InventoryRestoreApplier();
         this.experienceRestoreApplier = new ExperienceRestoreApplier();
-        this.notifier = new RestoreNotifier(plugin);
     }
 
     public void restoreToPlayer(CommandSender actor, Player target, String backupId) {
         if (!plugin.isStoreReady()) {
-            runOnActor(actor, () -> notifier.showStoreUnavailable(actor));
+            runOnActor(actor, () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "pib")));
             return;
         }
 
-        RestoreRequest request = RestoreRequest.of(actor, target, backupId);
-        runOnActor(actor, () -> notifier.showRestoreLoading(actor));
+        String actorDetails = actorDetails(actor);
+        UUID targetUuid = target.getUniqueId();
+        String targetName = target.getName();
+
+        runOnActor(actor, () -> Chat.info(actor, "info.restoring-loading"));
 
         Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            RestoreLoadResult loadResult = recordLoader.loadInventoryRestore(request);
-            if (!handleLoadFailure(request, loadResult)) {
+            RestoreLoadResult loadResult = recordLoader.loadInventoryRestore(actorDetails, targetUuid, targetName, backupId);
+            if (!handleLoadFailure(actor, backupId, loadResult)) {
                 return;
             }
 
-            runOnPlayer(target, () -> beginInventoryRestore(request, target, loadResult.parts(), loadResult.claims()));
+            runOnPlayer(
+                    target,
+                    () -> beginInventoryRestore(
+                            actor,
+                            actorDetails,
+                            target,
+                            targetUuid,
+                            targetName,
+                            backupId,
+                            loadResult.parts(),
+                            loadResult.claims()
+                    ),
+                    () -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"))
+            );
         });
     }
 
     public void restoreExperienceToPlayer(CommandSender actor, Player target, String backupId) {
         if (!plugin.isStoreReady()) {
-            runOnActor(actor, () -> notifier.showStoreUnavailable(actor));
+            runOnActor(actor, () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "pib")));
             return;
         }
 
-        RestoreRequest request = RestoreRequest.of(actor, target, backupId);
-        runOnActor(actor, () -> notifier.showExperienceRestoreLoading(actor));
+        String actorDetails = actorDetails(actor);
+        UUID targetUuid = target.getUniqueId();
+        String targetName = target.getName();
+
+        runOnActor(actor, () -> Chat.info(actor, "info.restoring-experience-loading"));
 
         Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
-            RestoreLoadResult loadResult = recordLoader.loadExperienceRestore(request);
-            if (!handleLoadFailure(request, loadResult)) {
+            RestoreLoadResult loadResult = recordLoader.loadExperienceRestore(actorDetails, targetUuid, targetName, backupId);
+            if (!handleLoadFailure(actor, backupId, loadResult)) {
                 return;
             }
 
-            runOnPlayer(target, () -> beginExperienceRestore(request, target, loadResult.parts()));
+            runOnPlayer(
+                    target,
+                    () -> beginExperienceRestore(
+                            actor,
+                            actorDetails,
+                            target,
+                            targetUuid,
+                            targetName,
+                            backupId,
+                            loadResult.parts()
+                    ),
+                    () -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"))
+            );
         });
     }
 
-    private boolean handleLoadFailure(RestoreRequest request, RestoreLoadResult loadResult) {
+    private boolean handleLoadFailure(CommandSender actor, String backupId, RestoreLoadResult loadResult) {
         if (loadResult.isSuccess()) {
             return true;
         }
 
         switch (loadResult.failure()) {
             case BACKUP_NOT_FOUND -> runOnActor(
-                    request.actor(),
-                    () -> notifier.showBackupNotFound(request.actor(), request.backupId())
+                    actor,
+                    () -> Chat.error(actor, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId))
             );
-            case READ_FAILED -> runOnActor(request.actor(), () -> notifier.showReadFailed(request.actor()));
+            case READ_FAILED -> runOnActor(actor, () -> Chat.error(actor, "errors.read-failed"));
             case SNAPSHOT_HASH_MISMATCH -> runOnActor(
-                    request.actor(),
-                    () -> notifier.showSnapshotHashMismatch(
-                            request.actor(),
-                            request.backupId(),
-                            loadResult.expectedSha256(),
-                            loadResult.actualSha256()
+                    actor,
+                    () -> Chat.error(
+                            actor,
+                            "errors.snapshot-hash-mismatch",
+                            Placeholder.unparsed("backup_id", backupId),
+                            Placeholder.unparsed("expected", loadResult.expectedSha256()),
+                            Placeholder.unparsed("actual", loadResult.actualSha256())
                     )
             );
-            case SNAPSHOT_INVALID -> runOnActor(request.actor(), () -> notifier.showSnapshotInvalid(request.actor()));
-            case EXPERIENCE_UNAVAILABLE -> runOnActor(
-                    request.actor(),
-                    () -> notifier.showBackupExperienceUnavailable(request.actor())
-            );
+            case SNAPSHOT_INVALID -> runOnActor(actor, () -> Chat.error(actor, "errors.snapshot-invalid"));
+            case EXPERIENCE_UNAVAILABLE -> runOnActor(actor, () -> Chat.error(actor, "errors.backup-experience-unavailable"));
         }
         return false;
     }
 
     private void beginInventoryRestore(
-            RestoreRequest request,
+            CommandSender actor,
+            String actorDetails,
             Player target,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
             SnapshotParts parts,
             List<SlotClaim> claims
     ) {
         if (!target.isOnline()) {
-            runOnActor(request.actor(), () -> notifier.showTargetOffline(request.actor()));
+            runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
             return;
         }
 
-        preRestoreBackupGuard.request(target, result -> handleInventoryPreRestoreBackupResult(request, parts, claims, result));
+        preRestoreBackupGuard.request(
+                target,
+                result -> handleInventoryPreRestoreBackupResult(
+                        actor,
+                        actorDetails,
+                        targetUuid,
+                        targetName,
+                        backupId,
+                        parts,
+                        claims,
+                        result
+                )
+        );
     }
 
-    private void beginExperienceRestore(RestoreRequest request, Player target, SnapshotParts parts) {
+    private void beginExperienceRestore(
+            CommandSender actor,
+            String actorDetails,
+            Player target,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
+            SnapshotParts parts
+    ) {
         if (!target.isOnline()) {
-            runOnActor(request.actor(), () -> notifier.showTargetOffline(request.actor()));
+            runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
             return;
         }
 
-        preRestoreBackupGuard.request(target, result -> handleExperiencePreRestoreBackupResult(request, parts, result));
+        preRestoreBackupGuard.request(
+                target,
+                result -> handleExperiencePreRestoreBackupResult(
+                        actor,
+                        actorDetails,
+                        targetUuid,
+                        targetName,
+                        backupId,
+                        parts,
+                        result
+                )
+        );
     }
 
     private void handleInventoryPreRestoreBackupResult(
-            RestoreRequest request,
+            CommandSender actor,
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
             SnapshotParts parts,
             List<SlotClaim> claims,
             PreRestoreBackupResult result
     ) {
         if (!result.isSuccess()) {
-            handlePreRestoreBackupFailure(request, result, "errors.restore-pre-backup-failed");
+            handlePreRestoreBackupFailure(
+                    actor,
+                    actorDetails,
+                    targetUuid,
+                    targetName,
+                    backupId,
+                    result,
+                    "errors.restore-pre-backup-failed"
+            );
             return;
         }
 
+        String preRestoreBackupId = result.preRestoreBackupId();
         plugin.getLogger().info(plugin.lang().plain(
                 "console.restore.pre-backup-succeeded",
-                Placeholder.unparsed("actor", request.actorDetails()),
-                Placeholder.unparsed("target", request.targetName()),
-                Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                Placeholder.unparsed("backup_id", request.backupId()),
-                Placeholder.unparsed("pre_restore_backup_id", result.preRestoreBackupId())
+                Placeholder.unparsed("actor", actorDetails),
+                Placeholder.unparsed("target", targetName),
+                Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                Placeholder.unparsed("backup_id", backupId),
+                Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId)
         ));
 
-        runOnOnlineTarget(request.targetUuid(), currentTarget -> {
-            runOnActor(request.actor(), () -> {
-                notifier.showPreRestoreBackupReady(request.actor(), result.preRestoreBackupId());
-                notifier.showRestoreRunning(request.actor());
+        runOnOnlineTarget(targetUuid, currentTarget -> {
+            runOnActor(actor, () -> {
+                Chat.info(
+                        actor,
+                        "info.restore-pre-backup-success",
+                        Placeholder.component("backup_id", createCopyableBackupId(preRestoreBackupId))
+                );
+                Chat.info(actor, "info.restore-running");
             });
 
             try {
                 inventoryRestoreApplier.apply(currentTarget, parts, claims);
             } catch (Exception e) {
-                logApplyFailed(request, e);
-                runOnActor(request.actor(), () -> notifier.showPreRestoreBackupFailed(request.actor(), "errors.restore-failed"));
+                logApplyFailed(actorDetails, targetName, targetUuid, backupId, e);
+                runOnActor(actor, () -> Chat.error(actor, "errors.restore-failed"));
                 return;
             }
 
-            runOnActor(request.actor(), () -> notifier.showRestoreSuccess(request.actor()));
-            notifier.showTargetRestoreNotice(currentTarget);
+            runOnActor(actor, () -> Chat.success(actor, "success.restore-success"));
+            Chat.warn(currentTarget, "warn.restored-notify-target");
             plugin.auditService().log(
                     "RESTORE",
-                    request.actor(),
-                    request.targetUuid(),
-                    request.targetName(),
-                    request.backupId(),
-                    "claimedSlots=" + claims.size() + ",preRestoreBackupId=" + result.preRestoreBackupId()
+                    actor,
+                    targetUuid,
+                    targetName,
+                    backupId,
+                    "claimedSlots=" + claims.size() + ",preRestoreBackupId=" + preRestoreBackupId
             );
-        }, () -> runOnActor(request.actor(), () -> notifier.showTargetOffline(request.actor())));
+        }, () -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline")));
     }
 
     private void handleExperiencePreRestoreBackupResult(
-            RestoreRequest request,
+            CommandSender actor,
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
             SnapshotParts parts,
             PreRestoreBackupResult result
     ) {
         if (!result.isSuccess()) {
-            handlePreRestoreBackupFailure(request, result, "errors.restore-experience-pre-backup-failed");
+            handlePreRestoreBackupFailure(
+                    actor,
+                    actorDetails,
+                    targetUuid,
+                    targetName,
+                    backupId,
+                    result,
+                    "errors.restore-experience-pre-backup-failed"
+            );
             return;
         }
 
+        String preRestoreBackupId = result.preRestoreBackupId();
         plugin.getLogger().info(plugin.lang().plain(
                 "console.restore.pre-backup-succeeded",
-                Placeholder.unparsed("actor", request.actorDetails()),
-                Placeholder.unparsed("target", request.targetName()),
-                Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                Placeholder.unparsed("backup_id", request.backupId()),
-                Placeholder.unparsed("pre_restore_backup_id", result.preRestoreBackupId())
+                Placeholder.unparsed("actor", actorDetails),
+                Placeholder.unparsed("target", targetName),
+                Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                Placeholder.unparsed("backup_id", backupId),
+                Placeholder.unparsed("pre_restore_backup_id", preRestoreBackupId)
         ));
 
-        runOnOnlineTarget(request.targetUuid(), currentTarget -> {
-            runOnActor(request.actor(), () -> {
-                notifier.showPreRestoreBackupReady(request.actor(), result.preRestoreBackupId());
-                notifier.showExperienceRestoreRunning(request.actor());
+        runOnOnlineTarget(targetUuid, currentTarget -> {
+            runOnActor(actor, () -> {
+                Chat.info(
+                        actor,
+                        "info.restore-pre-backup-success",
+                        Placeholder.component("backup_id", createCopyableBackupId(preRestoreBackupId))
+                );
+                Chat.info(actor, "info.restore-experience-running");
             });
 
             try {
                 experienceRestoreApplier.apply(currentTarget, parts);
             } catch (Exception e) {
-                logApplyFailed(request, e);
-                runOnActor(request.actor(), () -> notifier.showPreRestoreBackupFailed(request.actor(), "errors.restore-failed"));
+                logApplyFailed(actorDetails, targetName, targetUuid, backupId, e);
+                runOnActor(actor, () -> Chat.error(actor, "errors.restore-failed"));
                 return;
             }
 
-            runOnActor(request.actor(), () -> notifier.showExperienceRestoreSuccess(request.actor()));
-            notifier.showTargetExperienceRestoreNotice(currentTarget);
+            runOnActor(actor, () -> Chat.success(actor, "success.restore-experience-success"));
+            Chat.warn(currentTarget, "warn.restored-experience-notify-target");
             plugin.auditService().log(
                     "RESTORE_EXPERIENCE",
-                    request.actor(),
-                    request.targetUuid(),
-                    request.targetName(),
-                    request.backupId(),
+                    actor,
+                    targetUuid,
+                    targetName,
+                    backupId,
                     "level=" + parts.experienceLevel()
                             + ",progress=" + parts.experienceProgress()
                             + ",totalExperience=" + parts.totalExperience()
-                            + ",preRestoreBackupId=" + result.preRestoreBackupId()
+                            + ",preRestoreBackupId=" + preRestoreBackupId
             );
-        }, () -> runOnActor(request.actor(), () -> notifier.showTargetOffline(request.actor())));
+        }, () -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline")));
     }
 
     private void handlePreRestoreBackupFailure(
-            RestoreRequest request,
+            CommandSender actor,
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
             PreRestoreBackupResult result,
             String errorKey
     ) {
         switch (result.failure()) {
-            case STORE_UNAVAILABLE -> runOnActor(request.actor(), () -> notifier.showStoreUnavailable(request.actor()));
-            case TARGET_OFFLINE -> runOnActor(request.actor(), () -> notifier.showTargetOffline(request.actor()));
+            case STORE_UNAVAILABLE -> runOnActor(
+                    actor,
+                    () -> Chat.error(actor, "errors.store-unavailable", Placeholder.unparsed("label", "pib"))
+            );
+            case TARGET_OFFLINE -> runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
             case QUEUE_FULL, BACKUP_TASK_FAILED, REQUEST_THREW -> {
-                logPreRestoreBackupFailure(request, result);
-                runOnActor(request.actor(), () -> notifier.showPreRestoreBackupFailed(request.actor(), errorKey));
+                String reason = switch (result.failure()) {
+                    case QUEUE_FULL -> "queue_full";
+                    case BACKUP_TASK_FAILED -> "backup_task_failed";
+                    case REQUEST_THREW -> "request_threw:" + String.valueOf(result.cause() == null ? null : result.cause().getMessage());
+                    case STORE_UNAVAILABLE -> "store_unavailable";
+                    case TARGET_OFFLINE -> "target_offline";
+                };
+
+                plugin.getLogger().log(
+                        Level.WARNING,
+                        plugin.lang().plain(
+                                "console.restore.pre-backup-failed",
+                                Placeholder.unparsed("actor", actorDetails),
+                                Placeholder.unparsed("target", targetName),
+                                Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                Placeholder.unparsed("backup_id", backupId),
+                                Placeholder.unparsed("pre_restore_backup_id", result.logBackupId()),
+                                Placeholder.unparsed("reason", reason)
+                        ),
+                        result.failure() == PreRestoreBackupResult.Failure.REQUEST_THREW ? result.cause() : null
+                );
+                runOnActor(actor, () -> Chat.error(actor, errorKey));
             }
         }
     }
 
-    private void logPreRestoreBackupFailure(RestoreRequest request, PreRestoreBackupResult result) {
-        String reason = switch (result.failure()) {
-            case QUEUE_FULL -> "queue_full";
-            case BACKUP_TASK_FAILED -> "backup_task_failed";
-            case REQUEST_THREW -> "request_threw:" + String.valueOf(result.cause() == null ? null : result.cause().getMessage());
-            case STORE_UNAVAILABLE -> "store_unavailable";
-            case TARGET_OFFLINE -> "target_offline";
-        };
-
-        plugin.getLogger().log(
-                Level.WARNING,
-                plugin.lang().plain(
-                        "console.restore.pre-backup-failed",
-                        Placeholder.unparsed("actor", request.actorDetails()),
-                        Placeholder.unparsed("target", request.targetName()),
-                        Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                        Placeholder.unparsed("backup_id", request.backupId()),
-                        Placeholder.unparsed("pre_restore_backup_id", result.logBackupId()),
-                        Placeholder.unparsed("reason", reason)
-                ),
-                result.failure() == PreRestoreBackupResult.Failure.REQUEST_THREW ? result.cause() : null
-        );
-    }
-
-    private void logApplyFailed(RestoreRequest request, Exception e) {
+    private void logApplyFailed(
+            String actorDetails,
+            String targetName,
+            UUID targetUuid,
+            String backupId,
+            Exception e
+    ) {
         plugin.getLogger().log(
                 Level.SEVERE,
                 plugin.lang().plain(
                         "console.restore.apply-failed",
-                        Placeholder.unparsed("actor", request.actorDetails()),
-                        Placeholder.unparsed("target", request.targetName()),
-                        Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                        Placeholder.unparsed("backup_id", request.backupId())
+                        Placeholder.unparsed("actor", actorDetails),
+                        Placeholder.unparsed("target", targetName),
+                        Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                        Placeholder.unparsed("backup_id", backupId)
                 ),
                 e
         );
@@ -289,7 +397,14 @@ public final class RestoreService {
     }
 
     private void runOnPlayer(Player player, Runnable runnable) {
+        runOnPlayer(player, runnable, null);
+    }
+
+    private void runOnPlayer(Player player, Runnable runnable, Runnable ifOffline) {
         if (player == null || !player.isOnline()) {
+            if (ifOffline != null) {
+                ifOffline.run();
+            }
             return;
         }
         player.getScheduler().run(plugin, ignored -> runnable.run(), null);
@@ -304,5 +419,20 @@ public final class RestoreService {
             return;
         }
         Bukkit.getGlobalRegionScheduler().execute(plugin, runnable);
+    }
+
+    private Component createCopyableBackupId(String backupId) {
+        return Component.text(backupId)
+                .clickEvent(ClickEvent.copyToClipboard(backupId))
+                .hoverEvent(HoverEvent.showText(plugin.lang().msg("success.restore-pre-backup-copy-hover")));
+    }
+
+    private String actorDetails(CommandSender actor) {
+        if (actor == null) {
+            return "-";
+        }
+        return actor instanceof Player player
+                ? actor.getName() + "(" + player.getUniqueId() + ")"
+                : actor.getName();
     }
 }

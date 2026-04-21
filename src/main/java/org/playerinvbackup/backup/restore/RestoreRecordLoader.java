@@ -2,20 +2,20 @@ package org.playerinvbackup.backup.restore;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.codec.SnapshotCodec;
 import org.playerinvbackup.backup.domain.BackupRecord;
 import org.playerinvbackup.backup.domain.SlotClaim;
-import org.playerinvbackup.backup.domain.SnapshotParts;
 import org.playerinvbackup.backup.util.Hashing;
 
 /**
  * 负责恢复前的备份记录读取和快照校验
  *
  * <p>这里统一处理备份记录读取, 领取记录读取, sha256 校验和快照解码
- * RestoreService 只需要根据结果决定下一步编排, 不再直接承担底层读取细节
+ * RestoreService 只根据结果决定后续流程, 不再直接承担读取和校验细节
  */
 final class RestoreRecordLoader {
     private final PlayerInvBackupPlugin plugin;
@@ -24,41 +24,50 @@ final class RestoreRecordLoader {
         this.plugin = plugin;
     }
 
-    RestoreLoadResult loadInventoryRestore(RestoreRequest request) {
+    RestoreLoadResult loadInventoryRestore(
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId
+    ) {
         BackupRecord record;
         List<SlotClaim> claims;
         try {
-            record = plugin.store().loadBackup(request.targetUuid(), request.backupId()).orElse(null);
+            record = plugin.store().loadBackup(targetUuid, backupId).orElse(null);
             if (record == null) {
                 return RestoreLoadResult.failure(RestoreLoadResult.Failure.BACKUP_NOT_FOUND);
             }
-            claims = plugin.store().listClaims(request.targetUuid(), request.backupId());
+            claims = plugin.store().listClaims(targetUuid, backupId);
         } catch (Exception e) {
-            logReadFailed(request, e);
+            logReadFailed(actorDetails, targetUuid, targetName, backupId, e);
             return RestoreLoadResult.failure(RestoreLoadResult.Failure.READ_FAILED);
         }
 
-        RestoreLoadResult validated = validateAndDecode(request, record);
+        RestoreLoadResult validated = validateAndDecode(actorDetails, targetUuid, targetName, backupId, record);
         if (!validated.isSuccess()) {
             return validated;
         }
-
-        return RestoreLoadResult.success(record, validated.parts(), claims);
+        return RestoreLoadResult.success(validated.parts(), claims);
     }
 
-    RestoreLoadResult loadExperienceRestore(RestoreRequest request) {
+    RestoreLoadResult loadExperienceRestore(
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId
+    ) {
         BackupRecord record;
         try {
-            record = plugin.store().loadBackup(request.targetUuid(), request.backupId()).orElse(null);
+            record = plugin.store().loadBackup(targetUuid, backupId).orElse(null);
             if (record == null) {
                 return RestoreLoadResult.failure(RestoreLoadResult.Failure.BACKUP_NOT_FOUND);
             }
         } catch (Exception e) {
-            logReadFailed(request, e);
+            logReadFailed(actorDetails, targetUuid, targetName, backupId, e);
             return RestoreLoadResult.failure(RestoreLoadResult.Failure.READ_FAILED);
         }
 
-        RestoreLoadResult validated = validateAndDecode(request, record);
+        RestoreLoadResult validated = validateAndDecode(actorDetails, targetUuid, targetName, backupId, record);
         if (!validated.isSuccess()) {
             return validated;
         }
@@ -67,17 +76,24 @@ final class RestoreRecordLoader {
         }
         return validated;
     }
-    private RestoreLoadResult validateAndDecode(RestoreRequest request, BackupRecord record) {
+
+    private RestoreLoadResult validateAndDecode(
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
+            BackupRecord record
+    ) {
         String expectedSha256 = record.meta().sha256Hex();
         if (expectedSha256 != null && !expectedSha256.isBlank()) {
             String actualSha256 = Hashing.sha256Hex(record.snapshotBytes());
             if (!expectedSha256.equalsIgnoreCase(actualSha256)) {
                 plugin.getLogger().severe(plugin.lang().plain(
                         "console.restore.sha-mismatch",
-                        Placeholder.unparsed("actor", request.actorDetails()),
-                        Placeholder.unparsed("target", request.targetName()),
-                        Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                        Placeholder.unparsed("backup_id", request.backupId()),
+                        Placeholder.unparsed("actor", actorDetails),
+                        Placeholder.unparsed("target", targetName),
+                        Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                        Placeholder.unparsed("backup_id", backupId),
                         Placeholder.unparsed("expected", expectedSha256),
                         Placeholder.unparsed("actual", actualSha256)
                 ));
@@ -86,16 +102,16 @@ final class RestoreRecordLoader {
         }
 
         try {
-            return RestoreLoadResult.success(record, SnapshotCodec.decodeGzip(record.snapshotBytes()), List.of());
+            return RestoreLoadResult.success(SnapshotCodec.decodeGzip(record.snapshotBytes()), List.of());
         } catch (IOException e) {
             plugin.getLogger().log(
                     Level.SEVERE,
                     plugin.lang().plain(
                             "console.restore.snapshot-invalid",
-                            Placeholder.unparsed("actor", request.actorDetails()),
-                            Placeholder.unparsed("target", request.targetName()),
-                            Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                            Placeholder.unparsed("backup_id", request.backupId())
+                            Placeholder.unparsed("actor", actorDetails),
+                            Placeholder.unparsed("target", targetName),
+                            Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                            Placeholder.unparsed("backup_id", backupId)
                     ),
                     e
             );
@@ -103,15 +119,21 @@ final class RestoreRecordLoader {
         }
     }
 
-    private void logReadFailed(RestoreRequest request, Exception e) {
+    private void logReadFailed(
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
+            Exception e
+    ) {
         plugin.getLogger().log(
                 Level.SEVERE,
                 plugin.lang().plain(
                         "console.restore.read-failed",
-                        Placeholder.unparsed("actor", request.actorDetails()),
-                        Placeholder.unparsed("target", request.targetName()),
-                        Placeholder.unparsed("target_uuid", request.targetUuid().toString()),
-                        Placeholder.unparsed("backup_id", request.backupId())
+                        Placeholder.unparsed("actor", actorDetails),
+                        Placeholder.unparsed("target", targetName),
+                        Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                        Placeholder.unparsed("backup_id", backupId)
                 ),
                 e
         );
