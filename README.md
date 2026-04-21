@@ -107,7 +107,7 @@ Target resolution rules:
 Restore limitations:
 
 - Current restore implementation requires the target player to be online
-- Both GUIS restore and `/pib restore` are executed against an online `Player` entity
+- Both GUI restore and `/pib restore` are executed against an online `Player` entity
 
 ## 🛠️ Build
 Windows

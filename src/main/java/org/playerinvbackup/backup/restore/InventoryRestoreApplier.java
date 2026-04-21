@@ -17,6 +17,12 @@ import org.bukkit.inventory.ItemStack;
  * 不读取存储, 不做消息发送, 不关心恢复前备份
  */
 final class InventoryRestoreApplier {
+    void assertCompatible(SnapshotParts parts, List<SlotClaim> claims) {
+        Set<String> claimedKeys = toClaimedKeys(claims);
+        ensureCompatible(parts.inventorySlotBytes(), SlotType.INV, claimedKeys);
+        ensureCompatible(parts.enderChestSlotBytes(), SlotType.ENDER, claimedKeys);
+    }
+
     void apply(Player target, SnapshotParts parts, List<SlotClaim> claims) {
         Set<String> claimedKeys = toClaimedKeys(claims);
 
@@ -73,5 +79,28 @@ final class InventoryRestoreApplier {
             claimedKeys.add(claim.slotType().name() + ":" + claim.slotIndex());
         }
         return claimedKeys;
+    }
+
+    private void ensureCompatible(byte[][] slots, SlotType slotType, Set<String> claimedKeys) {
+        if (slots == null) {
+            return;
+        }
+        for (int i = 0; i < slots.length; i++) {
+            if (claimedKeys.contains(slotType.name() + ":" + i)) {
+                continue;
+            }
+            byte[] bytes = slots[i];
+            if (bytes == null || bytes.length == 0) {
+                continue;
+            }
+            try {
+                ItemStack.deserializeBytes(bytes);
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException(
+                        "slot=" + slotType.name() + ":" + i + ", reason=" + String.valueOf(e.getMessage()),
+                        e
+                );
+            }
+        }
     }
 }

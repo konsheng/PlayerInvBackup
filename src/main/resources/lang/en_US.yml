@@ -63,10 +63,13 @@ errors:
   snapshot-invalid: "<prefix><#EF5350>✖ Backup data is corrupted or cannot be parsed, check console logs</#EF5350>"
   lang-key-missing: "<prefix><#EF5350>✖ Missing language text: <key></#EF5350>"
   restore-failed: "<prefix><#EF5350>✖ Restore failed, check console logs</#EF5350>"
+  restore-incompatible-backup: "<prefix><#EF5350>✖ This backup contains items that cannot be restored on the current server, item restore has been cancelled</#EF5350>"
   restore-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current items</#EF5350>"
   restore-experience-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current experience</#EF5350>"
   backup-experience-unavailable: "<prefix><#EF5350>✖ This backup does not contain experience data and cannot restore experience separately</#EF5350>"
   claim-failed: "<prefix><#EF5350>✖ Claim failed, check console logs</#EF5350>"
+  claim-incompatible: "<prefix><#EF5350>✖ This item cannot be claimed on the current server version</#EF5350>"
+  claim-incompatible-backup: "<prefix><#EF5350>✖ This backup contains incompatible items, claiming is blocked for the whole backup by config</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ This item has already been claimed</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
   claim-mark-failed-rollback: "<prefix><#EF5350>✖ Give failed (database update failed), item rolled back, retry with <#FFCA28>/<label> pending</#FFCA28></#EF5350>"
@@ -256,6 +259,16 @@ gui:
       name: "<#EF5350>✖ Claimed</#EF5350>"
       lore:
         - "<#90A4AE>This slot has been claimed by an admin</#90A4AE>"
+    incompatible:
+      name: "<#EF5350>✖ Incompatible Item</#EF5350>"
+      lore:
+        - "<#90A4AE>This item comes from a newer or incompatible server data version</#90A4AE>"
+        - "<#90A4AE>The current server cannot deserialize it, so this slot cannot be claimed</#90A4AE>"
+    incompatible-backup:
+      name: "<#EF5350>✖ Backup Claim Blocked</#EF5350>"
+      lore:
+        - "<#90A4AE>This backup contains incompatible items</#90A4AE>"
+        - "<#90A4AE>Current config blocks claiming the whole backup view</#90A4AE>"
     processing:
       name: "<#78909C>Processing...</#78909C>"
     back:
@@ -397,6 +410,7 @@ console:
     pending-mark-delivered-failed: "Failed to mark delivered: <reason>"
     lock-update-failed: "Failed to update pin state: target=<target_uuid>, backup_id=<backup_id>"
     claim-failed: "Claim failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>"
+    claim-incompatible: "Claim blocked due to incompatible item: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>, mode=<mode>, reason=<reason>"
 
   packet-gui:
     unsupported-size: "Unsupported GUI size: size=<size>, player=<player>"
@@ -437,6 +451,7 @@ console:
     read-failed: "Failed to read backup: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
     sha-mismatch: "Backup verification failed (sha256 mismatch): actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, expected=<expected>, actual=<actual>"
     snapshot-invalid: "Backup data corrupted or cannot be parsed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
+    incompatible-backup: "Restore blocked because the backup contains incompatible items: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, reason=<reason>"
     pre-backup-failed: "Restore cancelled because the pre-restore safety backup failed: actor=<actor>, target=<target>(<target_uuid>), source backup_id=<backup_id>, pre_restore_backup_id=<pre_restore_backup_id>, reason=<reason>"
     pre-backup-succeeded: "Pre-restore safety backup created successfully: actor=<actor>, target=<target>(<target_uuid>), source backup_id=<backup_id>, pre_restore_backup_id=<pre_restore_backup_id>"
     apply-failed: "Restore failed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"

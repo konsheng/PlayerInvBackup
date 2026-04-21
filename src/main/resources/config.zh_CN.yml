@@ -117,6 +117,11 @@ gui:
   # 每页显示备份数量，必须 <= 45
   list-page-size: 45
 
+  backup-view:
+    incompatible-claim:
+      # false: 仅屏蔽不兼容槽位, true: 只要存在不兼容物品就禁止整份备份的槽位领取
+      block-whole-backup: false
+
   backup-list:
     # 支持: all, 30m, 1h, 6h, 12h, 24h, 7d, 30d ...
     time-filters:

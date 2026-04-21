@@ -54,6 +54,17 @@ public final class RestoreService {
             if (!handleLoadFailure(actor, backupId, loadResult)) {
                 return;
             }
+            if (!handleIncompatibleInventoryRestore(
+                    actor,
+                    actorDetails,
+                    targetUuid,
+                    targetName,
+                    backupId,
+                    loadResult.parts(),
+                    loadResult.claims()
+            )) {
+                return;
+            }
 
             runOnPlayer(
                     target,
@@ -131,6 +142,32 @@ public final class RestoreService {
             case EXPERIENCE_UNAVAILABLE -> runOnActor(actor, () -> Chat.error(actor, "errors.backup-experience-unavailable"));
         }
         return false;
+    }
+
+    private boolean handleIncompatibleInventoryRestore(
+            CommandSender actor,
+            String actorDetails,
+            UUID targetUuid,
+            String targetName,
+            String backupId,
+            SnapshotParts parts,
+            List<SlotClaim> claims
+    ) {
+        try {
+            inventoryRestoreApplier.assertCompatible(parts, claims);
+            return true;
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning(plugin.lang().plain(
+                    "console.restore.incompatible-backup",
+                    Placeholder.unparsed("actor", actorDetails),
+                    Placeholder.unparsed("target", targetName),
+                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                    Placeholder.unparsed("backup_id", backupId),
+                    Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
+            ));
+            runOnActor(actor, () -> Chat.error(actor, "errors.restore-incompatible-backup"));
+            return false;
+        }
     }
 
     private void beginInventoryRestore(

@@ -41,6 +41,7 @@ public record PluginConfig(
         int queueLimit,
         double maxWritesPerSecond,
         int guiListPageSize,
+        boolean guiBackupViewBlockWholeBackupClaimOnIncompatible,
         List<GuiTimeFilterOption> guiTimeFilters,
         GuiMode guiMode,
         String languageFile,
@@ -134,6 +135,8 @@ public record PluginConfig(
         var maxWritesPerSecond = Math.max(0.1, config.getDouble("performance.max-writes-per-second", 20));
 
         var guiListPageSize = Math.min(45, Math.max(9, config.getInt("gui.list-page-size", 45)));
+        boolean guiBackupViewBlockWholeBackupClaimOnIncompatible =
+                config.getBoolean("gui.backup-view.incompatible-claim.block-whole-backup", false);
         List<GuiTimeFilterOption> guiTimeFilters = GuiTimeFilterOption.fromConfig(
                 plugin,
                 lang,
@@ -218,6 +221,7 @@ public record PluginConfig(
                 queueLimit,
                 maxWritesPerSecond,
                 guiListPageSize,
+                guiBackupViewBlockWholeBackupClaimOnIncompatible,
                 guiTimeFilters,
                 guiMode,
                 languageFile,

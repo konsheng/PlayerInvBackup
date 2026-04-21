@@ -442,6 +442,11 @@ public final class GuiService {
                         claimedEnder[claim.slotIndex()] = true;
                     }
                 }
+                boolean[] incompatibleInv = detectIncompatibleSlots(parts.inventorySlotBytes());
+                boolean[] incompatibleEnder = detectIncompatibleSlots(parts.enderChestSlotBytes());
+                boolean incompatibleClaimBlocksWholeBackup = plugin.pluginConfig() != null
+                        && plugin.pluginConfig().guiBackupViewBlockWholeBackupClaimOnIncompatible()
+                        && (hasIncompatibleSlots(incompatibleInv) || hasIncompatibleSlots(incompatibleEnder));
 
                 runOnPlayer(admin, () -> {
                     if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
@@ -462,6 +467,9 @@ public final class GuiService {
                             parts,
                             claimedInv,
                             claimedEnder,
+                            incompatibleInv,
+                            incompatibleEnder,
+                            incompatibleClaimBlocksWholeBackup,
                             record.meta().worldName(),
                             record.meta().locationX(),
                             record.meta().locationY(),
@@ -827,6 +835,18 @@ public final class GuiService {
             if (itemBytes == null || itemBytes.length == 0) {
                 return;
             }
+            if (holder.incompatibleClaimBlocksWholeBackup()) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
+                Chat.error(admin, "errors.claim-incompatible-backup");
+                logIncompatibleClaimBlocked(admin, holder, SlotType.INV, slot, "whole_backup_blocked");
+                return;
+            }
+            if (holder.incompatibleInv()[slot]) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
+                Chat.error(admin, "errors.claim-incompatible");
+                logIncompatibleClaimBlocked(admin, holder, SlotType.INV, slot, "slot_incompatible");
+                return;
+            }
             playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
             tryClaimSlot(admin, holder, SlotType.INV, slot, itemBytes);
         } else {
@@ -839,6 +859,18 @@ public final class GuiService {
             }
             byte[] itemBytes = holder.parts().enderChestSlotBytes()[slot];
             if (itemBytes == null || itemBytes.length == 0) {
+                return;
+            }
+            if (holder.incompatibleClaimBlocksWholeBackup()) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
+                Chat.error(admin, "errors.claim-incompatible-backup");
+                logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, slot, "whole_backup_blocked");
+                return;
+            }
+            if (holder.incompatibleEnder()[slot]) {
+                playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
+                Chat.error(admin, "errors.claim-incompatible");
+                logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, slot, "slot_incompatible");
                 return;
             }
             playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
@@ -956,7 +988,28 @@ public final class GuiService {
             }
 
             runOnPlayer(admin, () -> {
-                ItemStack item = ItemStack.deserializeBytes(itemBytes);
+                final ItemStack item;
+                try {
+                    item = ItemStack.deserializeBytes(itemBytes);
+                } catch (Exception e) {
+                    plugin.getLogger().log(
+                            Level.WARNING,
+                            plugin.lang().plain(
+                                    "console.gui.claim-incompatible",
+                                    Placeholder.unparsed("actor", actorName),
+                                    Placeholder.unparsed("actor_uuid", actorUuid.toString()),
+                                    Placeholder.unparsed("target_uuid", holder.targetUuid().toString()),
+                                    Placeholder.unparsed("backup_id", holder.backupId()),
+                                    Placeholder.unparsed("slot", slotType + ":" + slotIndex),
+                                    Placeholder.unparsed("mode", "runtime_deserialize_failed"),
+                                    Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
+                            ),
+                            e
+                    );
+                    Chat.error(admin, "errors.claim-incompatible");
+                    restoreOriginalSlot(admin, holder, slotType, slotIndex);
+                    return;
+                }
                 ItemStack[] before = cloneStorage(admin.getInventory().getStorageContents());
                 boolean delivered = InventoryUtil.tryInsertIntoStorage(admin.getInventory(), item);
                 if (delivered) {
@@ -1249,31 +1302,15 @@ public final class GuiService {
 
         if (holder.view() == GuiView.INVENTORY) {
             for (int i = 0; i < SnapshotCodec.INVENTORY_SLOT_COUNT && i < inv.getSize(); i++) {
-                if (holder.claimedInv()[i]) {
-                    inv.setItem(i, namedItem(
-                            Material.BARRIER,
-                            lang.msg("gui.backup-view.claimed.name"),
-                            lang.msgList("gui.backup-view.claimed.lore")
-                    ));
-                    continue;
-                }
                 byte[] itemBytes = holder.parts().inventorySlotBytes()[i];
-                inv.setItem(i, toPreviewItem(itemBytes));
+                inv.setItem(i, buildPreviewSlotItem(holder, SlotType.INV, i, itemBytes));
             }
             return;
         }
 
         for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT && i < inv.getSize(); i++) {
-            if (holder.claimedEnder()[i]) {
-                inv.setItem(i, namedItem(
-                        Material.BARRIER,
-                        lang.msg("gui.backup-view.claimed.name"),
-                        lang.msgList("gui.backup-view.claimed.lore")
-                ));
-                continue;
-            }
             byte[] itemBytes = holder.parts().enderChestSlotBytes()[i];
-            inv.setItem(i, toPreviewItem(itemBytes));
+            inv.setItem(i, buildPreviewSlotItem(holder, SlotType.ENDER, i, itemBytes));
         }
     }
 
@@ -1437,6 +1474,11 @@ public final class GuiService {
         String name = targetName == null ? targetUuid.toString() : targetName;
         Lang lang = plugin.lang();
         BackupQuery safeQuery = listQuery == null ? BackupQuery.all() : listQuery;
+        boolean[] incompatibleInv = detectIncompatibleSlots(parts.inventorySlotBytes());
+        boolean[] incompatibleEnder = detectIncompatibleSlots(parts.enderChestSlotBytes());
+        boolean incompatibleClaimBlocksWholeBackup = plugin.pluginConfig() != null
+                && plugin.pluginConfig().guiBackupViewBlockWholeBackupClaimOnIncompatible()
+                && (hasIncompatibleSlots(incompatibleInv) || hasIncompatibleSlots(incompatibleEnder));
         BackupViewHolder holder = new BackupViewHolder(
                 targetUuid,
                 name,
@@ -1447,6 +1489,9 @@ public final class GuiService {
                 parts,
                 claimedInv,
                 claimedEnder,
+                incompatibleInv,
+                incompatibleEnder,
+                incompatibleClaimBlocksWholeBackup,
                 null,
                 null,
                 null,
@@ -1463,29 +1508,13 @@ public final class GuiService {
 
         if (view == GuiView.INVENTORY) {
             for (int i = 0; i < SnapshotCodec.INVENTORY_SLOT_COUNT; i++) {
-                if (claimedInv[i]) {
-                    inv.setItem(i, namedItem(
-                            Material.BARRIER,
-                            lang.msg("gui.backup-view.claimed.name"),
-                            lang.msgList("gui.backup-view.claimed.lore")
-                    ));
-                    continue;
-                }
                 byte[] itemBytes = parts.inventorySlotBytes()[i];
-                inv.setItem(i, toPreviewItem(itemBytes));
+                inv.setItem(i, buildPreviewSlotItem(holder, SlotType.INV, i, itemBytes));
             }
         } else {
             for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT; i++) {
-                if (claimedEnder[i]) {
-                    inv.setItem(i, namedItem(
-                            Material.BARRIER,
-                            lang.msg("gui.backup-view.claimed.name"),
-                            lang.msgList("gui.backup-view.claimed.lore")
-                    ));
-                    continue;
-                }
                 byte[] itemBytes = parts.enderChestSlotBytes()[i];
-                inv.setItem(i, toPreviewItem(itemBytes));
+                inv.setItem(i, buildPreviewSlotItem(holder, SlotType.ENDER, i, itemBytes));
             }
         }
 
@@ -1627,18 +1656,8 @@ public final class GuiService {
             if (slotIndex < 0 || slotIndex >= SnapshotCodec.INVENTORY_SLOT_COUNT) {
                 return;
             }
-            if (holder.claimedInv()[slotIndex]) {
-                Lang lang = plugin.lang();
-                inv.setItem(slotIndex, namedItem(
-                        Material.BARRIER,
-                        lang.msg("gui.backup-view.claimed.name"),
-                        lang.msgList("gui.backup-view.claimed.lore")
-                ));
-                syncIfViewing(admin, inv);
-                return;
-            }
             byte[] itemBytes = holder.parts().inventorySlotBytes()[slotIndex];
-            inv.setItem(slotIndex, toPreviewItem(itemBytes));
+            inv.setItem(slotIndex, buildPreviewSlotItem(holder, SlotType.INV, slotIndex, itemBytes));
             syncIfViewing(admin, inv);
             return;
         }
@@ -1646,18 +1665,8 @@ public final class GuiService {
         if (slotIndex < 0 || slotIndex >= SnapshotCodec.ENDER_CHEST_SLOT_COUNT) {
             return;
         }
-        if (holder.claimedEnder()[slotIndex]) {
-            Lang lang = plugin.lang();
-            inv.setItem(slotIndex, namedItem(
-                    Material.BARRIER,
-                    lang.msg("gui.backup-view.claimed.name"),
-                    lang.msgList("gui.backup-view.claimed.lore")
-            ));
-            syncIfViewing(admin, inv);
-            return;
-        }
         byte[] itemBytes = holder.parts().enderChestSlotBytes()[slotIndex];
-        inv.setItem(slotIndex, toPreviewItem(itemBytes));
+        inv.setItem(slotIndex, buildPreviewSlotItem(holder, SlotType.ENDER, slotIndex, itemBytes));
         syncIfViewing(admin, inv);
     }
 
@@ -1665,6 +1674,45 @@ public final class GuiService {
      * 预览用物品: 只用于 GUI 展示, 不影响真实投递/恢复的数据
      * 不对物品文本样式做任何强制处理, 保持物品本身的显示效果
      */
+    private ItemStack buildPreviewSlotItem(BackupViewHolder holder, SlotType slotType, int slotIndex, byte[] itemBytes) {
+        Lang lang = plugin.lang();
+        if (slotType == SlotType.INV && holder.claimedInv()[slotIndex]) {
+            return namedItem(
+                    Material.BARRIER,
+                    lang.msg("gui.backup-view.claimed.name"),
+                    lang.msgList("gui.backup-view.claimed.lore")
+            );
+        }
+        if (slotType == SlotType.ENDER && holder.claimedEnder()[slotIndex]) {
+            return namedItem(
+                    Material.BARRIER,
+                    lang.msg("gui.backup-view.claimed.name"),
+                    lang.msgList("gui.backup-view.claimed.lore")
+            );
+        }
+        if (itemBytes == null || itemBytes.length == 0) {
+            return null;
+        }
+        if (holder.incompatibleClaimBlocksWholeBackup()) {
+            return namedItem(
+                    Material.BARRIER,
+                    lang.msg("gui.backup-view.incompatible-backup.name"),
+                    lang.msgList("gui.backup-view.incompatible-backup.lore")
+            );
+        }
+        boolean incompatible = slotType == SlotType.INV
+                ? holder.incompatibleInv()[slotIndex]
+                : holder.incompatibleEnder()[slotIndex];
+        if (incompatible) {
+            return namedItem(
+                    Material.BARRIER,
+                    lang.msg("gui.backup-view.incompatible.name"),
+                    lang.msgList("gui.backup-view.incompatible.lore")
+            );
+        }
+        return toPreviewItem(itemBytes);
+    }
+
     private static ItemStack toPreviewItem(byte[] itemBytes) {
         if (itemBytes == null) {
             return null;
@@ -1682,6 +1730,54 @@ public final class GuiService {
         }
 
         return item;
+    }
+
+    private boolean[] detectIncompatibleSlots(byte[][] slots) {
+        boolean[] incompatible = new boolean[slots.length];
+        for (int i = 0; i < slots.length; i++) {
+            incompatible[i] = isIncompatibleItemBytes(slots[i]);
+        }
+        return incompatible;
+    }
+
+    private boolean isIncompatibleItemBytes(byte[] itemBytes) {
+        if (itemBytes == null || itemBytes.length == 0) {
+            return false;
+        }
+        try {
+            ItemStack.deserializeBytes(itemBytes);
+            return false;
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+
+    private boolean hasIncompatibleSlots(boolean[] slots) {
+        for (boolean slot : slots) {
+            if (slot) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void logIncompatibleClaimBlocked(
+            Player admin,
+            BackupViewHolder holder,
+            SlotType slotType,
+            int slotIndex,
+            String mode
+    ) {
+        plugin.getLogger().warning(plugin.lang().plain(
+                "console.gui.claim-incompatible",
+                Placeholder.unparsed("actor", admin.getName()),
+                Placeholder.unparsed("actor_uuid", admin.getUniqueId().toString()),
+                Placeholder.unparsed("target_uuid", holder.targetUuid().toString()),
+                Placeholder.unparsed("backup_id", holder.backupId()),
+                Placeholder.unparsed("slot", slotType + ":" + slotIndex),
+                Placeholder.unparsed("mode", mode),
+                Placeholder.unparsed("reason", "deserialize_failed")
+        ));
     }
 
     private void beginBackupIdSearch(Player admin, BackupListHolder holder) {

@@ -23,6 +23,9 @@ public final class BackupViewHolder implements InventoryHolder {
     private final SnapshotParts parts;
     private final boolean[] claimedInv;
     private final boolean[] claimedEnder;
+    private final boolean[] incompatibleInv;
+    private final boolean[] incompatibleEnder;
+    private final boolean incompatibleClaimBlocksWholeBackup;
     private final String worldName;
     private final Double locationX;
     private final Double locationY;
@@ -42,6 +45,9 @@ public final class BackupViewHolder implements InventoryHolder {
             SnapshotParts parts,
             boolean[] claimedInv,
             boolean[] claimedEnder,
+            boolean[] incompatibleInv,
+            boolean[] incompatibleEnder,
+            boolean incompatibleClaimBlocksWholeBackup,
             String worldName,
             Double locationX,
             Double locationY,
@@ -58,6 +64,9 @@ public final class BackupViewHolder implements InventoryHolder {
         this.parts = parts;
         this.claimedInv = claimedInv;
         this.claimedEnder = claimedEnder;
+        this.incompatibleInv = incompatibleInv;
+        this.incompatibleEnder = incompatibleEnder;
+        this.incompatibleClaimBlocksWholeBackup = incompatibleClaimBlocksWholeBackup;
         this.worldName = worldName;
         this.locationX = locationX;
         this.locationY = locationY;
@@ -104,6 +113,18 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public boolean[] claimedEnder() {
         return claimedEnder;
+    }
+
+    public boolean[] incompatibleInv() {
+        return incompatibleInv;
+    }
+
+    public boolean[] incompatibleEnder() {
+        return incompatibleEnder;
+    }
+
+    public boolean incompatibleClaimBlocksWholeBackup() {
+        return incompatibleClaimBlocksWholeBackup;
     }
 
     public String worldName() {
