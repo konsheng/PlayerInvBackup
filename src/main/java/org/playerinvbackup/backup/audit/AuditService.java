@@ -69,6 +69,11 @@ public final class AuditService {
         }
     }
 
+    public void shutdown() {
+        enabled = false;
+        cancelMaintenanceTask();
+    }
+
     public void log(
             String action,
             CommandSender actor,
