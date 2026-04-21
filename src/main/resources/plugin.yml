@@ -5,7 +5,8 @@ api-version: "1.21"
 folia-supported: true
 softdepend: [ProtocolLib]
 authors: [Konsheng]
-description: Paper / Folia 背包备份, 包含玩家背包和末影箱
+website: "https://github.com/konsheng/PlayerInvBackup"
+description: Paper / Folia 背包备份插件, 包含玩家背包, 末影箱和经验值
 
 commands:
   playerinvbackup:
