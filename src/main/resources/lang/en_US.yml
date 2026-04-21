@@ -79,6 +79,7 @@ errors:
   snapshot-hash-mismatch: "<prefix><#EF5350>✖ Backup is corrupted (SHA256 mismatch), restore blocked: <#FFCA28><backup_id></#FFCA28></#EF5350>"
 
 info:
+  help-hint: "<prefix><#4FC3F7>ℹ Use </#4FC3F7><help_command><#4FC3F7> to view help</#4FC3F7>"
   plugin-info-header: "<gradient:#FFB75E:#ED8F03><bold><name></bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
   plugin-info-author: "<#78909C>-</#78909C> <#90A4AE>Author: </#90A4AE><author>"
   plugin-info-author-hover: "<#FFCA28>Click to open author page</#FFCA28>"

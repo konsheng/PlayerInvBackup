@@ -79,6 +79,7 @@ errors:
   snapshot-hash-mismatch: "<prefix><#EF5350>✖ 备份已损坏(SHA256 不匹配), 已阻止恢复: <#FFCA28><backup_id></#FFCA28></#EF5350>"
 
 info:
+  help-hint: "<prefix><#4FC3F7>ℹ 使用 </#4FC3F7><help_command><#4FC3F7> 查看帮助</#4FC3F7>"
   plugin-info-header: "<gradient:#FFB75E:#ED8F03><bold><name></bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
   plugin-info-author: "<#78909C>-</#78909C> <#90A4AE>作者: </#90A4AE><author>"
   plugin-info-author-hover: "<#FFCA28>点击打开作者主页</#FFCA28>"

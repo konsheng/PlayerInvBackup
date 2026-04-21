@@ -53,7 +53,8 @@ public record PluginConfig(
         Set<String> excludedWorlds,
         boolean guiSoundsEnabled,
         SoundEffect guiClickSound,
-        GuiButtonSounds guiButtonSounds
+        GuiButtonSounds guiButtonSounds,
+        SoundEffect helpCommandClickSound
 ) {
     public static PluginConfig from(Plugin plugin, Lang lang, FileConfiguration config) {
         var intervalMinutes = Math.max(0, config.getLong("backup.interval-minutes", 30));
@@ -187,6 +188,15 @@ public record PluginConfig(
                 1.0f
         );
         GuiButtonSounds guiButtonSounds = GuiButtonSounds.from(plugin, lang, config, guiClickSound);
+        SoundEffect helpCommandClickSound = SoundEffect.fromConfig(
+                plugin,
+                lang,
+                config,
+                "sounds.command.help-click",
+                "ENTITY_EXPERIENCE_ORB_PICKUP",
+                1.0f,
+                1.0f
+        );
 
         return new PluginConfig(
                 Duration.ofMinutes(intervalMinutes),
@@ -220,7 +230,8 @@ public record PluginConfig(
                 excludedWorlds,
                 guiSoundsEnabled,
                 guiClickSound,
-                guiButtonSounds
+                guiButtonSounds,
+                helpCommandClickSound
         );
     }
 

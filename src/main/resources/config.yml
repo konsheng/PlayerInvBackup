@@ -130,6 +130,12 @@ gui:
       - "30d"
 
 sounds:
+  command:
+    help-click:
+      name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 1.0
+      pitch: 1.0
+
   gui:
     enabled: true
 

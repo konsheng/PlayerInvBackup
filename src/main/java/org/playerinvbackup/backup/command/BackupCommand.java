@@ -19,6 +19,7 @@ import org.playerinvbackup.backup.command.support.CommandAsync;
 import org.playerinvbackup.backup.command.support.CommandGuards;
 import org.playerinvbackup.backup.command.support.CommandSuggestions;
 import org.playerinvbackup.backup.command.support.TargetResolver;
+import org.playerinvbackup.backup.config.SoundEffect;
 
 /**
  * Bukkit 命令入口
@@ -50,6 +51,10 @@ public final class BackupCommand implements CommandExecutor, TabCompleter {
                 new AdminHandler(
                         plugin::getName,
                         () -> plugin.getPluginMeta().getVersion(),
+                        () -> {
+                            var config = plugin.pluginConfig();
+                            return config == null ? SoundEffect.disabled() : config.helpCommandClickSound();
+                        },
                         plugin::reload,
                         plugin::isEnabled,
                         plugin::isStoreReady,

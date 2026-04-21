@@ -15,10 +15,12 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.Permissions;
 import org.playerinvbackup.backup.command.CommandContext;
 import org.playerinvbackup.backup.command.SubcommandHandler;
+import org.playerinvbackup.backup.config.SoundEffect;
 import org.playerinvbackup.backup.command.support.CommandGuards;
 import org.playerinvbackup.backup.command.support.CommandSuggestions;
 import org.playerinvbackup.backup.text.Chat;
 import org.playerinvbackup.backup.text.Lang;
+import org.bukkit.entity.Player;
 
 /**
  * 管理类命令处理器
@@ -49,6 +51,7 @@ public final class AdminHandler implements SubcommandHandler {
 
     private final Supplier<String> pluginNameSupplier;
     private final Supplier<String> versionSupplier;
+    private final Supplier<SoundEffect> helpCommandClickSoundSupplier;
     private final ReloadAction reloadAction;
     private final BooleanSupplier pluginEnabled;
     private final BooleanSupplier storeReady;
@@ -62,6 +65,7 @@ public final class AdminHandler implements SubcommandHandler {
     public AdminHandler(
             Supplier<String> pluginNameSupplier,
             Supplier<String> versionSupplier,
+            Supplier<SoundEffect> helpCommandClickSoundSupplier,
             ReloadAction reloadAction,
             BooleanSupplier pluginEnabled,
             BooleanSupplier storeReady,
@@ -74,6 +78,7 @@ public final class AdminHandler implements SubcommandHandler {
     ) {
         this.pluginNameSupplier = pluginNameSupplier;
         this.versionSupplier = versionSupplier;
+        this.helpCommandClickSoundSupplier = helpCommandClickSoundSupplier;
         this.reloadAction = reloadAction;
         this.pluginEnabled = pluginEnabled;
         this.storeReady = storeReady;
@@ -92,13 +97,14 @@ public final class AdminHandler implements SubcommandHandler {
 
     @Override
     public List<String> aliases() {
-        return List.of("tips", "reload");
+        return List.of("tips", "reload", "helpclick");
     }
 
     @Override
     public boolean execute(CommandContext ctx) {
         return switch (ctx.subcommand().toLowerCase(Locale.ROOT)) {
             case "help" -> executeHelp(ctx);
+            case "helpclick" -> executeHelpClick(ctx);
             case "tips" -> executeTips(ctx);
             case "reload" -> executeReload(ctx);
             default -> false;
@@ -112,6 +118,9 @@ public final class AdminHandler implements SubcommandHandler {
 
     @Override
     public boolean isVisible(CommandContext ctx, String token) {
+        if ("helpclick".equalsIgnoreCase(token)) {
+            return false;
+        }
         String permission = "reload".equalsIgnoreCase(token) ? Permissions.RELOAD : Permissions.ADMIN;
         return org.playerinvbackup.backup.Permissions.has(ctx.sender(), permission);
     }
@@ -124,6 +133,15 @@ public final class AdminHandler implements SubcommandHandler {
         return true;
     }
 
+    private boolean executeHelpClick(CommandContext ctx) {
+        if (!guards.requirePermission(ctx, Permissions.ADMIN)) {
+            return true;
+        }
+        playHelpCommandClickSound(ctx);
+        sendHelpContents(ctx);
+        return true;
+    }
+
     public boolean sendHelpDirect(CommandContext ctx) {
         sendHelpContents(ctx);
         return true;
@@ -131,6 +149,15 @@ public final class AdminHandler implements SubcommandHandler {
 
     public boolean sendPluginInfoDirect(CommandContext ctx) {
         sendPluginInfoContents(ctx);
+        return true;
+    }
+
+    public boolean sendHelpHintDirect(CommandContext ctx) {
+        Chat.info(
+                ctx.sender(),
+                "info.help-hint",
+                Placeholder.component("help_command", createHelpCommand(ctx.label()))
+        );
         return true;
     }
 
@@ -303,11 +330,28 @@ public final class AdminHandler implements SubcommandHandler {
 
     private Component createHelpCommand(String label) {
         String safeLabel = hasText(label) ? label : "playerinvbackup";
-        String command = "/" + safeLabel + " help";
-        return Component.text(command)
+        String displayCommand = "/" + safeLabel + " help";
+        String clickCommand = "/" + safeLabel + " helpclick";
+        return Component.text(displayCommand)
                 .color(TextColor.color(0x4FC3F7))
-                .clickEvent(ClickEvent.runCommand(command))
+                .clickEvent(ClickEvent.runCommand(clickCommand))
                 .hoverEvent(HoverEvent.showText(lang.msg("info.plugin-info-help-hover")));
+    }
+
+    private void playHelpCommandClickSound(CommandContext ctx) {
+        Player player = ctx.senderAsPlayer();
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+        SoundEffect effect = helpCommandClickSoundSupplier.get();
+        if (effect == null || !effect.enabled()) {
+            return;
+        }
+        player.getScheduler().run(
+                ctx.plugin(),
+                ignored -> player.playSound(player.getLocation(), effect.sound(), effect.volume(), effect.pitch()),
+                null
+        );
     }
 
     private static boolean hasDownloadLinks() {

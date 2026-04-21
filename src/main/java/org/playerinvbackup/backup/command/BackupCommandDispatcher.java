@@ -52,7 +52,7 @@ public final class BackupCommandDispatcher {
         SubcommandHandler handler = handlersByToken.get(token);
         if (handler == null) {
             Chat.error(ctx.sender(), "errors.unknown-subcommand", Placeholder.unparsed("sub", ctx.subcommand()));
-            return fallbackToHelp(ctx, true);
+            return fallbackToHelpHint(ctx);
         }
         return handler.execute(ctx);
     }
@@ -92,5 +92,12 @@ public final class BackupCommandDispatcher {
             return adminHandler.sendPluginInfoDirect(ctx);
         }
         return fallbackToHelp(ctx, false);
+    }
+
+    private boolean fallbackToHelpHint(CommandContext ctx) {
+        if (adminHandler != null) {
+            return adminHandler.sendHelpHintDirect(ctx);
+        }
+        return true;
     }
 }
