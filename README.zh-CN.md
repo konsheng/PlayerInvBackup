@@ -36,7 +36,7 @@ Paper / Folia `1.21.1+` 玩家备份插件，备份范围包括玩家背包、�
 | Paper 1.21.1+      | ✅ 支持  |
 | Folia 1.21.1+      | ✅ 支持  |
 | Leaf 1.21.1+       | ✅ 支持  |
-| PurPur 1.21.1+     | ✅ 支持  |
+| Purpur 1.21.1+     | ✅ 支持  |
 | Pufferfish 1.21.1+ | ✅ 支持  |
 | Spigot             | ❌ 不支持 |
 | CraftBukkit        | ❌ 不支持 |

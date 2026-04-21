@@ -36,7 +36,7 @@ Built against the Paper API:
 | Paper 1.21.1+      | ✅ Supported     |
 | Folia 1.21.1+      | ✅ Supported     |
 | Leaf 1.21.1+       | ✅ Supported     |
-| PurPur 1.21.1+     | ✅ Supported     |
+| Purpur 1.21.1+     | ✅ Supported     |
 | Pufferfish 1.21.1+ | ✅ Supported     |
 | Spigot             | ❌ Not supported |
 | CraftBukkit        | ❌ Not supported |
