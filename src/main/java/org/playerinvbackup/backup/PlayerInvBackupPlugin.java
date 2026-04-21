@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -65,6 +66,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
     private BackupCommand backupCommand;
     private volatile int lastReloadCancelledBackupTargets;
     private volatile int lastReloadDiscardedIoTasks;
+    private volatile String buildCommitShort;
     // 最近一次存储初始化失败原因, 用于 status 与 reload 反馈
     private volatile String storeInitFailedReason;
 
@@ -179,7 +181,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         Chat.plainList(
                 Bukkit.getConsoleSender(),
                 "console.plugin.banner",
-                Placeholder.unparsed("version", getPluginMeta().getVersion()),
+                Placeholder.unparsed("version", statusPluginVersion()),
                 Placeholder.unparsed("server", Bukkit.getName())
         );
     }
@@ -344,6 +346,44 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
 
     public int lastReloadDiscardedIoTasks() {
         return lastReloadDiscardedIoTasks;
+    }
+
+    public String statusPluginVersion() {
+        String version = getPluginMeta().getVersion();
+        if (version == null || version.isBlank()) {
+            return version;
+        }
+        if (!version.toUpperCase(Locale.ROOT).contains("SNAPSHOT")) {
+            return version;
+        }
+        String commit = buildCommitShort();
+        if (commit == null || commit.isBlank()) {
+            return version;
+        }
+        return version + "-" + commit;
+    }
+
+    private String buildCommitShort() {
+        String cached = buildCommitShort;
+        if (cached != null) {
+            return cached;
+        }
+
+        String loaded = "";
+        try (InputStream in = getResource("build-info.properties")) {
+            if (in != null) {
+                Properties properties = new Properties();
+                properties.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+                String raw = properties.getProperty("git.commit.short", "");
+                if (raw != null) {
+                    loaded = raw.trim();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        buildCommitShort = loaded;
+        return loaded;
     }
 
     private BackupStore createStore(PluginConfig config) {

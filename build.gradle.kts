@@ -62,18 +62,21 @@ tasks.withType<JavaCompile>().configureEach {
 val pluginName = project.name
 // 插件版本
 val pluginVersion = project.version.toString()
+// 仅在 CI 显式传入时附加提交哈希; 本地构建默认留空
+val gitCommitShort = providers.gradleProperty("gitCommitShort").orElse("").get()
 // 产物版本, 可通过 -PartifactVersionOverride 覆盖
 val artifactVersion = providers.gradleProperty("artifactVersionOverride").orElse(pluginVersion).get()
 
 tasks.processResources {
     // 资源过滤使用 UTF-8
     filteringCharset = "UTF-8"
-    filesMatching("plugin.yml") {
-        // 展开 plugin.yml 占位符
+    filesMatching(listOf("plugin.yml", "build-info.properties")) {
+        // 展开资源占位符
         expand(
             mapOf(
                 "name" to pluginName,
                 "version" to pluginVersion,
+                "gitCommitShort" to gitCommitShort,
             ),
         )
     }
