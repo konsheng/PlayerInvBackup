@@ -119,9 +119,9 @@ public record PluginConfig(
         var storageType = StorageType.fromConfigValue(config.getString("storage.type", "sqlite"));
         var localBasePath = Path.of(config.getString("storage.local.base-path", "data"));
         var sqliteFile = Path.of(config.getString("storage.sqlite.file", "data/backups.db"));
-        String sqliteTablePrefix = config.getString("storage.sqlite.table-prefix", "");
+        String sqliteTablePrefix = config.getString("storage.sqlite.table-prefix", "pib_");
         if (sqliteTablePrefix == null) {
-            sqliteTablePrefix = "";
+            sqliteTablePrefix = "pib_";
         } else {
             sqliteTablePrefix = sqliteTablePrefix.trim();
         }

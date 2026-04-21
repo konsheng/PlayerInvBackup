@@ -30,7 +30,12 @@ public record PostgresqlConfig(
                 "storage.postgresql.parameters",
                 "sslmode=disable"
         ));
-        String tablePrefix = normalizeBlankToDefault(config.getString("storage.postgresql.table-prefix", ""), "");
+        String tablePrefix = config.getString("storage.postgresql.table-prefix", "pib_");
+        if (tablePrefix == null) {
+            tablePrefix = "pib_";
+        } else {
+            tablePrefix = tablePrefix.trim();
+        }
         return new PostgresqlConfig(url, host, port, database, username, password == null ? "" : password, parameters, tablePrefix);
     }
 

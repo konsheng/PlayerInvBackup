@@ -66,7 +66,7 @@ storage:
 
   sqlite:
     file: "data/backups.db"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   mysql:
     # 如果填写 url，则优先使用 url
@@ -78,7 +78,7 @@ storage:
     password: ""
     # 额外参数使用 & 连接
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   postgresql:
     # 如果填写 url，则优先使用 url
@@ -90,7 +90,7 @@ storage:
     password: ""
     # 额外参数使用 & 连接
     parameters: "sslmode=disable"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   h2:
     # 如果填写 url，则优先使用 url
@@ -101,7 +101,7 @@ storage:
     password: ""
     # 额外参数使用 ; 连接
     parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
-    table-prefix: ""
+    table-prefix: "pib_"
 
 performance:
   # 最大 I/O 写入队列长度，超过后新备份请求会被拒绝

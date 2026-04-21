@@ -30,7 +30,12 @@ public record MysqlConfig(
                 "storage.mysql.parameters",
                 "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
         ));
-        String tablePrefix = normalizeBlankToDefault(config.getString("storage.mysql.table-prefix", ""), "");
+        String tablePrefix = config.getString("storage.mysql.table-prefix", "pib_");
+        if (tablePrefix == null) {
+            tablePrefix = "pib_";
+        } else {
+            tablePrefix = tablePrefix.trim();
+        }
         return new MysqlConfig(url, host, port, database, username, password == null ? "" : password, parameters, tablePrefix);
     }
 

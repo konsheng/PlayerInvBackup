@@ -27,7 +27,12 @@ public record H2Config(
                 "storage.h2.parameters",
                 "MODE=MySQL;DATABASE_TO_UPPER=false"
         ));
-        String tablePrefix = normalizeBlankToDefault(config.getString("storage.h2.table-prefix", ""), "");
+        String tablePrefix = config.getString("storage.h2.table-prefix", "pib_");
+        if (tablePrefix == null) {
+            tablePrefix = "pib_";
+        } else {
+            tablePrefix = tablePrefix.trim();
+        }
         return new H2Config(url, file, username, password == null ? "" : password, parameters, tablePrefix);
     }
 

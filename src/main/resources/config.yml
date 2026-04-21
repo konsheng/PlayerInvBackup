@@ -66,7 +66,7 @@ storage:
 
   sqlite:
     file: "data/backups.db"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   mysql:
     # If url is set, it takes priority over host/port/database.
@@ -78,7 +78,7 @@ storage:
     password: ""
     # Extra parameters joined with &.
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   postgresql:
     # If url is set, it takes priority over host/port/database.
@@ -90,7 +90,7 @@ storage:
     password: ""
     # Extra parameters joined with &.
     parameters: "sslmode=disable"
-    table-prefix: ""
+    table-prefix: "pib_"
 
   h2:
     # If url is set, it takes priority over file.
@@ -101,7 +101,7 @@ storage:
     password: ""
     # Extra parameters joined with ;.
     parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
-    table-prefix: ""
+    table-prefix: "pib_"
 
 performance:
   # Maximum queued I/O write tasks before new backup requests are rejected.
