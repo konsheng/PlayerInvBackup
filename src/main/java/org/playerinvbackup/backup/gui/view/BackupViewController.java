@@ -1,0 +1,256 @@
+package org.playerinvbackup.backup.gui.view;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.playerinvbackup.backup.PlayerInvBackupPlugin;
+import org.playerinvbackup.backup.codec.SnapshotCodec;
+import org.playerinvbackup.backup.domain.BackupRecord;
+import org.playerinvbackup.backup.domain.SnapshotParts;
+import org.playerinvbackup.backup.gui.GuiView;
+import org.playerinvbackup.backup.gui.holder.BackupListHolder;
+import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
+import org.playerinvbackup.backup.gui.list.BackupListController;
+import org.playerinvbackup.backup.gui.platform.GuiPlatformBridge;
+import org.playerinvbackup.backup.gui.preview.PreviewSnapshotData;
+import org.playerinvbackup.backup.gui.preview.PreviewSnapshotService;
+import org.playerinvbackup.backup.gui.render.BackupViewRenderer;
+import org.playerinvbackup.backup.gui.render.LoadingScreenRenderer;
+import org.playerinvbackup.backup.store.BackupQuery;
+import org.playerinvbackup.backup.store.BackupStore;
+import org.playerinvbackup.backup.text.Chat;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+
+/**
+ * 详情页控制器, 负责读取备份记录, 组装 holder, 驱动 loading -> view 状态切换
+ */
+public final class BackupViewController {
+    private static final int GUI_SIZE = 54;
+    private static final String MAIN_LABEL = "pib";
+
+    private final PlayerInvBackupPlugin plugin;
+    private final GuiPlatformBridge platformBridge;
+    private final BackupListController listController;
+    private final LoadingScreenRenderer loadingRenderer;
+    private final BackupViewRenderer viewRenderer;
+    private final PreviewSnapshotService previewSnapshotService;
+
+    public BackupViewController(
+            PlayerInvBackupPlugin plugin,
+            GuiPlatformBridge platformBridge,
+            BackupListController listController,
+            LoadingScreenRenderer loadingRenderer,
+            BackupViewRenderer viewRenderer,
+            PreviewSnapshotService previewSnapshotService
+    ) {
+        this.plugin = plugin;
+        this.platformBridge = platformBridge;
+        this.listController = listController;
+        this.loadingRenderer = loadingRenderer;
+        this.viewRenderer = viewRenderer;
+        this.previewSnapshotService = previewSnapshotService;
+    }
+
+    public void openBackupView(
+            Player admin,
+            UUID targetUuid,
+            String targetName,
+            int listPage,
+            BackupQuery listQuery,
+            String backupId,
+            GuiView view
+    ) {
+        BackupStore store = resolveStoreOrError(admin, false);
+        if (store == null) {
+            return;
+        }
+
+        UUID adminUuid = admin.getUniqueId();
+        String adminName = admin.getName();
+        int safeListPage = Math.max(0, listPage);
+        BackupQuery safeQuery = listQuery == null ? BackupQuery.all() : listQuery;
+        GuiView safeView = view == null ? GuiView.INVENTORY : view;
+        String safeTargetName = targetName == null ? String.valueOf(targetUuid) : targetName;
+
+        plugin.auditService().log(
+                "OPEN_VIEW",
+                admin,
+                targetUuid,
+                targetName,
+                backupId,
+                "view=" + safeView.name() + " listPage=" + safeListPage
+                        + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
+                        + " after=" + safeQuery.createdAfterMillis()
+        );
+
+        Component title = viewRenderer.title(safeTargetName);
+        Component loadingLabel = plugin.lang().msgNoPrefix("gui.backup-view.loading-title");
+
+        runOnPlayer(admin, () -> {
+            BackupListHolder listHolder = listController.findOpenBackupListHolder(admin, targetUuid);
+            if (listHolder == null) {
+                listHolder = new BackupListHolder(targetUuid, safeTargetName, safeListPage, safeQuery, List.of());
+                Inventory inventory = Bukkit.createInventory(listHolder, GUI_SIZE, title);
+                listHolder.setInventory(inventory);
+                listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
+                listHolder.setListLoaded(false);
+                listHolder.setViewHolder(null);
+
+                loadingRenderer.render(inventory, loadingLabel);
+                platformBridge.openMenu(admin, inventory, title);
+            } else {
+                Inventory inventory = listHolder.getInventory();
+                if (inventory == null) {
+                    return;
+                }
+
+                listHolder.nextRefreshSeq();
+                listHolder.setPage(safeListPage);
+                listHolder.setQuery(safeQuery);
+                listHolder.setViewHolder(null);
+                listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
+
+                loadingRenderer.render(inventory, loadingLabel);
+                platformBridge.syncIfViewing(admin, inventory);
+            }
+
+            long viewSeq = listHolder.nextViewRefreshSeq();
+            BackupListHolder finalListHolder = listHolder;
+
+            Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
+                BackupRecord record;
+                List<org.playerinvbackup.backup.domain.SlotClaim> claims;
+                try {
+                    record = store.loadBackup(targetUuid, backupId).orElse(null);
+                    if (record == null) {
+                        runOnPlayer(admin, () -> {
+                            if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                                return;
+                            }
+                            Chat.error(admin, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId));
+                            listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                        });
+                        return;
+                    }
+                    claims = store.listClaims(targetUuid, backupId);
+                } catch (Exception e) {
+                    plugin.getLogger().log(
+                            Level.SEVERE,
+                            plugin.lang().plain(
+                                    "console.gui.backup-load-failed",
+                                    Placeholder.unparsed("actor", adminName),
+                                    Placeholder.unparsed("actor_uuid", adminUuid.toString()),
+                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                    Placeholder.unparsed("backup_id", backupId)
+                            ),
+                            e
+                    );
+                    runOnPlayer(admin, () -> {
+                        if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                            return;
+                        }
+                        Chat.error(admin, "errors.load-failed");
+                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                    });
+                    return;
+                }
+
+                SnapshotParts parts;
+                try {
+                    parts = SnapshotCodec.decodeGzip(record.snapshotBytes());
+                } catch (IOException e) {
+                    plugin.getLogger().log(
+                            Level.SEVERE,
+                            plugin.lang().plain(
+                                    "console.gui.snapshot-invalid",
+                                    Placeholder.unparsed("actor", adminName),
+                                    Placeholder.unparsed("actor_uuid", adminUuid.toString()),
+                                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                                    Placeholder.unparsed("backup_id", backupId)
+                            ),
+                            e
+                    );
+                    runOnPlayer(admin, () -> {
+                        if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                            return;
+                        }
+                        Chat.error(admin, "errors.snapshot-invalid");
+                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                    });
+                    return;
+                }
+
+                boolean blockWhole = plugin.pluginConfig() != null
+                        && plugin.pluginConfig().guiBackupViewBlockWholeBackupClaimOnIncompatible();
+                PreviewSnapshotData previewData = previewSnapshotService.build(parts, claims, blockWhole);
+
+                runOnPlayer(admin, () -> {
+                    if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
+                        return;
+                    }
+                    Inventory inventory = finalListHolder.getInventory();
+                    if (inventory == null) {
+                        return;
+                    }
+
+                    BackupViewHolder viewHolder = new BackupViewHolder(
+                            targetUuid,
+                            safeTargetName,
+                            backupId,
+                            safeListPage,
+                            safeQuery,
+                            safeView,
+                            parts,
+                            previewData.claimedInv(),
+                            previewData.claimedEnder(),
+                            previewData.incompatibleInv(),
+                            previewData.incompatibleEnder(),
+                            previewData.incompatibleClaimBlocksWholeBackup(),
+                            record.meta().worldName(),
+                            record.meta().locationX(),
+                            record.meta().locationY(),
+                            record.meta().locationZ(),
+                            record.meta().locked(),
+                            record.meta().note()
+                    );
+                    viewHolder.setInventory(inventory);
+                    finalListHolder.setViewHolder(viewHolder);
+                    finalListHolder.setScreen(BackupListHolder.Screen.VIEW);
+
+                    viewRenderer.renderScreen(inventory, viewHolder);
+                    platformBridge.syncIfViewing(admin, inventory);
+                });
+            });
+        });
+    }
+
+    public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {
+        openBackupView(admin, targetUuid, targetName, listPage, BackupQuery.all(), backupId, view);
+    }
+
+    private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {
+        BackupStore store = plugin.store();
+        if (store != null && plugin.isStoreReady()) {
+            return store;
+        }
+        if (player != null) {
+            if (closeMenu) {
+                platformBridge.closeMenu(player);
+            }
+            Chat.error(player, "errors.store-unavailable", Placeholder.unparsed("label", MAIN_LABEL));
+        }
+        return null;
+    }
+
+    private void runOnPlayer(Player player, Runnable runnable) {
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+        player.getScheduler().run(plugin, ignored -> runnable.run(), null);
+    }
+}
