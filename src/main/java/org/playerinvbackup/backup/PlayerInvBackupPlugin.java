@@ -61,11 +61,10 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         registerCoreListeners();
 
         long startupElapsedMs = (System.nanoTime() - startupStartedAt) / 1_000_000L;
-        Chat.plain(
-                Bukkit.getConsoleSender(),
+        getLogger().info(lang().plain(
                 "console.plugin.enabled",
                 Placeholder.unparsed("elapsed_ms", String.valueOf(startupElapsedMs))
-        );
+        ));
     }
 
     @Override
@@ -76,7 +75,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         }
 
         if (currentLang != null) {
-            Chat.plain(Bukkit.getConsoleSender(), "console.plugin.disabled");
+            getLogger().info(currentLang.plain("console.plugin.disabled"));
         } else {
             boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
             getLogger().info(chinese ? "PlayerInvBackup 已关闭" : "PlayerInvBackup has been disabled");

@@ -1,129 +1,154 @@
-# PlayerInvBackup config (Paper / Folia 1.21.1+)
-# Backup scope: player inventory (including armor/offhand), ender chest, and experience
-# After editing, run /pib reload or restart the server.
+# PlayerInvBackup config, for Paper / Folia 1.21.1+
+# Current backup scope includes player inventory (with armor and offhand), ender chest, and experience
+# After editing, run /pib reload, or restart the server to apply changes
 
-# Available languages: zh_CN.yml, en_US.yml
+# Language file name, available values, zh_CN.yml, en_US.yml
 language: "en_US.yml"
 
+# Display related settings
 display:
-  # Java DateTimeFormatter pattern used to display backup time.
+  # Backup time display format, uses Java DateTimeFormatter pattern
   backup-time-format: "yyyy-MM-dd HH:mm:ss"
 
-  # Display aliases for world names shown in GUI/messages.
+  # World alias mapping, used for world names shown in GUI and messages
   world-aliases:
     world: "Overworld"
     world_nether: "Nether"
     world_the_end: "The End"
 
+# Backup policy and trigger settings
 backup:
-  # Automatic backup interval in minutes. 0 disables timer backups.
+  # Automatic backup interval in minutes, set to 0 to disable timer backups
   interval-minutes: 30
 
-  # Cooldown in seconds for /pib backup with no target argument.
+  # Self-backup cooldown in seconds for /pib backup without a target argument
   manual-self-cooldown-seconds: 5
 
-  # Progress reminder interval for /pib backupall in seconds. 0 disables reminders.
+  # Progress reminder interval for /pib backupall in seconds, set to 0 to disable
   backupall-progress-interval-seconds: 3
 
-  # Random delay added per player to spread writes.
+  # Random per-player jitter in seconds
   jitter-seconds: 300
 
-  # Keep the latest N backups per player. 0 disables count-based cleanup.
+  # Maximum backups kept per player, set to 0 to disable count-based cleanup
   keep-per-player: 0
 
-  # Keep backups from the latest N days. 0 disables age-based cleanup.
+  # Maximum backup days kept per player, set to 0 to disable age-based cleanup
   keep-days: 0
 
+  # Automatic backup triggers
   triggers:
     join: true
     quit: true
     death: true
     world-change: true
 
-  # Worlds excluded from timer/event backups.
+  # Excluded worlds, backups will not be triggered by timer or events in these worlds
   excluded-worlds: []
 
+# Audit log related settings
 audit:
-  # Write audit logs under plugins/PlayerInvBackup/logs.
+  # Enable audit logs, logs are written to plugins/PlayerInvBackup/logs
   enabled: true
 
-  # Also mirror audit entries to console.
+  # Also print audit logs to console
   console: true
 
-  # Keep audit logs for N days. 0 disables cleanup.
+  # Audit log retention in days, set to 0 to disable cleanup
   keep-days: 30
 
+# bStats related settings
 bstats:
+  # Enable bStats
   enabled: true
 
+# Storage backend related settings
 storage:
-  # local | sqlite | mysql | postgresql | h2
+  # Storage type, available values, local, sqlite, mysql, postgresql, h2
   type: sqlite
 
+  # Local file storage settings
   local:
-    # Relative to plugins/PlayerInvBackup/
+    # Local storage base path, relative to plugins/PlayerInvBackup/
     base-path: "data"
 
+  # SQLite storage settings
   sqlite:
+    # SQLite database file path, relative to plugins/PlayerInvBackup/
     file: "data/backups.db"
+    # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
 
+  # MySQL storage settings
   mysql:
-    # If url is set, it takes priority over host/port/database.
+    # Full JDBC URL, if set it takes priority
     url: ""
     host: "127.0.0.1"
     port: 3306
     database: "playerinvbackup"
     username: "root"
     password: ""
-    # Extra parameters joined with &.
+    # Extra JDBC parameters, joined with &
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
+    # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
 
+  # PostgreSQL storage settings
   postgresql:
-    # If url is set, it takes priority over host/port/database.
+    # Full JDBC URL, if set it takes priority
     url: ""
     host: "127.0.0.1"
     port: 5432
     database: "playerinvbackup"
     username: "postgres"
     password: ""
-    # Extra parameters joined with &.
+    # Extra JDBC parameters, joined with &
     parameters: "sslmode=disable"
+    # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
 
+  # H2 storage settings
   h2:
-    # If url is set, it takes priority over file.
+    # Full JDBC URL, if set it takes priority
     url: ""
-    # Relative to plugins/PlayerInvBackup/, without the .mv.db suffix.
+    # H2 file path, relative to plugins/PlayerInvBackup/, without the .mv.db suffix
     file: "data/backups_h2"
     username: "sa"
     password: ""
-    # Extra parameters joined with ;.
+    # Extra JDBC parameters, joined with ;
     parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
+    # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
 
+# Performance and write rate settings
 performance:
-  # Maximum queued I/O write tasks before new backup requests are rejected.
+  # I/O queue limit, new backup requests are rejected after this limit is reached
   queue-limit: 500
 
-  # Soft write rate limit.
+  # Maximum writes per second
   max-writes-per-second: 20
 
+# GUI related settings
 gui:
-  # auto | bukkit | packet
+  # GUI mode
+  # auto, automatically detect ProtocolLib
+  # bukkit, use Bukkit native GUI
+  # packet, force ProtocolLib Packet GUI
   mode: "auto"
 
-  # Maximum backups shown per page. Must be <= 45.
+  # Backups shown per page, must be <= 45
   list-page-size: 45
 
+  # Backup preview screen related settings
   backup-view:
     incompatible-claim:
-      # false: only block incompatible slots, true: block claiming the whole backup view if any incompatible item exists
+      # false, only block incompatible slots
+      # true, if any incompatible item exists, block claiming from the whole backup
       block-whole-backup: false
 
+  # Backup list screen related settings
   backup-list:
-    # Supported entries: all, 30m, 1h, 6h, 12h, 24h, 7d, 30d ...
+    # Supported time filters, for example all, 30m, 1h, 7d
     time-filters:
       - "all"
       - "30m"
@@ -134,112 +159,141 @@ gui:
       - "7d"
       - "30d"
 
+# Sound related settings
 sounds:
+  # Command interaction sound settings
   command:
+    # Chat /pib help hint
     help-click:
       name: "ENTITY_EXPERIENCE_ORB_PICKUP"
       volume: 1.0
       pitch: 1.0
 
+  # GUI interaction sound settings
   gui:
+    # Enable GUI sounds
     enabled: true
 
-    # Default GUI click sound.
+    # GUI default click sound settings
     click:
       name: "UI_BUTTON_CLICK"
       volume: 1.0
       pitch: 1.0
 
-    # Played when clicking a blocked/unavailable slot.
+    # Sound settings when clicking a blocked slot
     barrier-slot:
       name: "BLOCK_NOTE_BLOCK_BASS"
       volume: 1.0
       pitch: 1.0
 
-    # INHERIT = use sounds.gui.click
-    # NONE = disable this sound
-    # Otherwise use a Bukkit Sound enum name.
+    # Sound name special values
+    # INHERIT, inherits sounds.gui.click
+    # NONE, disables this sound
+    # Any other value, use a Bukkit Sound enum name
+    # Button sounds for the backup list screen
     backup-list:
+      # Open a backup entry
       entry-open:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Click a disabled page button
       page-disabled:
         name: "BLOCK_NOTE_BLOCK_BASS"
         volume: 1.0
         pitch: 1.0
+      # Previous page
       prev-page:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Next page
       next-page:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Time filter toggle
       filter-time:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Trigger filter toggle
       filter-trigger:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Search by backup id
       search:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Clear filters
       clear-filters:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Jump back multiple pages
       jump-back:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Jump forward multiple pages
       jump-forward:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Refresh current page
       refresh:
         name: "ENTITY_EXPERIENCE_ORB_PICKUP"
         volume: 1.0
         pitch: 1.0
 
+    # Button sounds for the backup preview screen
     backup-view:
+      # Back to backup list
       back:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Inventory / ender chest view toggle
       toggle:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Restore to player
       restore:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Toggle pinned display
       lock:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Open pending delivery list
       pending:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Claim a single slot item
       claim-slot:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 
+    # Button sounds for the restore confirmation screen
     restore-confirm:
+      # Confirm restore
       confirm:
         name: "ENTITY_PLAYER_LEVELUP"
         volume: 1.0
         pitch: 1.0
+      # View confirmation info
       info:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # Cancel restore
       cancel:
         name: "INHERIT"
         volume: 1.0

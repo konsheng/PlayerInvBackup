@@ -1,129 +1,154 @@
-# PlayerInvBackup 配置 (Paper / Folia 1.21.1+)
-# 备份范围: 玩家背包 (含盔甲/副手), 末影箱, 经验值
-# 修改后执行 /pib reload 或重启服务器生效
+# PlayerInvBackup 配置文件, 适用于 Paper / Folia 1.21.1+
+# 当前备份范围包括, 玩家背包(含盔甲和副手), 末影箱, 经验值
+# 修改后请执行 /pib reload, 或重启服务器使配置生效
 
-# 可选语言: zh_CN.yml, en_US.yml
+# 语言文件名, 可选 zh_CN.yml, en_US.yml
 language: "zh_CN.yml"
 
+# 显示相关配置
 display:
-  # 备份时间显示格式 (Java DateTimeFormatter pattern)
+  # 备份时间显示格式, 使用 Java DateTimeFormatter pattern
   backup-time-format: "yyyy-MM-dd HH:mm:ss"
 
-  # GUI/消息中的世界显示别名
+  # 世界别名映射, 用于 GUI 和消息中的世界名称显示
   world-aliases:
     world: "主世界"
     world_nether: "地狱"
     world_the_end: "末地"
 
+# 备份策略与触发器配置
 backup:
-  # 自动备份间隔(分钟)，0 表示关闭定时备份
+  # 自动备份间隔, 单位为分钟, 设为 0 表示关闭定时备份
   interval-minutes: 30
 
-  # /pib backup 无目标参数时的自助备份冷却(秒)
+  # /pib backup 不带目标参数时的自助备份冷却, 单位为秒
   manual-self-cooldown-seconds: 5
 
-  # /pib backupall 进度提醒间隔(秒)，0 表示关闭
+  # /pib backupall 的进度提示间隔, 单位为秒, 设为 0 表示关闭
   backupall-progress-interval-seconds: 3
 
-  # 每个玩家附加的随机错峰延迟(秒)
+  # 每个玩家附加的随机错峰延迟, 单位为秒
   jitter-seconds: 300
 
-  # 每玩家保留最近 N 份备份，0 表示不按份数清理
+  # 每玩家最多保留多少份备份, 设为 0 表示不按份数清理
   keep-per-player: 0
 
-  # 每玩家保留最近 N 天备份，0 表示不按天数清理
+  # 每玩家最多保留多少天备份, 设为 0 表示不按天数清理
   keep-days: 0
 
+  # 自动备份触发器
   triggers:
     join: true
     quit: true
     death: true
     world-change: true
 
-  # 定时/事件备份排除世界
+  # 排除的世界列表, 这些世界不会触发定时或事件备份
   excluded-worlds: []
 
+# 审计日志相关配置
 audit:
-  # 写入审计日志到 plugins/PlayerInvBackup/logs
+  # 是否启用审计日志, 日志写入 plugins/PlayerInvBackup/logs
   enabled: true
 
-  # 是否同步输出到控制台
+  # 是否同时输出审计日志到控制台
   console: true
 
-  # 审计日志保留天数，0 表示不清理
+  # 审计日志保留天数, 设为 0 表示不自动清理
   keep-days: 30
 
+# bStats 统计相关配置
 bstats:
+  # 是否启用 bStats
   enabled: true
 
+# 存储后端相关配置
 storage:
-  # local | sqlite | mysql | postgresql | h2
+  # 存储类型, 可选 local, sqlite, mysql, postgresql, h2
   type: sqlite
 
+  # 本地文件存储配置
   local:
-    # 相对 plugins/PlayerInvBackup/
+    # 本地文件存储根目录, 相对于 plugins/PlayerInvBackup/
     base-path: "data"
 
+  # SQLite 存储配置
   sqlite:
+    # SQLite 数据库文件路径, 相对于 plugins/PlayerInvBackup/
     file: "data/backups.db"
+    # 表名前缀, 设为空字符串表示不使用前缀
     table-prefix: "pib_"
 
+  # MySQL 存储配置
   mysql:
-    # 如果填写 url，则优先使用 url
+    # 完整 JDBC URL, 如果填写则优先使用
     url: ""
     host: "127.0.0.1"
     port: 3306
     database: "playerinvbackup"
     username: "root"
     password: ""
-    # 额外参数使用 & 连接
+    # JDBC 额外参数, 多个参数之间使用 & 连接
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
+    # 表名前缀, 设为空字符串表示不使用前缀
     table-prefix: "pib_"
 
+  # PostgreSQL 存储配置
   postgresql:
-    # 如果填写 url，则优先使用 url
+    # 完整 JDBC URL, 如果填写则优先使用
     url: ""
     host: "127.0.0.1"
     port: 5432
     database: "playerinvbackup"
     username: "postgres"
     password: ""
-    # 额外参数使用 & 连接
+    # JDBC 额外参数, 多个参数之间使用 & 连接
     parameters: "sslmode=disable"
+    # 表名前缀, 设为空字符串表示不使用前缀
     table-prefix: "pib_"
 
+  # H2 存储配置
   h2:
-    # 如果填写 url，则优先使用 url
+    # 完整 JDBC URL, 如果填写则优先使用
     url: ""
-    # 相对 plugins/PlayerInvBackup/，不要写 .mv.db 后缀
+    # H2 文件路径, 相对于 plugins/PlayerInvBackup/, 不要写 .mv.db 后缀
     file: "data/backups_h2"
     username: "sa"
     password: ""
-    # 额外参数使用 ; 连接
+    # JDBC 额外参数, 多个参数之间使用 ; 连接
     parameters: "MODE=MySQL;DATABASE_TO_UPPER=false"
+    # 表名前缀, 设为空字符串表示不使用前缀
     table-prefix: "pib_"
 
+# 性能与写入限流配置
 performance:
-  # 最大 I/O 写入队列长度，超过后新备份请求会被拒绝
+  # I/O 写入队列上限, 超过后新的备份请求会被拒绝
   queue-limit: 500
 
-  # 软写入速率限制
+  # 每秒最大写入次数
   max-writes-per-second: 20
 
+# GUI 相关配置
 gui:
-  # auto | bukkit | packet
+  # GUI 模式
+  # auto, 自动检测 ProtocolLib
+  # bukkit, 使用 Bukkit 原生 GUI
+  # packet, 强制使用 ProtocolLib Packet GUI
   mode: "auto"
 
-  # 每页显示备份数量，必须 <= 45
+  # 备份列表每页显示数量, 必须 <= 45
   list-page-size: 45
 
+  # 备份预览界面相关设置
   backup-view:
     incompatible-claim:
-      # false: 仅屏蔽不兼容槽位, true: 只要存在不兼容物品就禁止整份备份的槽位领取
+      # false, 只屏蔽不兼容的单个槽位
+      # true, 只要存在不兼容物品就禁用整份备份的槽位领取
       block-whole-backup: false
 
+  # 备份列表界面相关设置
   backup-list:
-    # 支持: all, 30m, 1h, 6h, 12h, 24h, 7d, 30d ...
+    # 备份列表支持的时间筛选项, 例如 all, 30m, 1h, 7d
     time-filters:
       - "all"
       - "30m"
@@ -134,112 +159,141 @@ gui:
       - "7d"
       - "30d"
 
+# 音效相关配置
 sounds:
+  # 命令交互音效配置
   command:
+    # 聊天中的 /pib help 提示
     help-click:
       name: "ENTITY_EXPERIENCE_ORB_PICKUP"
       volume: 1.0
       pitch: 1.0
 
+  # GUI 交互音效配置
   gui:
+    # 是否启用 GUI 音效
     enabled: true
 
-    # 默认 GUI 点击音效
+    # GUI 通用点击音效配置
     click:
       name: "UI_BUTTON_CLICK"
       volume: 1.0
       pitch: 1.0
 
-    # 点击不可操作槽位时的音效
+    # 点击不可操作槽位时的音效配置
     barrier-slot:
       name: "BLOCK_NOTE_BLOCK_BASS"
       volume: 1.0
       pitch: 1.0
 
-    # INHERIT = 继承 sounds.gui.click
-    # NONE = 关闭该音效
-    # 其他值 = Bukkit Sound 枚举名
+    # 音效名称支持以下特殊值
+    # INHERIT, 继承 sounds.gui.click
+    # NONE, 禁用该音效
+    # 其他值, 填写 Bukkit Sound 枚举名
+    # 备份列表界面的按钮音效
     backup-list:
+      # 打开某份备份详情
       entry-open:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 点击已禁用的翻页按钮
       page-disabled:
         name: "BLOCK_NOTE_BLOCK_BASS"
         volume: 1.0
         pitch: 1.0
+      # 上一页
       prev-page:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 下一页
       next-page:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 时间筛选切换
       filter-time:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 触发器筛选切换
       filter-trigger:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 按编号搜索
       search:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 清空筛选
       clear-filters:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 快退多页
       jump-back:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 快进多页
       jump-forward:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 刷新当前页
       refresh:
         name: "ENTITY_EXPERIENCE_ORB_PICKUP"
         volume: 1.0
         pitch: 1.0
 
+    # 备份预览界面的按钮音效
     backup-view:
+      # 返回备份列表
       back:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 背包 / 末影箱视图切换
       toggle:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 恢复到玩家
       restore:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 置顶显示切换
       lock:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 打开待投递列表
       pending:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 领取单个槽位物品
       claim-slot:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 
+    # 恢复确认界面的按钮音效
     restore-confirm:
+      # 确认恢复
       confirm:
         name: "ENTITY_PLAYER_LEVELUP"
         volume: 1.0
         pitch: 1.0
+      # 查看确认信息
       info:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
+      # 取消恢复
       cancel:
         name: "INHERIT"
         volume: 1.0
