@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.platform;
 import java.util.Locale;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.Permissions;
+import org.playerinvbackup.backup.app.BackupLocationContext;
 import org.playerinvbackup.backup.config.PluginConfig;
 import org.playerinvbackup.backup.domain.TriggerType;
 import org.bukkit.entity.Player;
@@ -111,7 +112,11 @@ public final class PlayerLifecycleListener implements Listener {
         if (backupService == null) {
             return;
         }
-        backupService.requestBackup(player, TriggerType.WORLD_CHANGE);
+        backupService.requestBackup(
+                player,
+                TriggerType.WORLD_CHANGE,
+                BackupLocationContext.fromTransition(event.getFrom(), event.getTo())
+        );
     }
 
     private static boolean shouldSkipAutomaticBackup(PluginConfig config, Player player, String worldName) {

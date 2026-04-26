@@ -100,6 +100,54 @@ class LocalBackupStoreTest {
         assertEquals(1, store.listClaims(playerUuid, "b1").size());
     }
 
+    @Test
+    void worldChangeMetadataSurvivesLoadAndCacheUpdates() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        BackupMeta meta = new BackupMeta(
+                "wc1",
+                playerUuid,
+                1_000L,
+                TriggerType.WORLD_CHANGE,
+                1,
+                "sha256-wc1",
+                3,
+                false,
+                "",
+                "world",
+                100.0,
+                64.0,
+                -30.0,
+                "world_nether",
+                12.0,
+                72.0,
+                8.0
+        );
+        store.saveBackup(new BackupRecord(meta, new byte[]{1, 2, 3}));
+
+        BackupMeta loaded = store.loadBackup(playerUuid, "wc1").orElseThrow().meta();
+        assertEquals("world", loaded.worldName());
+        assertEquals(Double.valueOf(100.0), loaded.locationX());
+        assertEquals("world_nether", loaded.targetWorldName());
+        assertEquals(Double.valueOf(12.0), loaded.targetLocationX());
+        assertEquals(Double.valueOf(72.0), loaded.targetLocationY());
+        assertEquals(Double.valueOf(8.0), loaded.targetLocationZ());
+
+        store.listBackups(playerUuid, BackupQuery.all(), 0, 10);
+        assertTrue(store.setBackupLocked(playerUuid, "wc1", true));
+        assertTrue(store.setBackupNote(playerUuid, "wc1", "route"));
+
+        BackupMeta updated = store.listBackups(playerUuid, BackupQuery.all(), 0, 10).getFirst();
+        assertEquals("world_nether", updated.targetWorldName());
+        assertEquals(Double.valueOf(12.0), updated.targetLocationX());
+        assertEquals(Double.valueOf(72.0), updated.targetLocationY());
+        assertEquals(Double.valueOf(8.0), updated.targetLocationZ());
+        assertEquals("route", updated.note());
+        assertTrue(updated.locked());
+    }
+
     private static BackupRecord backup(
             UUID playerUuid,
             String backupId,

@@ -26,6 +26,7 @@ import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.playerinvbackup.backup.config.StorageType;
 import org.playerinvbackup.backup.text.Chat;
+import org.playerinvbackup.backup.util.BackupLocationFormatter;
 
 /**
  * 查询类命令处理器
@@ -216,6 +217,16 @@ public final class QueryHandler implements SubcommandHandler {
                             Placeholder.unparsed("time", time),
                             Placeholder.unparsed("trigger", plugin.lang().raw(meta.trigger().langKey())),
                             Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
+                            Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
+                            Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                                    plugin,
+                                    meta.locationX(),
+                                    meta.locationY(),
+                                    meta.locationZ(),
+                                    meta.targetLocationX(),
+                                    meta.targetLocationY(),
+                                    meta.targetLocationZ()
+                            )),
                             Placeholder.unparsed("sha256", meta.sha256Hex()),
                             Placeholder.unparsed("schema", String.valueOf(meta.schemaVersion())),
                             Placeholder.unparsed("claimed", String.valueOf(claimedCount)),

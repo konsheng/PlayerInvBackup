@@ -1,7 +1,6 @@
 package org.playerinvbackup.backup.gui.render;
 
 import java.util.List;
-import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -9,6 +8,7 @@ import org.playerinvbackup.backup.codec.SnapshotCodec;
 import org.playerinvbackup.backup.gui.GuiView;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.text.Lang;
+import org.playerinvbackup.backup.util.BackupLocationFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -87,8 +87,20 @@ public final class BackupViewRenderer {
                                 "gui.backup-view.lock.lore",
                                 Placeholder.unparsed("locked", lockedText),
                                 Placeholder.unparsed("note", noteText),
-                                Placeholder.unparsed("world", displayWorld(holder.worldName())),
-                                Placeholder.unparsed("position", displayPosition(holder.locationX(), holder.locationY(), holder.locationZ()))
+                                Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
+                                        plugin,
+                                        holder.worldName(),
+                                        holder.targetWorldName()
+                                )),
+                                Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                                        plugin,
+                                        holder.locationX(),
+                                        holder.locationY(),
+                                        holder.locationZ(),
+                                        holder.targetLocationX(),
+                                        holder.targetLocationY(),
+                                        holder.targetLocationZ()
+                                ))
                         )
                 )
         );
@@ -151,22 +163,7 @@ public final class BackupViewRenderer {
         );
     }
 
-    private String displayWorld(String worldName) {
-        if (worldName == null || worldName.isBlank()) {
-            return plugin.lang().raw("common.none");
-        }
-        var config = plugin.pluginConfig();
-        return config == null ? worldName : config.displayWorldName(worldName);
-    }
-
-    private String displayPosition(Double x, Double y, Double z) {
-        if (x == null || y == null || z == null) {
-            return plugin.lang().raw("common.none");
-        }
-        return String.format(Locale.ROOT, "%.2f, %.2f, %.2f", x, y, z);
-    }
-
     private String displayExperienceProgress(float progress) {
-        return String.format(Locale.ROOT, "%.1f%%", Math.max(0.0f, progress) * 100.0f);
+        return String.format(java.util.Locale.ROOT, "%.1f%%", Math.max(0.0f, progress) * 100.0f);
     }
 }

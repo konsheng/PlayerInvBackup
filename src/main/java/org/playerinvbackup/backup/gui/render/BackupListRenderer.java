@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -13,6 +12,7 @@ import org.playerinvbackup.backup.domain.BackupMeta;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.playerinvbackup.backup.text.Lang;
+import org.playerinvbackup.backup.util.BackupLocationFormatter;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 
@@ -88,8 +88,16 @@ public final class BackupListRenderer {
                             Placeholder.unparsed("id", meta.backupId()),
                             Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
                             Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
-                            Placeholder.unparsed("world", displayWorld(meta.worldName())),
-                            Placeholder.unparsed("position", displayPosition(meta.locationX(), meta.locationY(), meta.locationZ())),
+                            Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
+                            Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                                    plugin,
+                                    meta.locationX(),
+                                    meta.locationY(),
+                                    meta.locationZ(),
+                                    meta.targetLocationX(),
+                                    meta.targetLocationY(),
+                                    meta.targetLocationZ()
+                            )),
                             Placeholder.unparsed("locked", lockedText),
                             Placeholder.unparsed("note", noteText)
                     )
@@ -193,21 +201,6 @@ public final class BackupListRenderer {
             return GuiTimeFilterOption.defaults();
         }
         return config.guiTimeFilters();
-    }
-
-    private String displayWorld(String worldName) {
-        if (worldName == null || worldName.isBlank()) {
-            return plugin.lang().raw("common.none");
-        }
-        var config = plugin.pluginConfig();
-        return config == null ? worldName : config.displayWorldName(worldName);
-    }
-
-    private String displayPosition(Double x, Double y, Double z) {
-        if (x == null || y == null || z == null) {
-            return plugin.lang().raw("common.none");
-        }
-        return String.format(Locale.ROOT, "%.2f, %.2f, %.2f", x, y, z);
     }
 
     private String cancelKeywordDisplay() {

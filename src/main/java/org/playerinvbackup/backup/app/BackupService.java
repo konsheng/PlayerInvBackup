@@ -20,7 +20,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.Location;
 
 /**
  * 备份服务
@@ -50,16 +49,26 @@ public final class BackupService {
     }
 
     public boolean requestBackup(Player player, TriggerType triggerType) {
-        return requestBackup(player, triggerType, null);
+        return requestBackup(player, triggerType, BackupLocationContext.fromCurrentLocation(player.getLocation()), null);
     }
 
     public boolean requestBackup(Player player, TriggerType triggerType, BackupCompletion completion) {
+        return requestBackup(player, triggerType, BackupLocationContext.fromCurrentLocation(player.getLocation()), completion);
+    }
+
+    public boolean requestBackup(Player player, TriggerType triggerType, BackupLocationContext locationContext) {
+        return requestBackup(player, triggerType, locationContext, null);
+    }
+
+    public boolean requestBackup(Player player, TriggerType triggerType, BackupLocationContext locationContext, BackupCompletion completion) {
         if (!ioDispatcher.hasCapacity()) {
             return false;
         }
 
+        BackupLocationContext safeLocationContext = locationContext == null
+                ? BackupLocationContext.fromCurrentLocation(player.getLocation())
+                : locationContext;
         SnapshotParts parts = captureSnapshot(player);
-        Location location = player.getLocation();
         UUID playerUuid = player.getUniqueId();
         String playerName = player.getName();
         long now = System.currentTimeMillis();
@@ -81,10 +90,14 @@ public final class BackupService {
                         snapshotBytes.length,
                         false,
                         "",
-                        location.getWorld() == null ? null : location.getWorld().getName(),
-                        location.getX(),
-                        location.getY(),
-                        location.getZ()
+                        safeLocationContext.worldName(),
+                        safeLocationContext.locationX(),
+                        safeLocationContext.locationY(),
+                        safeLocationContext.locationZ(),
+                        safeLocationContext.targetWorldName(),
+                        safeLocationContext.targetLocationX(),
+                        safeLocationContext.targetLocationY(),
+                        safeLocationContext.targetLocationZ()
                 );
                 store.saveBackup(new BackupRecord(meta, snapshotBytes));
                 success = true;

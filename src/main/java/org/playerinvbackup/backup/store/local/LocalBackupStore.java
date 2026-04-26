@@ -382,6 +382,10 @@ public final class LocalBackupStore implements BackupStore {
         yaml.set("location.x", meta.locationX());
         yaml.set("location.y", meta.locationY());
         yaml.set("location.z", meta.locationZ());
+        yaml.set("target-world-name", meta.targetWorldName());
+        yaml.set("target-location.x", meta.targetLocationX());
+        yaml.set("target-location.y", meta.targetLocationY());
+        yaml.set("target-location.z", meta.targetLocationZ());
         return yaml.saveToString();
     }
 
@@ -408,7 +412,11 @@ public final class LocalBackupStore implements BackupStore {
                     yaml.getString("world-name", null),
                     yaml.contains("location.x") ? yaml.getDouble("location.x") : null,
                     yaml.contains("location.y") ? yaml.getDouble("location.y") : null,
-                    yaml.contains("location.z") ? yaml.getDouble("location.z") : null
+                    yaml.contains("location.z") ? yaml.getDouble("location.z") : null,
+                    yaml.getString("target-world-name", null),
+                    yaml.contains("target-location.x") ? yaml.getDouble("target-location.x") : null,
+                    yaml.contains("target-location.y") ? yaml.getDouble("target-location.y") : null,
+                    yaml.contains("target-location.z") ? yaml.getDouble("target-location.z") : null
             );
         } catch (Exception e) {
             return null;
@@ -561,7 +569,11 @@ public final class LocalBackupStore implements BackupStore {
                         existing.worldName(),
                         existing.locationX(),
                         existing.locationY(),
-                        existing.locationZ()
+                        existing.locationZ(),
+                        existing.targetWorldName(),
+                        existing.targetLocationX(),
+                        existing.targetLocationY(),
+                        existing.targetLocationZ()
                 ));
             }
         }
@@ -588,7 +600,11 @@ public final class LocalBackupStore implements BackupStore {
                         existing.worldName(),
                         existing.locationX(),
                         existing.locationY(),
-                        existing.locationZ()
+                        existing.locationZ(),
+                        existing.targetWorldName(),
+                        existing.targetLocationX(),
+                        existing.targetLocationY(),
+                        existing.targetLocationZ()
                 ));
             }
         }

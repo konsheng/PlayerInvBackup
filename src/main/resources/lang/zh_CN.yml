@@ -106,6 +106,8 @@ info:
     - "<prefix><#90A4AE>时间: </#90A4AE><white><time></white>"
     - "<prefix><#90A4AE>触发: </#90A4AE><white><trigger></white>"
     - "<prefix><#90A4AE>大小: </#90A4AE><white><size></white> <#78909C>字节</#78909C>"
+    - "<prefix><#90A4AE>世界: </#90A4AE><white><world></white>"
+    - "<prefix><#90A4AE>坐标: </#90A4AE><white><position></white>"
     - "<prefix><#90A4AE>SHA256: </#90A4AE><#B0BEC5><sha256></#B0BEC5>"
     - "<prefix><#90A4AE>Schema: </#90A4AE><white><schema></white>"
     - "<prefix><#90A4AE>已领取格子: </#90A4AE><white><claimed></white>"

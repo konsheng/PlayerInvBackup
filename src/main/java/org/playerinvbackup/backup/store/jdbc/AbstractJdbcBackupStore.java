@@ -85,8 +85,8 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final void saveBackup(BackupRecord record) throws Exception {
         withConnection(connection -> {
             String sql = """
-                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
@@ -104,6 +104,10 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setObject(12, meta.locationX());
                 ps.setObject(13, meta.locationY());
                 ps.setObject(14, meta.locationZ());
+                ps.setString(15, meta.targetWorldName());
+                ps.setObject(16, meta.targetLocationX());
+                ps.setObject(17, meta.targetLocationY());
+                ps.setObject(18, meta.targetLocationZ());
                 ps.executeUpdate();
             }
             return null;
@@ -117,7 +121,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         }
         return withConnection(connection -> {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, trigger_type, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z
+                    SELECT backup_id, created_at, trigger_type, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z
                     FROM %s
                     WHERE player_uuid=?
                     """.formatted(tables.backups()));
@@ -157,7 +161,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         return withConnection(connection -> {
             String sql = """
-                    SELECT created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z
+                    SELECT created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z
                     FROM %s
                     WHERE player_uuid=? AND backup_id=?
                     """.formatted(tables.backups());
@@ -410,7 +414,11 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                       world_name %s,
                       location_x %s,
                       location_y %s,
-                      location_z %s
+                      location_z %s,
+                      target_world_name %s,
+                      target_location_x %s,
+                      target_location_y %s,
+                      target_location_z %s
                     )
                     """.formatted(
                     tables.backups(),
@@ -421,6 +429,10 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     dialect.blobType(),
                     dialect.booleanType(),
                     dialect.noteType(),
+                    dialect.worldNameType(),
+                    dialect.doubleType(),
+                    dialect.doubleType(),
+                    dialect.doubleType(),
                     dialect.worldNameType(),
                     dialect.doubleType(),
                     dialect.doubleType(),
@@ -465,6 +477,10 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         ensureBackupColumn(conn, "location_x", dialect.doubleType());
         ensureBackupColumn(conn, "location_y", dialect.doubleType());
         ensureBackupColumn(conn, "location_z", dialect.doubleType());
+        ensureBackupColumn(conn, "target_world_name", dialect.worldNameType());
+        ensureBackupColumn(conn, "target_location_x", dialect.doubleType());
+        ensureBackupColumn(conn, "target_location_y", dialect.doubleType());
+        ensureBackupColumn(conn, "target_location_z", dialect.doubleType());
     }
 
     private void ensureBackupColumn(Connection conn, String column, String definition) throws SQLException {
@@ -501,7 +517,11 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 rs.getString(9),
                 readNullableDouble(rs, 10),
                 readNullableDouble(rs, 11),
-                readNullableDouble(rs, 12)
+                readNullableDouble(rs, 12),
+                rs.getString(13),
+                readNullableDouble(rs, 14),
+                readNullableDouble(rs, 15),
+                readNullableDouble(rs, 16)
         );
     }
 
@@ -519,7 +539,11 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 rs.getString(9),
                 readNullableDouble(rs, 10),
                 readNullableDouble(rs, 11),
-                readNullableDouble(rs, 12)
+                readNullableDouble(rs, 12),
+                rs.getString(13),
+                readNullableDouble(rs, 14),
+                readNullableDouble(rs, 15),
+                readNullableDouble(rs, 16)
         );
         return new BackupRecord(meta, rs.getBytes(5));
     }

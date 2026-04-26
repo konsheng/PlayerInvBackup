@@ -7,6 +7,7 @@ import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
 import org.playerinvbackup.backup.text.Lang;
+import org.playerinvbackup.backup.util.BackupLocationFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -52,6 +53,10 @@ public final class RestoreConfirmRenderer {
                 sourceHolder.locationX(),
                 sourceHolder.locationY(),
                 sourceHolder.locationZ(),
+                sourceHolder.targetWorldName(),
+                sourceHolder.targetLocationX(),
+                sourceHolder.targetLocationY(),
+                sourceHolder.targetLocationZ(),
                 sourceHolder.parts().experienceLevel(),
                 sourceHolder.parts().experienceProgress(),
                 sourceHolder.parts().totalExperience()
@@ -85,11 +90,23 @@ public final class RestoreConfirmRenderer {
                         infoLoreKey,
                         Placeholder.unparsed("target", titleName),
                         Placeholder.unparsed("id", sourceHolder.backupId()),
-                        Placeholder.unparsed("world", displayWorld(sourceHolder.worldName())),
-                        Placeholder.unparsed("position", displayPosition(sourceHolder.locationX(), sourceHolder.locationY(), sourceHolder.locationZ())),
-                        Placeholder.unparsed("level", String.valueOf(sourceHolder.parts().experienceLevel())),
-                        Placeholder.unparsed("progress", displayExperienceProgress(sourceHolder.parts().experienceProgress())),
-                        Placeholder.unparsed("total", String.valueOf(sourceHolder.parts().totalExperience()))
+                        Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
+                                plugin,
+                                confirmHolder.worldName(),
+                                confirmHolder.targetWorldName()
+                        )),
+                        Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                                plugin,
+                                confirmHolder.locationX(),
+                                confirmHolder.locationY(),
+                                confirmHolder.locationZ(),
+                                confirmHolder.targetLocationX(),
+                                confirmHolder.targetLocationY(),
+                                confirmHolder.targetLocationZ()
+                        )),
+                        Placeholder.unparsed("level", String.valueOf(confirmHolder.experienceLevel())),
+                        Placeholder.unparsed("progress", displayExperienceProgress(confirmHolder.experienceProgress())),
+                        Placeholder.unparsed("total", String.valueOf(confirmHolder.totalExperience()))
                 )
         ));
         inventory.setItem(CONFIRM_CANCEL, itemFactory.namedItem(
@@ -98,21 +115,6 @@ public final class RestoreConfirmRenderer {
                 lang.msgList("gui.restore-confirm.cancel.lore")
         ));
         return inventory;
-    }
-
-    private String displayWorld(String worldName) {
-        if (worldName == null || worldName.isBlank()) {
-            return plugin.lang().raw("common.none");
-        }
-        var config = plugin.pluginConfig();
-        return config == null ? worldName : config.displayWorldName(worldName);
-    }
-
-    private String displayPosition(Double x, Double y, Double z) {
-        if (x == null || y == null || z == null) {
-            return plugin.lang().raw("common.none");
-        }
-        return String.format(java.util.Locale.ROOT, "%.2f, %.2f, %.2f", x, y, z);
     }
 
     private String displayExperienceProgress(float progress) {

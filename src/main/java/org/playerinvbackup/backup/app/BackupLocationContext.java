@@ -1,0 +1,55 @@
+package org.playerinvbackup.backup.app;
+
+import org.bukkit.Location;
+
+/**
+ * 备份位置上下文
+ *
+ * <p>用于在抓取快照时同步保留来源位置与目标位置, 避免异步阶段再访问 Bukkit Location
+ */
+public record BackupLocationContext(
+        String worldName,
+        Double locationX,
+        Double locationY,
+        Double locationZ,
+        String targetWorldName,
+        Double targetLocationX,
+        Double targetLocationY,
+        Double targetLocationZ
+) {
+    public static BackupLocationContext fromCurrentLocation(Location location) {
+        return fromTransition(location, null);
+    }
+
+    public static BackupLocationContext fromTransition(Location from, Location to) {
+        return new BackupLocationContext(
+                worldName(from),
+                coordinateX(from),
+                coordinateY(from),
+                coordinateZ(from),
+                worldName(to),
+                coordinateX(to),
+                coordinateY(to),
+                coordinateZ(to)
+        );
+    }
+
+    private static String worldName(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return null;
+        }
+        return location.getWorld().getName();
+    }
+
+    private static Double coordinateX(Location location) {
+        return location == null ? null : location.getX();
+    }
+
+    private static Double coordinateY(Location location) {
+        return location == null ? null : location.getY();
+    }
+
+    private static Double coordinateZ(Location location) {
+        return location == null ? null : location.getZ();
+    }
+}

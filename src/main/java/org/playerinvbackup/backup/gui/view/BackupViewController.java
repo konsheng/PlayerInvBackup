@@ -216,6 +216,10 @@ public final class BackupViewController {
                             record.meta().locationX(),
                             record.meta().locationY(),
                             record.meta().locationZ(),
+                            record.meta().targetWorldName(),
+                            record.meta().targetLocationX(),
+                            record.meta().targetLocationY(),
+                            record.meta().targetLocationZ(),
                             record.meta().locked(),
                             record.meta().note()
                     );

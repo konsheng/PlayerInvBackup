@@ -28,6 +28,10 @@ public final class RestoreConfirmHolder implements InventoryHolder {
     private final Double locationX;
     private final Double locationY;
     private final Double locationZ;
+    private final String targetWorldName;
+    private final Double targetLocationX;
+    private final Double targetLocationY;
+    private final Double targetLocationZ;
     private final int experienceLevel;
     private final float experienceProgress;
     private final int totalExperience;
@@ -45,6 +49,10 @@ public final class RestoreConfirmHolder implements InventoryHolder {
             Double locationX,
             Double locationY,
             Double locationZ,
+            String targetWorldName,
+            Double targetLocationX,
+            Double targetLocationY,
+            Double targetLocationZ,
             int experienceLevel,
             float experienceProgress,
             int totalExperience
@@ -60,6 +68,10 @@ public final class RestoreConfirmHolder implements InventoryHolder {
         this.locationX = locationX;
         this.locationY = locationY;
         this.locationZ = locationZ;
+        this.targetWorldName = targetWorldName;
+        this.targetLocationX = targetLocationX;
+        this.targetLocationY = targetLocationY;
+        this.targetLocationZ = targetLocationZ;
         this.experienceLevel = experienceLevel;
         this.experienceProgress = experienceProgress;
         this.totalExperience = totalExperience;
@@ -107,6 +119,22 @@ public final class RestoreConfirmHolder implements InventoryHolder {
 
     public Double locationZ() {
         return locationZ;
+    }
+
+    public String targetWorldName() {
+        return targetWorldName;
+    }
+
+    public Double targetLocationX() {
+        return targetLocationX;
+    }
+
+    public Double targetLocationY() {
+        return targetLocationY;
+    }
+
+    public Double targetLocationZ() {
+        return targetLocationZ;
     }
 
     public int experienceLevel() {
