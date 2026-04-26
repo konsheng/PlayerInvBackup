@@ -42,13 +42,17 @@ public final class BackupListRenderer {
         this.itemFactory = itemFactory;
     }
 
-    public Component title(String targetName, int page) {
+    public Component title(String targetName, int page, int totalPages) {
         Lang lang = plugin.lang();
         String safeTarget = targetName == null ? "-" : targetName;
+        int safeCurrentPage = Math.max(0, page) + 1;
+        int safeTotalPages = Math.max(1, totalPages);
         return lang.msgNoPrefix(
                 "gui.backup-list.title",
                 Placeholder.unparsed("target", safeTarget),
-                Placeholder.unparsed("page", String.valueOf(Math.max(0, page) + 1))
+                Placeholder.unparsed("page", String.valueOf(safeCurrentPage)),
+                Placeholder.unparsed("current_page", String.valueOf(safeCurrentPage)),
+                Placeholder.unparsed("total_pages", String.valueOf(safeTotalPages))
         );
     }
 

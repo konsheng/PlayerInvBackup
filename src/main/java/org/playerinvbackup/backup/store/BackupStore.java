@@ -26,6 +26,12 @@ public interface BackupStore extends AutoCloseable {
 
     List<BackupMeta> listBackups(UUID playerUuid, BackupQuery query, int offset, int limit) throws Exception;
 
+    default int countBackups(UUID playerUuid) throws Exception {
+        return countBackups(playerUuid, BackupQuery.all());
+    }
+
+    int countBackups(UUID playerUuid, BackupQuery query) throws Exception;
+
     Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception;
 
     List<SlotClaim> listClaims(UUID playerUuid, String backupId) throws Exception;

@@ -79,6 +79,11 @@ public final class BackupListController {
                 int limit = plugin.pluginConfig().guiListPageSize();
                 if (same && existing.isListLoaded()) {
                     existing.setScreen(BackupListHolder.Screen.LIST);
+                    platformBridge.retitleIfViewing(
+                            admin,
+                            existing.getInventory(),
+                            listRenderer.title(existing.targetName(), safePage, existing.totalPages())
+                    );
                     listRenderer.render(existing.getInventory(), existing, existing.backups().size() >= limit);
                     platformBridge.syncIfViewing(admin, existing.getInventory());
                     return;
@@ -91,7 +96,7 @@ public final class BackupListController {
             }
 
             String name = targetName == null ? String.valueOf(targetUuid) : targetName;
-            Component title = listRenderer.title(name, safePage);
+            Component title = listRenderer.title(name, safePage, 1);
             BackupListHolder holder = new BackupListHolder(targetUuid, name, safePage, safeQuery, List.of());
             holder.setScreen(BackupListHolder.Screen.LIST_LOADING);
             Inventory inventory = Bukkit.createInventory(holder, GUI_SIZE, title);
@@ -161,7 +166,9 @@ public final class BackupListController {
 
         Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
             List<BackupMeta> backups;
+            int totalCount;
             try {
+                totalCount = store.countBackups(targetUuid, safeQuery);
                 backups = store.listBackups(targetUuid, safeQuery, offset, limit);
             } catch (Exception e) {
                 plugin.getLogger().log(
@@ -198,6 +205,7 @@ public final class BackupListController {
             }
 
             boolean hasNextPage = backups.size() >= limit;
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalCount / limit));
             runOnPlayer(admin, () -> {
                 Inventory top = holder.getInventory();
                 if (top == null) {
@@ -212,11 +220,13 @@ public final class BackupListController {
                 }
 
                 holder.setPage(safePage);
+                holder.setTotalPages(totalPages);
                 holder.setQuery(safeQuery);
                 holder.setBackups(backups);
                 holder.setListLoaded(true);
                 holder.setScreen(BackupListHolder.Screen.LIST);
 
+                platformBridge.retitleIfViewing(admin, top, listRenderer.title(targetName, safePage, totalPages));
                 listRenderer.render(top, holder, hasNextPage);
                 platformBridge.syncIfViewing(admin, top);
             });

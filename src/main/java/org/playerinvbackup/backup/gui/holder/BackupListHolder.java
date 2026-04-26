@@ -27,6 +27,7 @@ public final class BackupListHolder implements InventoryHolder {
     private final AtomicLong refreshSeq = new AtomicLong();
     private final AtomicLong viewRefreshSeq = new AtomicLong();
     private int page;
+    private int totalPages = 1;
     private BackupQuery query;
     private List<BackupMeta> backups;
     private volatile boolean listLoaded;
@@ -56,6 +57,14 @@ public final class BackupListHolder implements InventoryHolder {
 
     public void setPage(int page) {
         this.page = Math.max(0, page);
+    }
+
+    public int totalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = Math.max(1, totalPages);
     }
 
     public BackupQuery query() {

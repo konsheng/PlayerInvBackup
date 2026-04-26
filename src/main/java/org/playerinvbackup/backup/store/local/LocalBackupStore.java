@@ -73,6 +73,18 @@ public final class LocalBackupStore implements BackupStore {
             return List.of();
         }
 
+        List<BackupMeta> filtered = filteredBackups(playerUuid, query);
+        int from = Math.min(Math.max(0, offset), filtered.size());
+        int to = Math.min(from + limit, filtered.size());
+        return List.copyOf(filtered.subList(from, to));
+    }
+
+    @Override
+    public int countBackups(UUID playerUuid, BackupQuery query) throws IOException {
+        return filteredBackups(playerUuid, query).size();
+    }
+
+    private List<BackupMeta> filteredBackups(UUID playerUuid, BackupQuery query) throws IOException {
         TriggerType triggerFilter = query == null ? null : query.trigger();
         long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
 
@@ -86,10 +98,7 @@ public final class LocalBackupStore implements BackupStore {
             }
             filtered.add(meta);
         }
-
-        int from = Math.min(Math.max(0, offset), filtered.size());
-        int to = Math.min(from + limit, filtered.size());
-        return List.copyOf(filtered.subList(from, to));
+        return filtered;
     }
 
     @Override

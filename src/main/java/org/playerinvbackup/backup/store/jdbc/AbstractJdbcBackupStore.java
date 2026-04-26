@@ -160,6 +160,39 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     }
 
     @Override
+    public final int countBackups(UUID playerUuid, BackupQuery query) throws Exception {
+        return withConnection(connection -> {
+            StringBuilder sql = new StringBuilder("""
+                    SELECT COUNT(*)
+                    FROM %s
+                    WHERE player_uuid=?
+                    """.formatted(tables.backups()));
+            TriggerType triggerFilter = query == null ? null : query.trigger();
+            long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
+            if (triggerFilter != null) {
+                sql.append(" AND trigger_type=?");
+            }
+            if (createdAfterMillis > 0) {
+                sql.append(" AND created_at>=?");
+            }
+
+            try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+                int idx = 1;
+                ps.setString(idx++, playerUuid.toString());
+                if (triggerFilter != null) {
+                    ps.setString(idx++, triggerFilter.name());
+                }
+                if (createdAfterMillis > 0) {
+                    ps.setLong(idx, createdAfterMillis);
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() ? rs.getInt(1) : 0;
+                }
+            }
+        });
+    }
+
+    @Override
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         return withConnection(connection -> {
             String sql = """

@@ -21,5 +21,7 @@ public interface GuiPlatformBridge {
 
     Inventory currentTop(Player player);
 
+    void retitleIfViewing(Player player, Inventory inventory, Component title);
+
     void syncIfViewing(Player player, Inventory inventory);
 }

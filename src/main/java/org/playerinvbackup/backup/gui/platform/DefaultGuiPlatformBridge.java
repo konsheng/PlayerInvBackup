@@ -1,6 +1,7 @@
 package org.playerinvbackup.backup.gui.platform;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
@@ -15,6 +16,8 @@ import org.bukkit.inventory.InventoryView;
  * 默认 GUI 平台桥, 优先走 Packet GUI, 否则退回 Bukkit 原生 Inventory GUI
  */
 public final class DefaultGuiPlatformBridge implements GuiPlatformBridge {
+    private static final LegacyComponentSerializer TITLE_SERIALIZER = LegacyComponentSerializer.legacySection();
+
     private final PlayerInvBackupPlugin plugin;
     private PacketGuiManager packetGuiManager;
 
@@ -125,6 +128,32 @@ public final class DefaultGuiPlatformBridge implements GuiPlatformBridge {
             return view == null ? null : view.getTopInventory();
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void retitleIfViewing(Player player, Inventory inventory, Component title) {
+        if (player == null || inventory == null || title == null || !player.isOnline()) {
+            return;
+        }
+
+        PacketGuiManager manager = packetGuiManager;
+        if (manager != null) {
+            manager.retitleIfViewing(player, inventory, title);
+            return;
+        }
+
+        if (!isViewing(player, inventory)) {
+            return;
+        }
+
+        try {
+            InventoryView view = player.getOpenInventory();
+            if (view != null && view.getTopInventory() == inventory) {
+                view.setTitle(TITLE_SERIALIZER.serialize(title));
+            }
+        } catch (Exception ignored) {
         }
     }
 

@@ -80,7 +80,7 @@ public final class PacketGuiManager {
     private static final class Session {
         private final int windowId;
         private final Inventory top;
-        private final Component title;
+        private Component title;
         private int stateId;
 
         private Session(int windowId, Inventory top, Component title) {
@@ -257,6 +257,26 @@ public final class PacketGuiManager {
         player.getScheduler().run(plugin, ignored -> {
             Session session = sessions.get(player.getUniqueId());
             if (session == null || session.top != inventory) {
+                return;
+            }
+            sendWindowItems(player, session);
+        }, null);
+    }
+
+    public void retitleIfViewing(Player player, Inventory inventory, Component title) {
+        if (player == null || inventory == null || title == null) {
+            return;
+        }
+        if (!player.isOnline()) {
+            return;
+        }
+        player.getScheduler().run(plugin, ignored -> {
+            Session session = sessions.get(player.getUniqueId());
+            if (session == null || session.top != inventory) {
+                return;
+            }
+            session.title = title;
+            if (!sendOpenWindow(player, session)) {
                 return;
             }
             sendWindowItems(player, session);

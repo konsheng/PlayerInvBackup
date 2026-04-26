@@ -181,7 +181,7 @@ gui:
       - "<#90A4AE>Please wait</#90A4AE>"
   backup-list:
     loading-title: "<#4FC3F7>Loading backup list...</#4FC3F7>"
-    title: "<gradient:#FFB75E:#ED8F03><bold>Backup List</bold></gradient> <#78909C>▸</#78909C> <target>"
+    title: "<gradient:#FFB75E:#ED8F03><bold>Backup List</bold></gradient> <#78909C>▸</#78909C> <target> <#90A4AE>(<current_page>/<total_pages>)</#90A4AE>"
     empty:
       name: "<#EF5350>✖ No backups</#EF5350>"
       lore:

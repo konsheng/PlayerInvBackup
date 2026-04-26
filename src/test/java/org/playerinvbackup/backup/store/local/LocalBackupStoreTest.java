@@ -150,6 +150,49 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    void countBackupsRespectsQueryFilters() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        store.saveBackup(backup(playerUuid, "b1", 1_000L, false, "", new byte[]{1}));
+        store.saveBackup(new BackupRecord(new BackupMeta(
+                "b2",
+                playerUuid,
+                2_000L,
+                TriggerType.DEATH,
+                1,
+                "sha256-b2",
+                1,
+                false,
+                "",
+                "world",
+                1.0,
+                64.0,
+                1.0
+        ), new byte[]{2}));
+        store.saveBackup(new BackupRecord(new BackupMeta(
+                "b3",
+                playerUuid,
+                3_000L,
+                TriggerType.DEATH,
+                1,
+                "sha256-b3",
+                1,
+                false,
+                "",
+                "world",
+                1.0,
+                64.0,
+                1.0
+        ), new byte[]{3}));
+
+        assertEquals(3, store.countBackups(playerUuid, BackupQuery.all()));
+        assertEquals(2, store.countBackups(playerUuid, new BackupQuery(TriggerType.DEATH, 0L)));
+        assertEquals(1, store.countBackups(playerUuid, new BackupQuery(TriggerType.DEATH, 2_500L)));
+    }
+
+    @Test
     void deathKillerMetadataSurvivesLoadAndCacheUpdates() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
