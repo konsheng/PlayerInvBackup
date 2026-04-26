@@ -136,6 +136,10 @@ gui:
   # packet, 强制使用 ProtocolLib Packet GUI
   mode: "auto"
 
+  # GUI 中显示 loading 提示前的延迟时间, 单位为真实秒
+  # 设为 0 表示立即显示 loading 提示
+  loading-indicator-delay-seconds: 3
+
   # 备份列表每页显示数量, 必须 <= 45
   list-page-size: 45
 

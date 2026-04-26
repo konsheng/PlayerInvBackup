@@ -18,8 +18,14 @@ public final class LoadingScreenRenderer {
             return;
         }
 
-        // 异步加载期间保留当前 GUI 内容, 不额外渲染 loading 图标
-        // LIST_LOADING / VIEW_LOADING 状态仍会在其他位置照常切换
-        // 因此在真实数据渲染完成前, 重复点击依然会被拦截
+        for (int i = 0; i < inventory.getSize(); i++) {
+            inventory.setItem(i, null);
+        }
+
+        int slot = Math.min(22, inventory.getSize() - 1);
+        if (slot < 0) {
+            return;
+        }
+        inventory.setItem(slot, itemFactory.loadingItem(label));
     }
 }

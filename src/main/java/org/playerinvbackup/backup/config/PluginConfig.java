@@ -40,6 +40,7 @@ public record PluginConfig(
         H2Config h2,
         int queueLimit,
         double maxWritesPerSecond,
+        Duration guiLoadingIndicatorDelay,
         int guiListPageSize,
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible,
         List<GuiTimeFilterOption> guiTimeFilters,
@@ -134,6 +135,7 @@ public record PluginConfig(
         var queueLimit = Math.max(1, config.getInt("performance.queue-limit", 500));
         var maxWritesPerSecond = Math.max(0.1, config.getDouble("performance.max-writes-per-second", 20));
 
+        var guiLoadingIndicatorDelaySeconds = Math.max(0, config.getLong("gui.loading-indicator-delay-seconds", 3));
         var guiListPageSize = Math.min(45, Math.max(9, config.getInt("gui.list-page-size", 45)));
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible =
                 config.getBoolean("gui.backup-view.incompatible-claim.block-whole-backup", false);
@@ -220,6 +222,7 @@ public record PluginConfig(
                 h2,
                 queueLimit,
                 maxWritesPerSecond,
+                Duration.ofSeconds(guiLoadingIndicatorDelaySeconds),
                 guiListPageSize,
                 guiBackupViewBlockWholeBackupClaimOnIncompatible,
                 guiTimeFilters,

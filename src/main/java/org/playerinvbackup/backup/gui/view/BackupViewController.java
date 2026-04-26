@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.gui.view;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -32,6 +33,7 @@ import org.bukkit.inventory.Inventory;
 public final class BackupViewController {
     private static final int GUI_SIZE = 54;
     private static final String MAIN_LABEL = "pib";
+    private static final long DEFAULT_LOADING_INDICATOR_DELAY_SECONDS = 3L;
 
     private final PlayerInvBackupPlugin plugin;
     private final GuiPlatformBridge platformBridge;
@@ -101,7 +103,6 @@ public final class BackupViewController {
                 listHolder.setListLoaded(false);
                 listHolder.setViewHolder(null);
 
-                loadingRenderer.render(inventory, loadingLabel);
                 platformBridge.openMenu(admin, inventory, title);
             } else {
                 Inventory inventory = listHolder.getInventory();
@@ -114,13 +115,13 @@ public final class BackupViewController {
                 listHolder.setQuery(safeQuery);
                 listHolder.setViewHolder(null);
                 listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
-
-                loadingRenderer.render(inventory, loadingLabel);
-                platformBridge.syncIfViewing(admin, inventory);
             }
 
             long viewSeq = listHolder.nextViewRefreshSeq();
             BackupListHolder finalListHolder = listHolder;
+            // 先进入 VIEW_LOADING 状态阻止重复点击, 但暂时保留旧界面
+            // 只有真实时间超过 3 秒仍未完成, 才显示 loading 画面
+            scheduleDelayedViewLoading(admin, finalListHolder, viewSeq, loadingLabel);
 
             Bukkit.getAsyncScheduler().runNow(plugin, ignored -> {
                 BackupRecord record;
@@ -231,6 +232,50 @@ public final class BackupViewController {
 
     public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {
         openBackupView(admin, targetUuid, targetName, listPage, BackupQuery.all(), backupId, view);
+    }
+
+    private void scheduleDelayedViewLoading(
+            Player admin,
+            BackupListHolder holder,
+            long viewSeq,
+            Component loadingLabel
+    ) {
+        if (admin == null || holder == null) {
+            return;
+        }
+
+        long delaySeconds = loadingIndicatorDelaySeconds();
+        Runnable renderTask = () -> runOnPlayer(admin, () -> {
+            if (!holder.isViewRefreshSeqCurrent(viewSeq)) {
+                return;
+            }
+            if (holder.screen() != BackupListHolder.Screen.VIEW_LOADING) {
+                return;
+            }
+
+            Inventory inventory = holder.getInventory();
+            if (inventory == null) {
+                return;
+            }
+
+            loadingRenderer.render(inventory, loadingLabel);
+            platformBridge.syncIfViewing(admin, inventory);
+        });
+
+        // 用异步调度器按真实时间计时, 到期后再切回玩家线程更新 GUI
+        if (delaySeconds <= 0L) {
+            renderTask.run();
+            return;
+        }
+        Bukkit.getAsyncScheduler().runDelayed(plugin, ignored -> renderTask.run(), delaySeconds, TimeUnit.SECONDS);
+    }
+
+    private long loadingIndicatorDelaySeconds() {
+        var config = plugin.pluginConfig();
+        if (config == null || config.guiLoadingIndicatorDelay() == null) {
+            return DEFAULT_LOADING_INDICATOR_DELAY_SECONDS;
+        }
+        return Math.max(0L, config.guiLoadingIndicatorDelay().toSeconds());
     }
 
     private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {

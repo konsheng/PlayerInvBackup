@@ -136,6 +136,10 @@ gui:
   # packet, force ProtocolLib Packet GUI
   mode: "auto"
 
+  # Delay before showing the loading indicator in GUI, in real seconds
+  # Set to 0 to show the loading indicator immediately
+  loading-indicator-delay-seconds: 3
+
   # Backups shown per page, must be <= 45
   list-page-size: 45
 

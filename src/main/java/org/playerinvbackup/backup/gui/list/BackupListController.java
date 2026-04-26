@@ -2,6 +2,7 @@ package org.playerinvbackup.backup.gui.list;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -24,6 +25,7 @@ import org.bukkit.inventory.Inventory;
 public final class BackupListController {
     private static final int GUI_SIZE = 54;
     private static final String MAIN_LABEL = "pib";
+    private static final long DEFAULT_LOADING_INDICATOR_DELAY_SECONDS = 3L;
 
     private final PlayerInvBackupPlugin plugin;
     private final GuiPlatformBridge platformBridge;
@@ -54,6 +56,7 @@ public final class BackupListController {
 
         int safePage = Math.max(0, page);
         BackupQuery safeQuery = query == null ? BackupQuery.all() : query;
+        Component loadingLabel = plugin.lang().msgNoPrefix("gui.backup-list.loading-title");
 
         plugin.auditService().log(
                 "OPEN_LIST",
@@ -83,9 +86,7 @@ public final class BackupListController {
 
                 existing.setScreen(BackupListHolder.Screen.LIST_LOADING);
                 existing.setListLoaded(false);
-                loadingRenderer.render(existing.getInventory(), plugin.lang().msgNoPrefix("gui.backup-list.loading-title"));
-                platformBridge.syncIfViewing(admin, existing.getInventory());
-                refreshBackupList(admin, existing, safePage, safeQuery);
+                refreshBackupList(admin, existing, safePage, safeQuery, false, true, loadingLabel);
                 return;
             }
 
@@ -96,14 +97,13 @@ public final class BackupListController {
             Inventory inventory = Bukkit.createInventory(holder, GUI_SIZE, title);
             holder.setInventory(inventory);
 
-            loadingRenderer.render(inventory, plugin.lang().msgNoPrefix("gui.backup-list.loading-title"));
             platformBridge.openMenu(admin, inventory, title);
-            refreshBackupList(admin, holder, safePage, safeQuery);
+            refreshBackupList(admin, holder, safePage, safeQuery, false, true, loadingLabel);
         });
     }
 
     public void refreshBackupList(Player admin, BackupListHolder holder, int page, BackupQuery query) {
-        refreshBackupList(admin, holder, page, query, false);
+        refreshBackupList(admin, holder, page, query, false, false, null);
     }
 
     public BackupListHolder findOpenBackupListHolder(Player player, UUID targetUuid) {
@@ -133,7 +133,9 @@ public final class BackupListController {
             BackupListHolder holder,
             int page,
             BackupQuery query,
-            boolean fallbackWarned
+            boolean fallbackWarned,
+            boolean scheduleDelayedLoading,
+            Component loadingLabel
     ) {
         if (admin == null || holder == null) {
             return;
@@ -148,6 +150,11 @@ public final class BackupListController {
         BackupQuery safeQuery = query == null ? BackupQuery.all() : query;
 
         long refreshSeq = holder.nextRefreshSeq();
+        if (scheduleDelayedLoading) {
+            // 先进入 LIST_LOADING 状态阻止重复点击, 但暂时保留旧界面
+            // 只有真实时间超过 3 秒仍未完成, 才显示 loading 画面
+            scheduleDelayedListLoading(admin, holder, refreshSeq, loadingLabel);
+        }
         int offset = safePage * limit;
         UUID targetUuid = holder.targetUuid();
         String targetName = holder.targetName();
@@ -185,7 +192,7 @@ public final class BackupListController {
                     if (!fallbackWarned) {
                         Chat.warn(admin, "warn.no-more-backups-back");
                     }
-                    refreshBackupList(admin, holder, safePage - 1, safeQuery, true);
+                    refreshBackupList(admin, holder, safePage - 1, safeQuery, true, false, null);
                 });
                 return;
             }
@@ -214,6 +221,50 @@ public final class BackupListController {
                 platformBridge.syncIfViewing(admin, top);
             });
         });
+    }
+
+    private void scheduleDelayedListLoading(
+            Player admin,
+            BackupListHolder holder,
+            long refreshSeq,
+            Component loadingLabel
+    ) {
+        if (admin == null || holder == null) {
+            return;
+        }
+
+        long delaySeconds = loadingIndicatorDelaySeconds();
+        Runnable renderTask = () -> runOnPlayer(admin, () -> {
+            if (!holder.isRefreshSeqCurrent(refreshSeq)) {
+                return;
+            }
+            if (holder.screen() != BackupListHolder.Screen.LIST_LOADING) {
+                return;
+            }
+
+            Inventory inventory = holder.getInventory();
+            if (inventory == null) {
+                return;
+            }
+
+            loadingRenderer.render(inventory, loadingLabel);
+            platformBridge.syncIfViewing(admin, inventory);
+        });
+
+        // 用异步调度器按真实时间计时, 到期后再切回玩家线程更新 GUI
+        if (delaySeconds <= 0L) {
+            renderTask.run();
+            return;
+        }
+        Bukkit.getAsyncScheduler().runDelayed(plugin, ignored -> renderTask.run(), delaySeconds, TimeUnit.SECONDS);
+    }
+
+    private long loadingIndicatorDelaySeconds() {
+        var config = plugin.pluginConfig();
+        if (config == null || config.guiLoadingIndicatorDelay() == null) {
+            return DEFAULT_LOADING_INDICATOR_DELAY_SECONDS;
+        }
+        return Math.max(0L, config.guiLoadingIndicatorDelay().toSeconds());
     }
 
     private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {
