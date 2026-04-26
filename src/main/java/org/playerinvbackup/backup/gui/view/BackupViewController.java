@@ -220,6 +220,8 @@ public final class BackupViewController {
                             record.meta().targetLocationX(),
                             record.meta().targetLocationY(),
                             record.meta().targetLocationZ(),
+                            record.meta().killerPlayerUuid(),
+                            record.meta().killerPlayerName(),
                             record.meta().locked(),
                             record.meta().note()
                     );

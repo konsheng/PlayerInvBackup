@@ -197,6 +197,7 @@ gui:
         - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
         - "<#90A4AE>备注: </#90A4AE><white><note></white>"
         - "<#81C784>▶ 点击打开</#81C784>"
+      killer-line: "<#90A4AE>击杀者: </#90A4AE><white><killer></white>"
     prev:
       name: "<#4FC3F7>◀ 上一页</#4FC3F7>"
     prev-disabled:
@@ -314,6 +315,7 @@ gui:
         - "<#90A4AE>置顶显示的备份会排在列表顶部</#90A4AE>"
         - "<#4FC3F7>▶ 点击切换置顶状态</#4FC3F7>"
         - "<#78909C>提示: 使用 /pib note 设置/清除备注</#78909C>"
+      killer-line: "<#90A4AE>击杀者: </#90A4AE><white><killer></white>"
   restore-confirm:
     title: "<gradient:#EF5350:#E53935><bold>确认恢复</bold></gradient> <#78909C>▸</#78909C> <target>"
     ok:

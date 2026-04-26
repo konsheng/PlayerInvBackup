@@ -85,8 +85,8 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final void saveBackup(BackupRecord record) throws Exception {
         withConnection(connection -> {
             String sql = """
-                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
@@ -108,6 +108,8 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 ps.setObject(16, meta.targetLocationX());
                 ps.setObject(17, meta.targetLocationY());
                 ps.setObject(18, meta.targetLocationZ());
+                ps.setString(19, meta.killerPlayerUuid() == null ? null : meta.killerPlayerUuid().toString());
+                ps.setString(20, meta.killerPlayerName());
                 ps.executeUpdate();
             }
             return null;
@@ -121,7 +123,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         }
         return withConnection(connection -> {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, trigger_type, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z
+                    SELECT backup_id, created_at, trigger_type, schema_version, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
                     FROM %s
                     WHERE player_uuid=?
                     """.formatted(tables.backups()));
@@ -161,7 +163,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         return withConnection(connection -> {
             String sql = """
-                    SELECT created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z
+                    SELECT created_at, trigger_type, schema_version, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
                     FROM %s
                     WHERE player_uuid=? AND backup_id=?
                     """.formatted(tables.backups());
@@ -418,7 +420,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                       target_world_name %s,
                       target_location_x %s,
                       target_location_y %s,
-                      target_location_z %s
+                      target_location_z %s,
+                      killer_player_uuid %s,
+                      killer_player_name %s
                     )
                     """.formatted(
                     tables.backups(),
@@ -436,7 +440,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     dialect.worldNameType(),
                     dialect.doubleType(),
                     dialect.doubleType(),
-                    dialect.doubleType()
+                    dialect.doubleType(),
+                    dialect.uuidType(),
+                    dialect.actorNameType()
             ));
 
             st.execute("""
@@ -481,6 +487,8 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         ensureBackupColumn(conn, "target_location_x", dialect.doubleType());
         ensureBackupColumn(conn, "target_location_y", dialect.doubleType());
         ensureBackupColumn(conn, "target_location_z", dialect.doubleType());
+        ensureBackupColumn(conn, "killer_player_uuid", dialect.uuidType());
+        ensureBackupColumn(conn, "killer_player_name", dialect.actorNameType());
     }
 
     private void ensureBackupColumn(Connection conn, String column, String definition) throws SQLException {
@@ -521,7 +529,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 rs.getString(13),
                 readNullableDouble(rs, 14),
                 readNullableDouble(rs, 15),
-                readNullableDouble(rs, 16)
+                readNullableDouble(rs, 16),
+                readNullableUuid(rs, 17),
+                rs.getString(18)
         );
     }
 
@@ -543,7 +553,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 rs.getString(13),
                 readNullableDouble(rs, 14),
                 readNullableDouble(rs, 15),
-                readNullableDouble(rs, 16)
+                readNullableDouble(rs, 16),
+                readNullableUuid(rs, 17),
+                rs.getString(18)
         );
         return new BackupRecord(meta, rs.getBytes(5));
     }
@@ -622,6 +634,14 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     private static Double readNullableDouble(ResultSet rs, int columnIndex) throws SQLException {
         double value = rs.getDouble(columnIndex);
         return rs.wasNull() ? null : value;
+    }
+
+    private static UUID readNullableUuid(ResultSet rs, int columnIndex) throws SQLException {
+        String raw = rs.getString(columnIndex);
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return UUID.fromString(raw);
     }
 
     private static String defaultString(String value) {

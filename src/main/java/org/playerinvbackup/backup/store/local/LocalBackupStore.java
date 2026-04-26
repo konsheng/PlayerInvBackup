@@ -386,6 +386,8 @@ public final class LocalBackupStore implements BackupStore {
         yaml.set("target-location.x", meta.targetLocationX());
         yaml.set("target-location.y", meta.targetLocationY());
         yaml.set("target-location.z", meta.targetLocationZ());
+        yaml.set("killer-player-uuid", meta.killerPlayerUuid() == null ? null : meta.killerPlayerUuid().toString());
+        yaml.set("killer-player-name", meta.killerPlayerName());
         return yaml.saveToString();
     }
 
@@ -416,7 +418,9 @@ public final class LocalBackupStore implements BackupStore {
                     yaml.getString("target-world-name", null),
                     yaml.contains("target-location.x") ? yaml.getDouble("target-location.x") : null,
                     yaml.contains("target-location.y") ? yaml.getDouble("target-location.y") : null,
-                    yaml.contains("target-location.z") ? yaml.getDouble("target-location.z") : null
+                    yaml.contains("target-location.z") ? yaml.getDouble("target-location.z") : null,
+                    readNullableUuid(yaml, "killer-player-uuid"),
+                    yaml.getString("killer-player-name", null)
             );
         } catch (Exception e) {
             return null;
@@ -501,6 +505,14 @@ public final class LocalBackupStore implements BackupStore {
         return false;
     }
 
+    private static UUID readNullableUuid(YamlConfiguration yaml, String path) {
+        String raw = yaml.getString(path, null);
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return UUID.fromString(raw);
+    }
+
     @FunctionalInterface
     private interface Loader<T> {
         T load() throws IOException;
@@ -573,7 +585,9 @@ public final class LocalBackupStore implements BackupStore {
                         existing.targetWorldName(),
                         existing.targetLocationX(),
                         existing.targetLocationY(),
-                        existing.targetLocationZ()
+                        existing.targetLocationZ(),
+                        existing.killerPlayerUuid(),
+                        existing.killerPlayerName()
                 ));
             }
         }
@@ -604,7 +618,9 @@ public final class LocalBackupStore implements BackupStore {
                         existing.targetWorldName(),
                         existing.targetLocationX(),
                         existing.targetLocationY(),
-                        existing.targetLocationZ()
+                        existing.targetLocationZ(),
+                        existing.killerPlayerUuid(),
+                        existing.killerPlayerName()
                 ));
             }
         }

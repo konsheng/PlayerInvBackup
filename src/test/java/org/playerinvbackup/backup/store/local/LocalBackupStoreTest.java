@@ -2,6 +2,7 @@ package org.playerinvbackup.backup.store.local;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -146,6 +147,64 @@ class LocalBackupStoreTest {
         assertEquals(Double.valueOf(8.0), updated.targetLocationZ());
         assertEquals("route", updated.note());
         assertTrue(updated.locked());
+    }
+
+    @Test
+    void deathKillerMetadataSurvivesLoadAndCacheUpdates() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        UUID killerUuid = UUID.randomUUID();
+        BackupMeta meta = new BackupMeta(
+                "death1",
+                playerUuid,
+                1_000L,
+                TriggerType.DEATH,
+                2,
+                "sha256-death1",
+                3,
+                false,
+                "",
+                "world",
+                100.0,
+                64.0,
+                -30.0,
+                null,
+                null,
+                null,
+                null,
+                killerUuid,
+                "Konsheng"
+        );
+        store.saveBackup(new BackupRecord(meta, new byte[]{1, 2, 3}));
+
+        BackupMeta loaded = store.loadBackup(playerUuid, "death1").orElseThrow().meta();
+        assertEquals(killerUuid, loaded.killerPlayerUuid());
+        assertEquals("Konsheng", loaded.killerPlayerName());
+
+        store.listBackups(playerUuid, BackupQuery.all(), 0, 10);
+        assertTrue(store.setBackupLocked(playerUuid, "death1", true));
+        assertTrue(store.setBackupNote(playerUuid, "death1", "pvp"));
+
+        BackupMeta updated = store.listBackups(playerUuid, BackupQuery.all(), 0, 10).getFirst();
+        assertEquals(killerUuid, updated.killerPlayerUuid());
+        assertEquals("Konsheng", updated.killerPlayerName());
+        assertEquals("pvp", updated.note());
+        assertTrue(updated.locked());
+    }
+
+    @Test
+    void oldMetadataWithoutKillerStillLoads() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        store.saveBackup(backup(playerUuid, "legacy", 1_000L, false, "", new byte[]{4}));
+
+        BackupMeta loaded = store.loadBackup(playerUuid, "legacy").orElseThrow().meta();
+        assertNull(loaded.killerPlayerUuid());
+        assertNull(loaded.killerPlayerName());
     }
 
     private static BackupRecord backup(

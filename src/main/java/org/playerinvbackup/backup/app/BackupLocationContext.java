@@ -1,6 +1,8 @@
 package org.playerinvbackup.backup.app;
 
+import java.util.UUID;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 /**
  * 备份位置上下文
@@ -15,10 +17,27 @@ public record BackupLocationContext(
         String targetWorldName,
         Double targetLocationX,
         Double targetLocationY,
-        Double targetLocationZ
+        Double targetLocationZ,
+        UUID killerPlayerUuid,
+        String killerPlayerName
 ) {
     public static BackupLocationContext fromCurrentLocation(Location location) {
         return fromTransition(location, null);
+    }
+
+    public static BackupLocationContext fromDeath(Location location, Player killer) {
+        return new BackupLocationContext(
+                worldName(location),
+                coordinateX(location),
+                coordinateY(location),
+                coordinateZ(location),
+                null,
+                null,
+                null,
+                null,
+                killer == null ? null : killer.getUniqueId(),
+                killer == null ? null : killer.getName()
+        );
     }
 
     public static BackupLocationContext fromTransition(Location from, Location to) {
@@ -30,7 +49,9 @@ public record BackupLocationContext(
                 worldName(to),
                 coordinateX(to),
                 coordinateY(to),
-                coordinateZ(to)
+                coordinateZ(to),
+                null,
+                null
         );
     }
 

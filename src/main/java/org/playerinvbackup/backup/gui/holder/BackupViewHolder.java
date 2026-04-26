@@ -34,6 +34,8 @@ public final class BackupViewHolder implements InventoryHolder {
     private final Double targetLocationX;
     private final Double targetLocationY;
     private final Double targetLocationZ;
+    private final UUID killerPlayerUuid;
+    private final String killerPlayerName;
     // GUI 内部状态需要原地更新, 所以这里不使用 final
     private boolean locked;
     private String note;
@@ -60,6 +62,8 @@ public final class BackupViewHolder implements InventoryHolder {
             Double targetLocationX,
             Double targetLocationY,
             Double targetLocationZ,
+            UUID killerPlayerUuid,
+            String killerPlayerName,
             boolean locked,
             String note
     ) {
@@ -83,6 +87,8 @@ public final class BackupViewHolder implements InventoryHolder {
         this.targetLocationX = targetLocationX;
         this.targetLocationY = targetLocationY;
         this.targetLocationZ = targetLocationZ;
+        this.killerPlayerUuid = killerPlayerUuid;
+        this.killerPlayerName = killerPlayerName;
         this.locked = locked;
         this.note = note == null ? "" : note;
     }
@@ -169,6 +175,14 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public Double targetLocationZ() {
         return targetLocationZ;
+    }
+
+    public UUID killerPlayerUuid() {
+        return killerPlayerUuid;
+    }
+
+    public String killerPlayerName() {
+        return killerPlayerName;
     }
 
     public boolean locked() {

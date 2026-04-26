@@ -86,7 +86,11 @@ public final class PlayerLifecycleListener implements Listener {
         if (backupService == null) {
             return;
         }
-        backupService.requestBackup(player, TriggerType.DEATH);
+        backupService.requestBackup(
+                player,
+                TriggerType.DEATH,
+                BackupLocationContext.fromDeath(player.getLocation(), player.getKiller())
+        );
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

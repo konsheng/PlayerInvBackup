@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.gui.render;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -80,27 +81,34 @@ public final class BackupListRenderer {
             String noteText = meta.note() == null || meta.note().isBlank()
                     ? lang.raw("common.none")
                     : meta.note();
+            List<Component> lore = new ArrayList<>(lang.msgList(
+                    "gui.backup-list.entry.lore",
+                    Placeholder.unparsed("id", meta.backupId()),
+                    Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
+                    Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
+                    Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
+                    Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                            plugin,
+                            meta.locationX(),
+                            meta.locationY(),
+                            meta.locationZ(),
+                            meta.targetLocationX(),
+                            meta.targetLocationY(),
+                            meta.targetLocationZ()
+                    )),
+                    Placeholder.unparsed("locked", lockedText),
+                    Placeholder.unparsed("note", noteText)
+            ));
+            if (meta.hasPlayerKiller()) {
+                lore.add(Math.min(2, lore.size()), lang.msg(
+                        "gui.backup-list.entry.killer-line",
+                        Placeholder.unparsed("killer", meta.killerPlayerName())
+                ));
+            }
             inventory.setItem(i, itemFactory.namedItem(
                     icon,
                     lang.msg("gui.backup-list.entry.name", Placeholder.unparsed("time", time)),
-                    lang.msgList(
-                            "gui.backup-list.entry.lore",
-                            Placeholder.unparsed("id", meta.backupId()),
-                            Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
-                            Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
-                            Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
-                            Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
-                                    plugin,
-                                    meta.locationX(),
-                                    meta.locationY(),
-                                    meta.locationZ(),
-                                    meta.targetLocationX(),
-                                    meta.targetLocationY(),
-                                    meta.targetLocationZ()
-                            )),
-                            Placeholder.unparsed("locked", lockedText),
-                            Placeholder.unparsed("note", noteText)
-                    )
+                    lore
             ));
         }
 

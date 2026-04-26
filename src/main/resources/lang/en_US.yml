@@ -197,6 +197,7 @@ gui:
         - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
         - "<#90A4AE>Note: </#90A4AE><white><note></white>"
         - "<#81C784>▶ Click to open</#81C784>"
+      killer-line: "<#90A4AE>Killer: </#90A4AE><white><killer></white>"
     prev:
       name: "<#4FC3F7>◀ Previous page</#4FC3F7>"
     prev-disabled:
@@ -314,6 +315,7 @@ gui:
         - "<#90A4AE>Pinned backups appear at the top of the list</#90A4AE>"
         - "<#4FC3F7>▶ Click to toggle pin</#4FC3F7>"
         - "<#78909C>Tip: Use /pib note to set or clear note</#78909C>"
+      killer-line: "<#90A4AE>Killer: </#90A4AE><white><killer></white>"
   restore-confirm:
     title: "<gradient:#EF5350:#E53935><bold>Confirm restore</bold></gradient> <#78909C>▸</#78909C> <target>"
     ok:

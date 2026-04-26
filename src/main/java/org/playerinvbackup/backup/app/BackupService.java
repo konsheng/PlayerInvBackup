@@ -97,7 +97,9 @@ public final class BackupService {
                         safeLocationContext.targetWorldName(),
                         safeLocationContext.targetLocationX(),
                         safeLocationContext.targetLocationY(),
-                        safeLocationContext.targetLocationZ()
+                        safeLocationContext.targetLocationZ(),
+                        safeLocationContext.killerPlayerUuid(),
+                        safeLocationContext.killerPlayerName()
                 );
                 store.saveBackup(new BackupRecord(meta, snapshotBytes));
                 success = true;

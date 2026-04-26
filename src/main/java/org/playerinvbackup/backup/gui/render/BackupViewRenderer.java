@@ -1,5 +1,6 @@
 package org.playerinvbackup.backup.gui.render;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -78,30 +79,37 @@ public final class BackupViewRenderer {
         String noteText = holder.note() == null || holder.note().isBlank()
                 ? lang.raw("common.none")
                 : holder.note();
+        List<Component> lore = new ArrayList<>(lang.msgList(
+                "gui.backup-view.lock.lore",
+                Placeholder.unparsed("locked", lockedText),
+                Placeholder.unparsed("note", noteText),
+                Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
+                        plugin,
+                        holder.worldName(),
+                        holder.targetWorldName()
+                )),
+                Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                        plugin,
+                        holder.locationX(),
+                        holder.locationY(),
+                        holder.locationZ(),
+                        holder.targetLocationX(),
+                        holder.targetLocationY(),
+                        holder.targetLocationZ()
+                ))
+        ));
+        if (holder.killerPlayerName() != null && !holder.killerPlayerName().isBlank()) {
+            lore.add(Math.min(4, lore.size()), lang.msg(
+                    "gui.backup-view.lock.killer-line",
+                    Placeholder.unparsed("killer", holder.killerPlayerName())
+            ));
+        }
         inventory.setItem(
                 SLOT_VIEW_LOCK,
                 itemFactory.namedItem(
                         Material.TRIPWIRE_HOOK,
                         lang.msg("gui.backup-view.lock.name"),
-                        lang.msgList(
-                                "gui.backup-view.lock.lore",
-                                Placeholder.unparsed("locked", lockedText),
-                                Placeholder.unparsed("note", noteText),
-                                Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
-                                        plugin,
-                                        holder.worldName(),
-                                        holder.targetWorldName()
-                                )),
-                                Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
-                                        plugin,
-                                        holder.locationX(),
-                                        holder.locationY(),
-                                        holder.locationZ(),
-                                        holder.targetLocationX(),
-                                        holder.targetLocationY(),
-                                        holder.targetLocationZ()
-                                ))
-                        )
+                        lore
                 )
         );
     }

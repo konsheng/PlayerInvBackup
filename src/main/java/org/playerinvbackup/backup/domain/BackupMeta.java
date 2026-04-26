@@ -24,8 +24,52 @@ public record BackupMeta(
         String targetWorldName,
         Double targetLocationX,
         Double targetLocationY,
-        Double targetLocationZ
+        Double targetLocationZ,
+        UUID killerPlayerUuid,
+        String killerPlayerName
 ) {
+    public BackupMeta(
+            String backupId,
+            UUID playerUuid,
+            long createdAtMillis,
+            TriggerType trigger,
+            int schemaVersion,
+            String sha256Hex,
+            int snapshotSizeBytes,
+            boolean locked,
+            String note,
+            String worldName,
+            Double locationX,
+            Double locationY,
+            Double locationZ,
+            String targetWorldName,
+            Double targetLocationX,
+            Double targetLocationY,
+            Double targetLocationZ
+    ) {
+        this(
+                backupId,
+                playerUuid,
+                createdAtMillis,
+                trigger,
+                schemaVersion,
+                sha256Hex,
+                snapshotSizeBytes,
+                locked,
+                note,
+                worldName,
+                locationX,
+                locationY,
+                locationZ,
+                targetWorldName,
+                targetLocationX,
+                targetLocationY,
+                targetLocationZ,
+                null,
+                null
+        );
+    }
+
     public BackupMeta(
             String backupId,
             UUID playerUuid,
@@ -55,6 +99,8 @@ public record BackupMeta(
                 locationX,
                 locationY,
                 locationZ,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -90,6 +136,8 @@ public record BackupMeta(
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -108,5 +156,11 @@ public record BackupMeta(
                 && targetLocationX != null
                 && targetLocationY != null
                 && targetLocationZ != null;
+    }
+
+    public boolean hasPlayerKiller() {
+        return killerPlayerUuid != null
+                && killerPlayerName != null
+                && !killerPlayerName.isBlank();
     }
 }
