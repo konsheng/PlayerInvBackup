@@ -5,7 +5,7 @@ import java.util.Locale;
 /**
  * GUI 渲染模式
  *
- * <p>用于解析 {@code config.yml} 中的 {@code gui.mode} 配置, 决定插件应使用:
+ * <p>用于解析 {@code config.yml} 中的 {@code gui.mode} 配置, 决定插件应使用
  * 1) 自动选择模式
  * 2) 原生 Bukkit Inventory GUI
  * 3) 基于 ProtocolLib 的 Packet GUI
@@ -26,9 +26,9 @@ public enum GuiMode {
     }
 
     /**
-     * 从配置字符串解析 GUI 模式.
+     * 从配置字符串解析 GUI 模式
      *
-     * <p>为了兼容旧写法和更直观的别名, 这里同时接受:
+     * <p>为了兼容旧写法和更直观的别名, 这里同时接受
      * {@code native}/{@code inventory} -> {@link #BUKKIT}
      * {@code protocollib} -> {@link #PACKET}
      */

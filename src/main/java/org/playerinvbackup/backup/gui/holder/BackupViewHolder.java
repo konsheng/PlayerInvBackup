@@ -10,7 +10,7 @@ import org.bukkit.inventory.InventoryHolder;
 /**
  * 备份预览界面的 holder
  *
- * <p>保存当前查看的备份编号, 视图类型(背包/末影箱), 领取标记, 以及置顶/备注状态
+ * <p>保存当前查看的备份编号, 视图类型 (背包/末影箱), 领取标记, 以及置顶/备注状态
  */
 public final class BackupViewHolder implements InventoryHolder {
     private final UUID targetUuid;

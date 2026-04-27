@@ -5,7 +5,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 /**
  * PostgreSQL 连接配置
  *
- * <p>支持两种方式:
+ * <p>支持两种方式
  * 1) 直接填写 storage.postgresql.url
  * 2) 填写 host/port/database + parameters, 自动拼接 JDBC URL
  */

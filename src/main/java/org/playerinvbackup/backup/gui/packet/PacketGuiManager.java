@@ -43,12 +43,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 /**
- * 基于 ProtocolLib 的“纯发包 GUI”
+ * 基于 ProtocolLib 的 “纯发包 GUI”
  *
- * <p>特点:
+ * <p>特点
  * 1) 不使用 Bukkit 的 InventoryClickEvent 体系
  * 2) 菜单打开/刷新/点击全部走数据包
- * 3) 由于服务端没有真实容器, 所有点击包都会被拦截并取消, 再通过重发内容来“回滚”客户端的拖拽/拾取行为
+ * 3) 由于服务端没有真实容器, 所有点击包都会被拦截并取消, 再通过重发内容来 “回滚” 客户端的拖拽/拾取行为
  */
 public final class PacketGuiManager {
     private enum InventoryClickType {
@@ -436,9 +436,9 @@ public final class PacketGuiManager {
     }
 
     /**
-     * 直接按 ServerboundContainerClickPacket 的正式字段顺序读取 slotNum.
+     * 直接按 ServerboundContainerClickPacket 的正式字段顺序读取 slotNum
      *
-     * <p>这里只接受顶部菜单区域的槽位, 其他点击统一视为无效按钮点击.
+     * <p>这里只接受顶部菜单区域的槽位, 其他点击统一视为无效按钮点击
      */
     private int extractClickedSlot(PacketContainer packet, int topSize) {
         if (packet == null) {
@@ -607,7 +607,7 @@ public final class PacketGuiManager {
                 packet.getItemArrayModifier().write(0, items.toArray(ItemStack[]::new));
             }
 
-            // carried item (鼠标上的物品), 强制清空, 防止出现“拿起物品”的假象
+            // carried item (鼠标上的物品), 强制清空, 防止出现 “拿起物品” 的假象
             if (packet.getItemModifier().size() > 0) {
                 packet.getItemModifier().write(0, new ItemStack(Material.AIR));
             }
@@ -642,7 +642,8 @@ public final class PacketGuiManager {
             return out;
         }
 
-        // Chest 容器的排列: 主背包(27, 对应 storage[9..35]) + 快捷栏(9, 对应 storage[0..8])
+        // Chest 容器的排列
+        // 主背包 (27, 对应 storage[9..35]) + 快捷栏 (9, 对应 storage[0..8])
         for (int i = 9; i < 36; i++) {
             out.add(safeItem(storage[i]));
         }
@@ -653,7 +654,7 @@ public final class PacketGuiManager {
     }
 
     /**
-     * WINDOW_ITEMS(container_set_content) 在 1.21+ 的编码层不接受 null
+     * WINDOW_ITEMS (container_set_content) 在 1.21+ 的编码层不接受 null
      * 空槽位必须使用 "empty stack" 表示, 否则会在编码时 NPE 并踢人
      */
     private static ItemStack safeItem(ItemStack item) {
@@ -728,7 +729,7 @@ public final class PacketGuiManager {
         } catch (Exception ignored) {
         }
 
-        // 兜底 1: 写 Registrable(MenuType)
+        // 兜底 1 -> 写 Registrable(MenuType)
         try {
             StructureModifier<WrappedRegistrable> modifier = packet.getRegistrableModifier(menuTypeClass);
             if (modifier != null && modifier.size() > 0) {
@@ -738,7 +739,7 @@ public final class PacketGuiManager {
         } catch (Exception ignored) {
         }
 
-        // 兜底 2: 写 MinecraftKey
+        // 兜底 2 -> 写 MinecraftKey
         try {
             if (packet.getMinecraftKeys().size() > 0) {
                 packet.getMinecraftKeys().write(0, new MinecraftKey(menuKey));
@@ -747,7 +748,7 @@ public final class PacketGuiManager {
         } catch (Exception ignored) {
         }
 
-        // 兜底 3: 写 String (极少数旧协议)
+        // 兜底 3 -> 写 String (极少数旧协议)
         try {
             if (packet.getStrings().size() > 0) {
                 packet.getStrings().write(0, menuKey);
@@ -762,10 +763,11 @@ public final class PacketGuiManager {
     /**
      * 根据注册键解析 MenuType 的 NMS 实例
      *
-     * <p>优先通过 MenuType 的静态字段(例如 GENERIC_9X3)解析,
+     * <p>优先通过 MenuType 的静态字段 (例如 GENERIC_9X3) 解析
      * 如果失败则扫描 BuiltInRegistries, 找到包含该 key 的注册表并取值
      *
-     * <p>说明: 这里不能用自造对象或错误的 registrable 包装, 否则会触发 open_screen 的编码异常并踢人
+     * <p>说明
+     * 这里不能用自造对象或错误的 registrable 包装, 否则会触发 open_screen 的编码异常并踢人
      */
     private Object resolveMenuTypeHandle(Class<?> menuTypeClass, String menuKey) {
         if (menuTypeClass == null || menuKey == null || menuKey.isBlank()) {
@@ -779,7 +781,7 @@ public final class PacketGuiManager {
 
         Object handle = null;
         try {
-            // 尝试: MenuType.GENERIC_9X3 这种静态字段
+            // 尝试 MenuType.GENERIC_9X3 这种静态字段
             String path = menuKey.contains(":") ? menuKey.substring(menuKey.indexOf(':') + 1) : menuKey;
             String constantName = path.toUpperCase(Locale.ROOT).replace('-', '_');
             try {
@@ -887,7 +889,7 @@ public final class PacketGuiManager {
         Object resourceKey = createRegistryEntryKey(registry, nmsKey);
         List<Object> args = resourceKey == null ? List.of(nmsKey) : List.of(nmsKey, resourceKey);
 
-        // 常见注册表读取方法: get/getOptional/getValue/getHolder
+        // 常见注册表读取方法 get/getOptional/getValue/getHolder
         for (String methodName : List.of("get", "getOptional", "getValue", "getHolder", "getHolderOrThrow")) {
             for (Object arg : args) {
                 Object out = tryInvokeSingleArg(registry, methodName, arg);
@@ -899,7 +901,7 @@ public final class PacketGuiManager {
             }
         }
 
-        // 兜底: 扫描所有单参数方法, 尝试直接用 key 获取目标类型(避免因实现差异导致方法名不一致)
+        // 兜底 -> 扫描所有单参数方法, 尝试直接用 key 获取目标类型 (避免因实现差异导致方法名不一致)
         for (Method m : registry.getClass().getMethods()) {
             if (m.getParameterCount() != 1 || m.getReturnType() == void.class) {
                 continue;
@@ -947,7 +949,7 @@ public final class PacketGuiManager {
             }
         } catch (Exception ignored) {
         }
-        // 再兜底: 扫描所有无参且返回 ResourceKey 的方法
+        // 再兜底 -> 扫描所有无参且返回 ResourceKey 的方法
         if (registryKey == null) {
             for (Method m : registry.getClass().getMethods()) {
                 if (m.getParameterCount() != 0) {
@@ -1007,7 +1009,7 @@ public final class PacketGuiManager {
             return m.invoke(target, arg);
         } catch (Exception ignored) {
         }
-        // 参数类型不完全一致时(父类/接口), 走 methods 扫描
+        // 参数类型不完全一致时 (父类/接口), 走 methods 扫描
         for (Method m : target.getClass().getMethods()) {
             if (!m.getName().equals(methodName) || m.getParameterCount() != 1) {
                 continue;
@@ -1031,7 +1033,7 @@ public final class PacketGuiManager {
         } catch (Exception ignored) {
         }
 
-        // 兜底: 直接反射构造 net.minecraft.resources.ResourceLocation
+        // 兜底 -> 直接反射构造 net.minecraft.resources.ResourceLocation
         Class<?> keyClass;
         try {
             keyClass = MinecraftReflection.getMinecraftKeyClass();

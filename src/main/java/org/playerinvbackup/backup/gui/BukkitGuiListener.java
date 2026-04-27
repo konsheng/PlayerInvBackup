@@ -17,9 +17,9 @@ import org.bukkit.inventory.InventoryView;
 /**
  * Bukkit 原生 GUI 降级监听器
  *
- * <p>当未启用 ProtocolLib 或手动选择原生 GUI 时, GuiService 会使用 Bukkit Inventory GUI 打开界面
- *
- * <p>该监听器负责拦截点击与拖拽, 阻止玩家移动 GUI 内的物品, 并把按钮点击转发给 GuiService 的处理逻辑
+ * <p>说明
+ * 当未启用 ProtocolLib 或手动选择原生 GUI 时, GuiService 会使用 Bukkit Inventory GUI 打开界面
+ * 该监听器负责拦截点击与拖拽, 阻止玩家移动 GUI 内的物品, 并把按钮点击转发给 GuiService 的处理逻辑
  */
 public final class BukkitGuiListener implements Listener {
     private final GuiService guiService;

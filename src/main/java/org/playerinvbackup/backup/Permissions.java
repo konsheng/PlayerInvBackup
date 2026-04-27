@@ -7,7 +7,7 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 /**
  * 权限节点常量与校验工具
  *
- * <p>约定:
+ * <p>约定
  * 1) 控制台默认拥有全部权限
  * 2) 拥有 {@link #ADMIN} 的玩家视为拥有全部子权限
  */

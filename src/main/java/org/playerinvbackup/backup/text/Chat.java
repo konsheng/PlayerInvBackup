@@ -46,7 +46,7 @@ public final class Chat {
     }
 
     private static void send(CommandSender sender, Component component) {
-        // 前缀由语言文件自行控制(使用 <prefix> 变量), 这里不再强制拼接
+        // 前缀由语言文件自行控制 (使用 <prefix> 变量), 这里不再强制拼接
         sender.sendMessage(component);
     }
 

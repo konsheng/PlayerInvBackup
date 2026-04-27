@@ -7,7 +7,7 @@ import org.bukkit.inventory.PlayerInventory;
 /**
  * 背包工具方法
  *
- * <p>用于将物品尽可能合并并插入主背包(36 格), 常用于待投递物品发放
+ * <p>用于将物品尽可能合并并插入主背包 (36格), 常用于待投递物品发放
  */
 public final class InventoryUtil {
     private InventoryUtil() {

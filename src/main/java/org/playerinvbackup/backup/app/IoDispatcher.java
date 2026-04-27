@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * I/O 写入调度器
  *
- * <p>特点:
+ * <p>特点
  * 1) 单线程顺序写入, 降低存储并发复杂度
  * 2) 队列满时直接拒绝, 避免无限堆积导致内存风险
  * 3) 通过 {@link WriteRateLimiter} 对写入速率做软限制

@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 /**
  * 备份编号生成器
  *
- * <p>格式: {@code <epochMillis>-<random>}，方便按时间排序, 同时避免同一毫秒冲突
+ * <p>格式 {@code <epochMillis>-<random>}, 方便按时间排序, 同时避免同一毫秒冲突
  */
 public final class BackupIdGenerator {
     private static final SecureRandom RANDOM = new SecureRandom();

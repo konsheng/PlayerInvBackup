@@ -26,7 +26,7 @@ import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.util.AtomicFiles;
 
 /**
- * Local file store implementation.
+ * 本地文件存储实现
  */
 public final class LocalBackupStore implements BackupStore {
     private static final Comparator<BackupMeta> BACKUP_ORDER =

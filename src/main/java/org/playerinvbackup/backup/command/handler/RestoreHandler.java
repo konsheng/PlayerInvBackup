@@ -13,6 +13,8 @@ import org.playerinvbackup.backup.text.Chat;
 
 /**
  * 恢复命令处理器
+ *
+ * <p>负责 restore
  */
 public final class RestoreHandler implements SubcommandHandler {
     private final RestoreService restoreService;

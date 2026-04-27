@@ -11,7 +11,7 @@ import org.bukkit.inventory.InventoryHolder;
 /**
  * 备份列表界面的 holder
  *
- * <p>用于在 GUI 刷新与点击处理时保存上下文(目标玩家, 页码, 筛选条件, 以及异步刷新序列号)
+ * <p>用于在 GUI 刷新与点击处理时保存上下文 (目标玩家, 页码, 筛选条件, 以及异步刷新序列号)
  */
 public final class BackupListHolder implements InventoryHolder {
     public enum Screen {

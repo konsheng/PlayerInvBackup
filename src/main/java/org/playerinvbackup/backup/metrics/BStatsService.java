@@ -8,7 +8,7 @@ import org.bstats.bukkit.Metrics;
 /**
  * bStats 统计服务
  *
- * <p>bStats 自带全局开关(plugins/bStats/config.yml), 插件侧只负责初始化
+ * <p>bStats 自带全局开关 (plugins/bStats/config.yml), 插件侧只负责初始化
  */
 public final class BStatsService {
     private static final int PLUGIN_ID = 30660;

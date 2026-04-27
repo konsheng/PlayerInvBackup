@@ -6,7 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 /**
  * H2 连接配置
  *
- * <p>支持两种方式:
+ * <p>支持两种方式
  * 1) 直接填写 storage.h2.url
  * 2) 填写 file + parameters, 自动拼接成 JDBC URL (文件模式)
  */

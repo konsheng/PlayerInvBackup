@@ -28,8 +28,8 @@ import org.bukkit.entity.Player;
 /**
  * 管理员操作审计
  *
- * <p>将关键操作写入 {@code plugins/PlayerInvBackup/logs/audit-YYYY-MM-DD.log}, 便于追溯:
- * 打开 GUI, 领取物品, 恢复备份, 置顶/备注等
+ * <p>将关键操作写入 {@code plugins/PlayerInvBackup/logs/audit-YYYY-MM-DD.log}, 便于追溯
+ * 打开 GUI, 领取物品, 恢复备份, 置顶, 备注等
  */
 public final class AuditService {
     private static final DateTimeFormatter FILE_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -223,7 +223,7 @@ public final class AuditService {
             return;
         }
 
-        // 没有开启保留策略时也要做“按天压缩”, 避免旧文件一直是 .log
+        // 没有开启保留策略时也要做 “按天压缩”, 避免旧文件一直是 .log
         try {
             Files.createDirectories(logsDir);
         } catch (Exception e) {

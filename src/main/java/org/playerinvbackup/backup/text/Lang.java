@@ -22,10 +22,10 @@ import org.bukkit.plugin.Plugin;
 /**
  * 语言文件加载与 MiniMessage 解析器
  *
- * <p>负责:
+ * <p>负责
  * 1) 从 yml 读取文本与列表文本
  * 2) 使用 MiniMessage 解析颜色与占位符
- * 3) 默认关闭斜体(避免 GUI/物品文本默认斜体), 但允许语言文件显式开启/关闭
+ * 3) 默认关闭斜体 (避免 GUI/物品文本默认斜体), 但允许语言文件显式开启/关闭
  * 4) 对缺失键进行一次性告警, 避免刷屏
  */
 public final class Lang {
@@ -51,7 +51,8 @@ public final class Lang {
         this.defaults = defaults;
         this.miniMessage = MiniMessage.builder().strict(false).build();
 
-        // prefix 是可选项: 不配置(键不存在)则视为不需要前缀, <prefix> 将解析为空
+        // prefix 是可选项
+        // 不配置 (键不存在) 则视为不需要前缀, <prefix> 将解析为空
         // 需要前缀时, 由语言文件自行定义 prefix 的内容与样式
         String prefixRaw = config.getString("prefix", "");
         this.prefix = deserializeRaw(prefixRaw);
@@ -67,7 +68,7 @@ public final class Lang {
     /**
      * 尝试从插件 Jar 内加载默认语言文件
      *
-     * <p>优先加载与外部语言文件同名的资源(例如 lang/zh_CN.yml),
+     * <p>优先加载与外部语言文件同名的资源 (例如 lang/zh_CN.yml)
      * 如果不存在则回退到 lang/zh_CN.yml
      */
     private static YamlConfiguration loadDefaults(Plugin plugin, Path file) {
@@ -119,9 +120,9 @@ public final class Lang {
     }
 
     /**
-     * 获取语言键对应的消息, 但将 <prefix> 视为空.
+     * 获取语言键对应的消息, 但将 <prefix> 视为空
      *
-     * <p>用于 GUI 标题等场景, 避免在标题中显示插件前缀。
+     * <p>用于 GUI 标题等场景, 避免在标题中显示插件前缀
      */
     public Component msgNoPrefix(String path, TagResolver... placeholders) {
         String raw = config.getString(path, null);
@@ -144,7 +145,7 @@ public final class Lang {
     }
 
     /**
-     * 获取语言键对应的纯文本(用于控制台输出等场景)
+     * 获取语言键对应的纯文本 (用于控制台输出等场景)
      */
     public String plain(String path, TagResolver... placeholders) {
         return PLAIN_TEXT.serialize(msg(path, placeholders));
@@ -173,7 +174,7 @@ public final class Lang {
         List<String> raw = resolved.list();
         if (raw.isEmpty()) {
             if (resolved.keyIsSet()) {
-                // 允许管理员把列表设置为空, 用于“关闭”某些多行提示
+                // 允许管理员把列表设置为空, 用于 “关闭” 某些多行提示
                 return List.of();
             }
             warnMissing("console.lang.missing-list-key", path);
@@ -224,7 +225,7 @@ public final class Lang {
     /**
      * 尝试把缺失键写回语言文件, 让管理员后续可直接编辑
      *
-     * <p>这是一个 best-effort 行为: 写入失败不会影响插件继续运行
+     * <p>这是一个 best-effort 行为 -> 写入失败不会影响插件继续运行
      */
     private void tryAutoFill(String path, Object value) {
         if (path == null || path.isBlank() || value == null) {
@@ -291,7 +292,7 @@ public final class Lang {
     }
 
     /**
-     * 从内置默认语言里读取消息, 避免“语言缺失”的场景下递归依赖外部语言文件
+     * 从内置默认语言里读取消息, 避免 “语言缺失” 的场景下递归依赖外部语言文件
      */
     private Component internalMsg(String path, TagResolver... placeholders) {
         if (defaults == null || path == null || path.isBlank()) {
@@ -378,8 +379,8 @@ public final class Lang {
             return Component.empty();
         }
 
-        // Minecraft 的物品显示名/lore 在未指定时通常默认斜体
-        // 这里把“默认值”设为非斜体, 但不覆盖语言文件显式设置的 <italic:true>/<italic:false>
+        // Minecraft 的物品显示名/lore在未指定时通常默认斜体
+        // 这里把 “默认值” 设为非斜体, 但不覆盖语言文件显式设置的 <italic:true>/<italic:false>
         if (component.decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
             component = component.decoration(TextDecoration.ITALIC, false);
         }

@@ -15,12 +15,12 @@ import org.bukkit.plugin.Plugin;
 /**
  * GUI 备份列表的时间筛选项
  *
- * <p>用于把 {@code config.yml} 中的时间筛选字符串解析为不可变对象, 例如:
- * {@code all}、{@code 30m}、{@code 1h}、{@code 7d}。
+ * <p>用于把 {@code config.yml} 中的时间筛选字符串解析为不可变对象
+ * 例如 {@code all}, {@code 30m}, {@code 1h}, {@code 7d}
  *
- * <p>其中:
+ * <p>其中
  * 1) {@code all=true} 表示不过滤时间范围
- * 2) 其余项会同时保留原始数值、时间单位与对应的 {@link Duration}
+ * 2) 其余项会同时保留原始数值, 时间单位与对应的 {@link Duration}
  * 3) GUI 点击切换时直接基于该对象计算 {@code createdAfterMillis}
  */
 public record GuiTimeFilterOption(
@@ -56,9 +56,9 @@ public record GuiTimeFilterOption(
     }
 
     /**
-     * 内置默认时间筛选顺序.
+     * 内置默认时间筛选顺序
      *
-     * <p>当配置缺失、为空或全部无效时, GUI 会回退到这组默认项。
+     * <p>当配置缺失, 为空或全部无效时, GUI 会回退到这组默认项
      */
     public static List<GuiTimeFilterOption> defaults() {
         return DEFAULTS;
@@ -84,9 +84,9 @@ public record GuiTimeFilterOption(
     }
 
     /**
-     * 从配置中的时间筛选字符串列表构建 GUI 可用的筛选项集合.
+     * 从配置中的时间筛选字符串列表构建 GUI 可用的筛选项集合
      *
-     * <p>规则:
+     * <p>规则
      * 1) 总是保证 {@code all} 位于首位
      * 2) 无效项会被忽略并输出警告
      * 3) 重复项只保留第一次出现的值
@@ -136,10 +136,10 @@ public record GuiTimeFilterOption(
     }
 
     /**
-     * 解析单个时间筛选令牌.
+     * 解析单个时间筛选令牌
      *
-     * <p>支持格式:
-     * {@code all} 或 {@code 数字 + s/m/h/d}。
+     * <p>支持格式
+     * {@code all} 或 {@code 数字 + s/m/h/d}
      */
     private static GuiTimeFilterOption parse(String raw) {
         if (raw == null) {
@@ -212,9 +212,9 @@ public record GuiTimeFilterOption(
     }
 
     /**
-     * 时间筛选支持的单位.
+     * 时间筛选支持的单位
      *
-     * <p>同时维护:
+     * <p>同时维护
      * 1) 配置中使用的后缀
      * 2) 语言文件中显示文本对应的键
      * 3) 无语言环境时的英文回退文本

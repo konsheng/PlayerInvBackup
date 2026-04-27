@@ -12,8 +12,8 @@ import org.playerinvbackup.backup.domain.UndeliveredClaim;
 /**
  * 备份存储接口
  *
- * <p>用于屏蔽不同存储后端实现差异(local/sqlite), 并提供:
- * 备份读写, 列表查询, 领取记录与待投递队列等操作
+ * <p>用于屏蔽不同存储后端实现差异 (local/sqlite)
+ * 并提供备份读写, 列表查询, 领取记录与待投递队列等操作
  */
 public interface BackupStore extends AutoCloseable {
     void init() throws Exception;
