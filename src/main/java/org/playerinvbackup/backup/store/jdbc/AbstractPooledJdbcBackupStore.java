@@ -15,6 +15,7 @@ public abstract class AbstractPooledJdbcBackupStore extends AbstractJdbcBackupSt
     private final String username;
     private final String password;
     private final String poolName;
+    private final JdbcPoolSettings poolSettings;
     private HikariDataSource dataSource;
 
     protected AbstractPooledJdbcBackupStore(
@@ -23,13 +24,15 @@ public abstract class AbstractPooledJdbcBackupStore extends AbstractJdbcBackupSt
             String jdbcUrl,
             String username,
             String password,
-            String poolName
+            String poolName,
+            JdbcPoolSettings poolSettings
     ) {
         super(dialect, tables);
         this.jdbcUrl = jdbcUrl;
         this.username = username;
         this.password = password;
         this.poolName = poolName;
+        this.poolSettings = poolSettings == null ? JdbcPoolSettings.defaults() : poolSettings;
     }
 
     @Override
@@ -50,12 +53,15 @@ public abstract class AbstractPooledJdbcBackupStore extends AbstractJdbcBackupSt
         if (hasText(password)) {
             config.setPassword(password);
         }
-        config.setMaximumPoolSize(8);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(5_000L);
-        config.setValidationTimeout(3_000L);
-        config.setIdleTimeout(60_000L);
-        config.setMaxLifetime(30 * 60_000L);
+        config.setMaximumPoolSize(poolSettings.maximumPoolSize());
+        config.setMinimumIdle(poolSettings.minimumIdle());
+        config.setConnectionTimeout(poolSettings.connectionTimeoutMs());
+        config.setValidationTimeout(poolSettings.validationTimeoutMs());
+        config.setIdleTimeout(poolSettings.idleTimeoutMs());
+        config.setMaxLifetime(poolSettings.maxLifetimeMs());
+        if (poolSettings.leakDetectionThresholdMs() > 0L) {
+            config.setLeakDetectionThreshold(poolSettings.leakDetectionThresholdMs());
+        }
         config.setAutoCommit(true);
         this.dataSource = new HikariDataSource(config);
     }

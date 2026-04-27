@@ -401,6 +401,12 @@ console:
     gui-mode-invalid: "gui.mode 配置无效, 已使用自动模式: <value>"
     backup-time-format-invalid: "display.backup-time-format 配置无效: <value>, 已使用默认格式 yyyy-MM-dd HH:mm:ss"
     gui-time-filter-invalid: "GUI 时间筛选配置无效, 已忽略: path=<path>, value=<value>"
+    jdbc-pool:
+      min-corrected: "<path> 不能小于 <limit>, 已自动修正为 <fixed>"
+      max-corrected: "<path> 不能大于 <limit>, 已自动修正为 <fixed>"
+      exceeds-other-corrected: "<path> 不能大于 <other>, 已自动修正为 <fixed>"
+      greater-than-other-corrected: "<path> 必须大于 <other>, 已自动修正为 <fixed>"
+      less-than-other-corrected: "<path> 必须小于 <other>, 已自动修正为 <fixed>"
     defaults-resource-missing: "配置默认资源不存在: <resource>"
     autofill-added: "已自动补全配置键: file=<file>, added=<added>"
     autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"

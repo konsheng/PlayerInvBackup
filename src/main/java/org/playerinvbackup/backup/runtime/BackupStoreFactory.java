@@ -40,13 +40,15 @@ public final class BackupStoreFactory {
                     config.mysql().jdbcUrl(),
                     config.mysql().username(),
                     config.mysql().password(),
-                    new SqlTableNames(config.mysql().tablePrefix())
+                    new SqlTableNames(config.mysql().tablePrefix()),
+                    config.mysql().poolSettings()
             );
             case POSTGRESQL -> new PostgresqlBackupStore(
                     config.postgresql().jdbcUrl(),
                     config.postgresql().username(),
                     config.postgresql().password(),
-                    new SqlTableNames(config.postgresql().tablePrefix())
+                    new SqlTableNames(config.postgresql().tablePrefix()),
+                    config.postgresql().poolSettings()
             );
             case H2 -> {
                 Path fileBase = dataFolder.resolve(config.h2().file());

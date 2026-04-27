@@ -400,6 +400,12 @@ console:
     gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
     backup-time-format-invalid: "Invalid display.backup-time-format: <value>, using default yyyy-MM-dd HH:mm:ss"
     gui-time-filter-invalid: "Invalid GUI time filter config ignored: path=<path>, value=<value>"
+    jdbc-pool:
+      min-corrected: "<path> must not be less than <limit>, corrected to <fixed>."
+      max-corrected: "<path> must not be greater than <limit>, corrected to <fixed>."
+      exceeds-other-corrected: "<path> must not be greater than <other>, corrected to <fixed>."
+      greater-than-other-corrected: "<path> must be greater than <other>, corrected to <fixed>."
+      less-than-other-corrected: "<path> must be less than <other>, corrected to <fixed>."
     defaults-resource-missing: "Default config resource not found: <resource>"
     autofill-added: "Auto filled config keys: file=<file>, added=<added>"
     autofill-failed: "Auto fill config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"

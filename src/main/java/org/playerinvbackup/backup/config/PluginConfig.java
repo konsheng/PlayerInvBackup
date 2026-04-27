@@ -128,8 +128,8 @@ public record PluginConfig(
         } else {
             sqliteTablePrefix = sqliteTablePrefix.trim();
         }
-        MysqlConfig mysql = MysqlConfig.from(config);
-        PostgresqlConfig postgresql = PostgresqlConfig.from(config);
+        MysqlConfig mysql = MysqlConfig.from(config, plugin.getLogger(), lang);
+        PostgresqlConfig postgresql = PostgresqlConfig.from(config, plugin.getLogger(), lang);
         H2Config h2 = H2Config.from(config);
 
         var queueLimit = Math.max(1, config.getInt("performance.queue-limit", 500));

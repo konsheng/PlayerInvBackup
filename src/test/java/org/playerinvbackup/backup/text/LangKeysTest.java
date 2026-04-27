@@ -17,13 +17,16 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * 语言键完整性测试
+ * 该测试文件用于验证语言键配置的完整性
  *
- * <p>用于扫描源码中通过 {@code Chat}/{@code Lang} 调用到的语言键, 并校验默认
- * {@code zh_CN.yml} 是否全部提供了对应条目, 避免运行时出现缺失翻译。
+ * <p>扫描源码中通过 {@code Chat} 和 {@code Lang} 使用到的语言键
+ * 校验默认中文语言文件 {@code zh_CN.yml} 是否全部提供对应条目
+ * 避免运行时出现缺失翻译
  */
 final class LangKeysTest {
     @Test
+    // 验证源码里所有实际使用到的语言键
+    // 都能够在默认中文语言文件中找到对应配置
     void allUsedKeysExistInDefaultLangFile() throws IOException {
         Path javaRoot = Paths.get("src/main/java");
         Path langFile = Paths.get("src/main/resources/lang/zh_CN.yml");
@@ -41,7 +44,7 @@ final class LangKeysTest {
 
         assertTrue(
                 missing.isEmpty(),
-                "zh_CN.yml 缺少以下键:\n" + String.join("\n", missing)
+                "zh_CN.yml 缺少以下键\n" + String.join("\n", missing)
         );
     }
 

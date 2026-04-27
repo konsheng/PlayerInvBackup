@@ -17,11 +17,18 @@ import org.playerinvbackup.backup.domain.TriggerType;
 import org.playerinvbackup.backup.domain.UndeliveredClaim;
 import org.playerinvbackup.backup.store.BackupQuery;
 
+/**
+ * 该测试文件用于验证本地文件存储后端的核心读写行为
+ * 覆盖缓存刷新 查询筛选 领取投递和元数据兼容场景
+ * 确保状态变化后返回的数据仍然一致 完整 且可继续读取
+ */
 class LocalBackupStoreTest {
     @TempDir
     Path tempDir;
 
     @Test
+    // 验证列表缓存经过锁定更新 备注修改和新增备份刷新后
+    // 备份排序 单条读取结果和快照内容仍然保持一致
     void listBackupsAndLoadBackupStayConsistentAfterCacheUpdates() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -55,6 +62,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证清理旧备份时会复用缓存元数据
+    // 同时保留仍然存在未投递领取记录的备份
     void purgeBackupsUsesCachedMetasAndKeepsBackupsWithUndeliveredClaims() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -80,6 +89,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证待投递列表会随着槽位领取和投递完成状态变化
+    // 并且不会影响已保存的领取记录查询结果
     void listUndeliveredTracksClaimAndDeliveryUpdates() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -102,6 +113,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证世界切换目标世界和目标坐标元数据在写入 读取和缓存刷新后
+    // 仍然能够完整保留且不会被锁定和备注更新覆盖
     void worldChangeMetadataSurvivesLoadAndCacheUpdates() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -150,6 +163,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证按触发类型和起始时间过滤统计备份数量时
+    // 返回的计数结果与实际保存的数据一致
     void countBackupsRespectsQueryFilters() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -193,6 +208,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证死亡触发备份中的击杀者唯一标识和名称元数据
+    // 在写入 读取和缓存刷新后都能够保持完整
     void deathKillerMetadataSurvivesLoadAndCacheUpdates() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -238,6 +255,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
+    // 验证旧版本未包含击杀者字段的备份元数据
+    // 在当前版本中仍然可以正常读取并保持空值兼容
     void oldMetadataWithoutKillerStillLoads() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();

@@ -1,6 +1,9 @@
 package org.playerinvbackup.backup.config;
 
+import java.util.logging.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.playerinvbackup.backup.store.jdbc.JdbcPoolSettings;
+import org.playerinvbackup.backup.text.Lang;
 
 /**
  * PostgreSQL 连接配置
@@ -17,9 +20,10 @@ public record PostgresqlConfig(
         String username,
         String password,
         String parameters,
-        String tablePrefix
+        String tablePrefix,
+        JdbcPoolSettings poolSettings
 ) {
-    public static PostgresqlConfig from(FileConfiguration config) {
+    public static PostgresqlConfig from(FileConfiguration config, Logger logger, Lang lang) {
         String url = normalizeBlankToNull(config.getString("storage.postgresql.url", null));
         String host = normalizeBlankToDefault(config.getString("storage.postgresql.host", "127.0.0.1"), "127.0.0.1");
         int port = Math.max(1, config.getInt("storage.postgresql.port", 5432));
@@ -36,7 +40,18 @@ public record PostgresqlConfig(
         } else {
             tablePrefix = tablePrefix.trim();
         }
-        return new PostgresqlConfig(url, host, port, database, username, password == null ? "" : password, parameters, tablePrefix);
+        JdbcPoolSettings poolSettings = JdbcPoolSettings.fromConfig(config, "storage.postgresql.pool", logger, lang);
+        return new PostgresqlConfig(
+                url,
+                host,
+                port,
+                database,
+                username,
+                password == null ? "" : password,
+                parameters,
+                tablePrefix,
+                poolSettings
+        );
     }
 
     /**
