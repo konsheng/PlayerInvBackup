@@ -172,9 +172,9 @@ performance:
 # GUI related settings
 gui:
   # GUI mode
-  # auto, automatically detect ProtocolLib
-  # bukkit, use Bukkit native GUI
-  # packet, force ProtocolLib Packet GUI
+  # auto -> automatically detect ProtocolLib
+  # bukkit -> use Bukkit native GUI
+  # packet -> force ProtocolLib Packet GUI
   mode: "auto"
 
   # Delay before showing the loading indicator in GUI, in real seconds
@@ -237,8 +237,8 @@ sounds:
       pitch: 1.0
 
     # Sound name special values
-    # INHERIT, inherits sounds.gui.click
-    # NONE, disables this sound
+    # INHERIT -> inherits sounds.gui.click
+    # NONE -> disables this sound
     # Any other value, use a Bukkit Sound enum name
     # Button sounds for the backup list screen
     backup-list:

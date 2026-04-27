@@ -172,9 +172,9 @@ performance:
 # GUI 相关配置
 gui:
   # GUI 模式
-  # auto, 自动检测 ProtocolLib
-  # bukkit, 使用 Bukkit 原生 GUI
-  # packet, 强制使用 ProtocolLib Packet GUI
+  # auto -> 自动检测 ProtocolLib
+  # bukkit -> 使用 Bukkit 原生 GUI
+  # packet -> 强制使用 ProtocolLib Packet GUI
   mode: "auto"
 
   # GUI 中显示 loading 提示前的延迟时间, 单位为真实秒
@@ -237,9 +237,9 @@ sounds:
       pitch: 1.0
 
     # 音效名称支持以下特殊值
-    # INHERIT, 继承 sounds.gui.click
-    # NONE, 禁用该音效
-    # 其他值, 填写 Bukkit Sound 枚举名
+    # INHERIT -> 继承 sounds.gui.click
+    # NONE -> 禁用该音效
+    # 其他值 -> 填写 Bukkit Sound 枚举名
     # 备份列表界面的按钮音效
     backup-list:
       # 打开某份备份详情

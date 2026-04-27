@@ -147,7 +147,7 @@ warn:
 list:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup List</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(Page <page>)</#90A4AE>"
   empty: "<prefix><#90A4AE>No backups</#90A4AE>"
-  line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>ID: </#90A4AE><white><id></white> <#90A4AE>Trigger: </#90A4AE><white><trigger></white> <#90A4AE>Server: </#90A4AE><white><server></white> <#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C> <#90A4AE>Pinned: </#90A4AE><white><locked></white> <#90A4AE>Note: </#90A4AE><white><note></white>"
+  line: "<prefix><#FFCA28><time></#FFCA28> <#90A4AE>ID: </#90A4AE><white><id></white> <#90A4AE>Trigger: </#90A4AE><white><trigger></white> <#90A4AE>Server: </#90A4AE><white><server></white> <#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C> <#90A4AE>Pinned: </#90A4AE><white><locked></white> <#90A4AE>Note: </#90A4AE><white><note></white>"
 
 status:
   title: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Status</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
