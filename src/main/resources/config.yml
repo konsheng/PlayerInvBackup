@@ -5,6 +5,15 @@
 # Language file name, available values, zh_CN.yml, en_US.yml
 language: "en_US.yml"
 
+# Server source settings
+server:
+  # Current server ID
+  id: "default"
+
+  # Server aliases
+  aliases:
+    default: "Default Server"
+
 # Display related settings
 display:
   # Backup time display format, uses Java DateTimeFormatter pattern

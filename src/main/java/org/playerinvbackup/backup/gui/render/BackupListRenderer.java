@@ -85,10 +85,12 @@ public final class BackupListRenderer {
             String noteText = meta.note() == null || meta.note().isBlank()
                     ? lang.raw("common.none")
                     : meta.note();
+            String serverText = displayServerName(meta.serverId());
             List<Component> lore = new ArrayList<>(lang.msgList(
                     "gui.backup-list.entry.lore",
                     Placeholder.unparsed("id", meta.backupId()),
                     Placeholder.unparsed("trigger", lang.raw(meta.trigger().langKey())),
+                    Placeholder.unparsed("server", serverText),
                     Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
                     Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
                     Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
@@ -223,5 +225,13 @@ public final class BackupListRenderer {
             }
         }
         return "cancel";
+    }
+
+    private String displayServerName(String serverId) {
+        var config = plugin.pluginConfig();
+        if (config == null) {
+            return serverId == null || serverId.isBlank() ? "default" : serverId;
+        }
+        return config.displayServerName(serverId);
     }
 }

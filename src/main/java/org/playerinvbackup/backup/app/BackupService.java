@@ -83,6 +83,7 @@ public final class BackupService {
                 BackupMeta meta = new BackupMeta(
                         backupId,
                         playerUuid,
+                        config.server().id(),
                         now,
                         triggerType,
                         sha256,

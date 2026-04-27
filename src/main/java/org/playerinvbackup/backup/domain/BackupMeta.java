@@ -10,6 +10,7 @@ import java.util.UUID;
 public record BackupMeta(
         String backupId,
         UUID playerUuid,
+        String serverId,
         long createdAtMillis,
         TriggerType trigger,
         String sha256Hex,
@@ -30,6 +31,7 @@ public record BackupMeta(
     public BackupMeta(
             String backupId,
             UUID playerUuid,
+            String serverId,
             long createdAtMillis,
             TriggerType trigger,
             String sha256Hex,
@@ -48,6 +50,7 @@ public record BackupMeta(
         this(
                 backupId,
                 playerUuid,
+                serverId,
                 createdAtMillis,
                 trigger,
                 sha256Hex,
@@ -70,6 +73,7 @@ public record BackupMeta(
     public BackupMeta(
             String backupId,
             UUID playerUuid,
+            String serverId,
             long createdAtMillis,
             TriggerType trigger,
             String sha256Hex,
@@ -84,6 +88,7 @@ public record BackupMeta(
         this(
                 backupId,
                 playerUuid,
+                serverId,
                 createdAtMillis,
                 trigger,
                 sha256Hex,
@@ -106,6 +111,7 @@ public record BackupMeta(
     public BackupMeta(
             String backupId,
             UUID playerUuid,
+            String serverId,
             long createdAtMillis,
             TriggerType trigger,
             String sha256Hex,
@@ -116,6 +122,7 @@ public record BackupMeta(
         this(
                 backupId,
                 playerUuid,
+                serverId,
                 createdAtMillis,
                 trigger,
                 sha256Hex,

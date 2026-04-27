@@ -16,6 +16,7 @@ public final class BackupViewHolder implements InventoryHolder {
     private final UUID targetUuid;
     private final String targetName;
     private final String backupId;
+    private final String serverId;
     private final int listPage;
     private final BackupQuery listQuery;
     // 视图在 GUI 内可切换, 需要原地更新
@@ -46,6 +47,7 @@ public final class BackupViewHolder implements InventoryHolder {
             UUID targetUuid,
             String targetName,
             String backupId,
+            String serverId,
             int listPage,
             BackupQuery listQuery,
             GuiView view,
@@ -72,6 +74,7 @@ public final class BackupViewHolder implements InventoryHolder {
         this.targetUuid = targetUuid;
         this.targetName = targetName;
         this.backupId = backupId;
+        this.serverId = serverId;
         this.listPage = Math.max(0, listPage);
         this.listQuery = listQuery == null ? BackupQuery.all() : listQuery;
         this.view = view == null ? GuiView.INVENTORY : view;
@@ -106,6 +109,10 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public String backupId() {
         return backupId;
+    }
+
+    public String serverId() {
+        return serverId;
     }
 
     public int listPage() {

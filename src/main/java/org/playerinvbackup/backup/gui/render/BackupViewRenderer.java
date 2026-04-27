@@ -79,10 +79,12 @@ public final class BackupViewRenderer {
         String noteText = holder.note() == null || holder.note().isBlank()
                 ? lang.raw("common.none")
                 : holder.note();
+        String serverText = displayServerName(holder.serverId());
         List<Component> lore = new ArrayList<>(lang.msgList(
                 "gui.backup-view.lock.lore",
                 Placeholder.unparsed("locked", lockedText),
                 Placeholder.unparsed("note", noteText),
+                Placeholder.unparsed("server", serverText),
                 Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
                         plugin,
                         holder.worldName(),
@@ -173,5 +175,13 @@ public final class BackupViewRenderer {
 
     private String displayExperienceProgress(float progress) {
         return String.format(java.util.Locale.ROOT, "%.1f%%", Math.max(0.0f, progress) * 100.0f);
+    }
+
+    private String displayServerName(String serverId) {
+        var config = plugin.pluginConfig();
+        if (config == null) {
+            return serverId == null || serverId.isBlank() ? "default" : serverId;
+        }
+        return config.displayServerName(serverId);
     }
 }

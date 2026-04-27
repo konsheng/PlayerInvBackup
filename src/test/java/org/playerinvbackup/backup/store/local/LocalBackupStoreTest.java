@@ -26,6 +26,8 @@ import org.playerinvbackup.backup.store.BackupQuery;
  * 确保状态变化后返回的数据仍然一致 完整 且不会继续写入旧的 schema 字段
  */
 class LocalBackupStoreTest {
+    private static final String DEFAULT_SERVER_ID = "default";
+
     @TempDir
     Path tempDir;
 
@@ -126,6 +128,7 @@ class LocalBackupStoreTest {
         BackupMeta meta = new BackupMeta(
                 "wc1",
                 playerUuid,
+                DEFAULT_SERVER_ID,
                 1_000L,
                 TriggerType.WORLD_CHANGE,
                 "sha256-wc1",
@@ -176,6 +179,7 @@ class LocalBackupStoreTest {
         store.saveBackup(new BackupRecord(new BackupMeta(
                 "b2",
                 playerUuid,
+                DEFAULT_SERVER_ID,
                 2_000L,
                 TriggerType.DEATH,
                 "sha256-b2",
@@ -190,6 +194,7 @@ class LocalBackupStoreTest {
         store.saveBackup(new BackupRecord(new BackupMeta(
                 "b3",
                 playerUuid,
+                DEFAULT_SERVER_ID,
                 3_000L,
                 TriggerType.DEATH,
                 "sha256-b3",
@@ -219,6 +224,7 @@ class LocalBackupStoreTest {
         BackupMeta meta = new BackupMeta(
                 "death1",
                 playerUuid,
+                DEFAULT_SERVER_ID,
                 1_000L,
                 TriggerType.DEATH,
                 "sha256-death1",
@@ -269,8 +275,8 @@ class LocalBackupStoreTest {
     }
 
     @Test
-    // 验证新的本地元数据文件只写当前需要的字段
-    // 不会再写入旧的 schema-version 节点
+    // 验证新的本地元数据文件会写入 server-id
+    // 同时不会再写入旧的 schema-version 节点
     void savedMetadataDoesNotContainSchemaVersionField() throws Exception {
         LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
         store.init();
@@ -281,7 +287,45 @@ class LocalBackupStoreTest {
 
         Path metaPath = tempDir.resolve("store").resolve("backups").resolve(playerUuid.toString()).resolve("meta1.yml");
         String yaml = Files.readString(metaPath, StandardCharsets.UTF_8);
+        org.bukkit.configuration.file.YamlConfiguration parsed = new org.bukkit.configuration.file.YamlConfiguration();
+        parsed.loadFromString(yaml);
+        assertEquals(DEFAULT_SERVER_ID, parsed.getString("server-id"));
         assertFalse(yaml.contains("schema-version"));
+    }
+
+    @Test
+    // 验证缺少 server-id 的旧本地元数据
+    // 在当前版本中不会继续被加载和展示
+    void metadataWithoutServerIdNoLongerLoads() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        Path playerDir = tempDir.resolve("store").resolve("backups").resolve(playerUuid.toString());
+        Files.createDirectories(playerDir);
+        Files.writeString(
+                playerDir.resolve("legacy.yml"),
+                """
+                backup-id: legacy
+                player-uuid: %s
+                created-at-millis: 1000
+                trigger: MANUAL
+                sha256: sha256-legacy
+                snapshot-size-bytes: 1
+                locked: false
+                note: ""
+                world-name: world
+                location:
+                  x: 1.0
+                  y: 64.0
+                  z: 1.0
+                """.formatted(playerUuid),
+                StandardCharsets.UTF_8
+        );
+        Files.write(playerDir.resolve("legacy.bkp"), new byte[]{1});
+
+        assertTrue(store.listBackups(playerUuid, BackupQuery.all(), 0, 10).isEmpty());
+        assertTrue(store.loadBackup(playerUuid, "legacy").isEmpty());
     }
 
     private static BackupRecord backup(
@@ -295,6 +339,7 @@ class LocalBackupStoreTest {
         BackupMeta meta = new BackupMeta(
                 backupId,
                 playerUuid,
+                DEFAULT_SERVER_ID,
                 createdAtMillis,
                 TriggerType.MANUAL,
                 "sha256-" + backupId,

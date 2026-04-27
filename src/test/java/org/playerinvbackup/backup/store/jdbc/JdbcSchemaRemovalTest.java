@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.store.jdbc;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -23,12 +24,14 @@ import org.playerinvbackup.backup.store.SqlTableNames;
  * 确保新表不再创建 schema_version 并且备份元数据仍能正常保存读取
  */
 class JdbcSchemaRemovalTest {
+    private static final String SERVER_ID = "survival-1";
+
     @TempDir
     Path tempDir;
 
     @Test
     // 验证 H2 SQLite MySQL 方言和 PostgreSQL 方言初始化新表后
-    // backups 表中都不会再出现 schema_version 列
+    // backups 表中都不会再出现 schema_version 且会创建 server_id 列
     void supportedJdbcSchemasDoNotCreateSchemaVersionColumn() throws Exception {
         try (TestJdbcStore h2 = new TestJdbcStore(
                 new H2Dialect(),
@@ -38,6 +41,7 @@ class JdbcSchemaRemovalTest {
         )) {
             h2.init();
             assertFalse(h2.hasBackupColumn("schema_version"));
+            assertTrue(h2.hasBackupColumn("server_id"));
         }
 
         try (TestJdbcStore sqlite = new TestJdbcStore(
@@ -48,6 +52,7 @@ class JdbcSchemaRemovalTest {
         )) {
             sqlite.init();
             assertFalse(sqlite.hasBackupColumn("schema_version"));
+            assertTrue(sqlite.hasBackupColumn("server_id"));
         }
 
         try (TestJdbcStore mysql = new TestJdbcStore(
@@ -58,6 +63,7 @@ class JdbcSchemaRemovalTest {
         )) {
             mysql.init();
             assertFalse(mysql.hasBackupColumn("schema_version"));
+            assertTrue(mysql.hasBackupColumn("server_id"));
         }
 
         try (TestJdbcStore postgresql = new TestJdbcStore(
@@ -68,12 +74,13 @@ class JdbcSchemaRemovalTest {
         )) {
             postgresql.init();
             assertFalse(postgresql.hasBackupColumn("schema_version"));
+            assertTrue(postgresql.hasBackupColumn("server_id"));
         }
     }
 
     @Test
     // 验证 JDBC 存储在移除 schema_version 后
-    // 仍然可以正常保存 列表读取和完整读取备份元数据与快照字节
+    // 仍然可以正常保存并读取 server_id 以及完整备份元数据与快照字节
     void jdbcStoreSaveAndLoadWorksWithoutSchemaVersionField() throws Exception {
         try (TestJdbcStore store = new TestJdbcStore(
                 new H2Dialect(),
@@ -89,6 +96,7 @@ class JdbcSchemaRemovalTest {
             BackupMeta meta = new BackupMeta(
                     "backup-1",
                     playerUuid,
+                    SERVER_ID,
                     1_000L,
                     TriggerType.DEATH,
                     "sha256-backup-1",
@@ -111,6 +119,7 @@ class JdbcSchemaRemovalTest {
 
             BackupMeta listed = store.listBackups(playerUuid, BackupQuery.all(), 0, 10).getFirst();
             assertEquals("backup-1", listed.backupId());
+            assertEquals(SERVER_ID, listed.serverId());
             assertEquals(TriggerType.DEATH, listed.trigger());
             assertEquals("sha256-backup-1", listed.sha256Hex());
             assertEquals(snapshotBytes.length, listed.snapshotSizeBytes());
@@ -121,6 +130,7 @@ class JdbcSchemaRemovalTest {
 
             BackupRecord loaded = store.loadBackup(playerUuid, "backup-1").orElseThrow();
             assertEquals("backup-1", loaded.meta().backupId());
+            assertEquals(SERVER_ID, loaded.meta().serverId());
             assertEquals("world", loaded.meta().worldName());
             assertEquals(Double.valueOf(10.0), loaded.meta().locationX());
             assertEquals(Double.valueOf(64.0), loaded.meta().locationY());

@@ -106,6 +106,7 @@ info:
   lines:
     - "<prefix><#90A4AE>时间: </#90A4AE><white><time></white>"
     - "<prefix><#90A4AE>触发: </#90A4AE><white><trigger></white>"
+    - "<prefix><#90A4AE>服务器: </#90A4AE><white><server></white>"
     - "<prefix><#90A4AE>大小: </#90A4AE><white><size></white> <#78909C>字节</#78909C>"
     - "<prefix><#90A4AE>世界: </#90A4AE><white><world></white>"
     - "<prefix><#90A4AE>坐标: </#90A4AE><white><position></white>"
@@ -146,7 +147,7 @@ warn:
 list:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>备份列表</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(第 <page> 页)</#90A4AE>"
   empty: "<prefix><#90A4AE>暂无备份</#90A4AE>"
-  line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>编号: </#90A4AE><white><id></white> <#90A4AE>触发: </#90A4AE><white><trigger></white> <#90A4AE>大小: </#90A4AE><white><size></white> <#78909C>字节</#78909C> <#90A4AE>置顶显示: </#90A4AE><white><locked></white> <#90A4AE>备注: </#90A4AE><white><note></white>"
+  line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>编号: </#90A4AE><white><id></white> <#90A4AE>触发: </#90A4AE><white><trigger></white> <#90A4AE>服务器: </#90A4AE><white><server></white> <#90A4AE>大小: </#90A4AE><white><size></white> <#78909C>字节</#78909C> <#90A4AE>置顶显示: </#90A4AE><white><locked></white> <#90A4AE>备注: </#90A4AE><white><note></white>"
 
 status:
   title: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 状态信息</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
@@ -193,6 +194,7 @@ gui:
       lore:
         - "<#90A4AE>编号: </#90A4AE><white><id></white>"
         - "<#90A4AE>触发: </#90A4AE><white><trigger></white>"
+        - "<#90A4AE>服务器: </#90A4AE><white><server></white>"
         - "<#90A4AE>大小: </#90A4AE><white><size></white><#78909C> 字节</#78909C>"
         - "<#90A4AE>世界: </#90A4AE><white><world></white>"
         - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
@@ -311,6 +313,7 @@ gui:
       lore:
         - "<#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
         - "<#90A4AE>备注: </#90A4AE><white><note></white>"
+        - "<#90A4AE>服务器: </#90A4AE><white><server></white>"
         - "<#90A4AE>世界: </#90A4AE><white><world></white>"
         - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
         - "<#90A4AE>置顶后, 不会被自动清理</#90A4AE>"
@@ -402,6 +405,8 @@ console:
   config:
     gui-mode-invalid: "gui.mode 配置无效, 已使用自动模式: <value>"
     backup-time-format-invalid: "display.backup-time-format 配置无效: <value>, 已使用默认格式 yyyy-MM-dd HH:mm:ss"
+    server-id-invalid: "server.id 配置无效, 已回退为 default: <value>"
+    server-alias-key-invalid: "server.aliases 存在无效键, 已忽略: <key>"
     gui-time-filter-invalid: "GUI 时间筛选配置无效, 已忽略: path=<path>, value=<value>"
     jdbc-pool:
       min-corrected: "<path> 不能小于 <limit>, 已自动修正为 <fixed>"

@@ -205,6 +205,7 @@ public final class BackupViewController {
                             targetUuid,
                             safeTargetName,
                             backupId,
+                            record.meta().serverId(),
                             safeListPage,
                             safeQuery,
                             safeView,

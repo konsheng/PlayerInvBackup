@@ -85,30 +85,31 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final void saveBackup(BackupRecord record) throws Exception {
         withConnection(connection -> {
             String sql = """
-                    INSERT INTO %s(backup_id, player_uuid, created_at, trigger_type, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO %s(backup_id, player_uuid, server_id, created_at, trigger_type, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """.formatted(tables.backups());
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 BackupMeta meta = record.meta();
                 ps.setString(1, meta.backupId());
                 ps.setString(2, meta.playerUuid().toString());
-                ps.setLong(3, meta.createdAtMillis());
-                ps.setString(4, meta.trigger().name());
-                ps.setString(5, meta.sha256Hex());
-                ps.setBytes(6, record.snapshotBytes());
-                ps.setInt(7, meta.snapshotSizeBytes());
-                dialect.bindBoolean(ps, 8, meta.locked());
-                ps.setString(9, meta.note());
-                ps.setString(10, meta.worldName());
-                ps.setObject(11, meta.locationX());
-                ps.setObject(12, meta.locationY());
-                ps.setObject(13, meta.locationZ());
-                ps.setString(14, meta.targetWorldName());
-                ps.setObject(15, meta.targetLocationX());
-                ps.setObject(16, meta.targetLocationY());
-                ps.setObject(17, meta.targetLocationZ());
-                ps.setString(18, meta.killerPlayerUuid() == null ? null : meta.killerPlayerUuid().toString());
-                ps.setString(19, meta.killerPlayerName());
+                ps.setString(3, meta.serverId());
+                ps.setLong(4, meta.createdAtMillis());
+                ps.setString(5, meta.trigger().name());
+                ps.setString(6, meta.sha256Hex());
+                ps.setBytes(7, record.snapshotBytes());
+                ps.setInt(8, meta.snapshotSizeBytes());
+                dialect.bindBoolean(ps, 9, meta.locked());
+                ps.setString(10, meta.note());
+                ps.setString(11, meta.worldName());
+                ps.setObject(12, meta.locationX());
+                ps.setObject(13, meta.locationY());
+                ps.setObject(14, meta.locationZ());
+                ps.setString(15, meta.targetWorldName());
+                ps.setObject(16, meta.targetLocationX());
+                ps.setObject(17, meta.targetLocationY());
+                ps.setObject(18, meta.targetLocationZ());
+                ps.setString(19, meta.killerPlayerUuid() == null ? null : meta.killerPlayerUuid().toString());
+                ps.setString(20, meta.killerPlayerName());
                 ps.executeUpdate();
             }
             return null;
@@ -122,7 +123,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         }
         return withConnection(connection -> {
             StringBuilder sql = new StringBuilder("""
-                    SELECT backup_id, created_at, trigger_type, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
+                    SELECT backup_id, server_id, created_at, trigger_type, sha256, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
                     FROM %s
                     WHERE player_uuid=?
                     """.formatted(tables.backups()));
@@ -195,7 +196,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
     public final Optional<BackupRecord> loadBackup(UUID playerUuid, String backupId) throws Exception {
         return withConnection(connection -> {
             String sql = """
-                    SELECT created_at, trigger_type, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
+                    SELECT server_id, created_at, trigger_type, sha256, snapshot_blob, snapshot_size, locked, note, world_name, location_x, location_y, location_z, target_world_name, target_location_x, target_location_y, target_location_z, killer_player_uuid, killer_player_name
                     FROM %s
                     WHERE player_uuid=? AND backup_id=?
                     """.formatted(tables.backups());
@@ -437,6 +438,7 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     CREATE TABLE IF NOT EXISTS %s(
                       backup_id %s PRIMARY KEY,
                       player_uuid %s NOT NULL,
+                      server_id VARCHAR(64) NOT NULL,
                       created_at BIGINT NOT NULL,
                       trigger_type %s NOT NULL,
                       sha256 %s NOT NULL,
@@ -546,22 +548,23 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         return new BackupMeta(
                 rs.getString(1),
                 playerUuid,
-                rs.getLong(2),
-                TriggerType.valueOf(rs.getString(3)),
-                rs.getString(4),
-                rs.getInt(5),
-                dialect.readBoolean(rs, 6),
-                defaultString(rs.getString(7)),
-                rs.getString(8),
-                readNullableDouble(rs, 9),
+                rs.getString(2),
+                rs.getLong(3),
+                TriggerType.valueOf(rs.getString(4)),
+                rs.getString(5),
+                rs.getInt(6),
+                dialect.readBoolean(rs, 7),
+                defaultString(rs.getString(8)),
+                rs.getString(9),
                 readNullableDouble(rs, 10),
                 readNullableDouble(rs, 11),
-                rs.getString(12),
-                readNullableDouble(rs, 13),
+                readNullableDouble(rs, 12),
+                rs.getString(13),
                 readNullableDouble(rs, 14),
                 readNullableDouble(rs, 15),
-                readNullableUuid(rs, 16),
-                rs.getString(17)
+                readNullableDouble(rs, 16),
+                readNullableUuid(rs, 17),
+                rs.getString(18)
         );
     }
 
@@ -569,24 +572,25 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
         BackupMeta meta = new BackupMeta(
                 backupId,
                 playerUuid,
-                rs.getLong(1),
-                TriggerType.valueOf(rs.getString(2)),
-                rs.getString(3),
-                rs.getInt(5),
-                dialect.readBoolean(rs, 6),
-                defaultString(rs.getString(7)),
-                rs.getString(8),
-                readNullableDouble(rs, 9),
+                rs.getString(1),
+                rs.getLong(2),
+                TriggerType.valueOf(rs.getString(3)),
+                rs.getString(4),
+                rs.getInt(6),
+                dialect.readBoolean(rs, 7),
+                defaultString(rs.getString(8)),
+                rs.getString(9),
                 readNullableDouble(rs, 10),
                 readNullableDouble(rs, 11),
-                rs.getString(12),
-                readNullableDouble(rs, 13),
+                readNullableDouble(rs, 12),
+                rs.getString(13),
                 readNullableDouble(rs, 14),
                 readNullableDouble(rs, 15),
-                readNullableUuid(rs, 16),
-                rs.getString(17)
+                readNullableDouble(rs, 16),
+                readNullableUuid(rs, 17),
+                rs.getString(18)
         );
-        return new BackupRecord(meta, rs.getBytes(4));
+        return new BackupRecord(meta, rs.getBytes(5));
     }
 
     private SlotClaim mapSlotClaim(ResultSet rs, String backupId) throws SQLException {

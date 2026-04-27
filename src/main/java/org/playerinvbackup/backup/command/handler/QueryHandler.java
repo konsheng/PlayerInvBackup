@@ -141,12 +141,14 @@ public final class QueryHandler implements SubcommandHandler {
                         String note = meta.note() == null || meta.note().isBlank()
                                 ? plugin.lang().raw("common.none")
                                 : meta.note();
+                        String server = displayServerName(meta.serverId());
                         Chat.plain(
                                 ctx.sender(),
                                 "list.line",
                                 Placeholder.unparsed("time", time),
                                 Placeholder.unparsed("id", meta.backupId()),
                                 Placeholder.unparsed("trigger", plugin.lang().raw(meta.trigger().langKey())),
+                                Placeholder.unparsed("server", server),
                                 Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
                                 Placeholder.unparsed("locked", locked),
                                 Placeholder.unparsed("note", note)
@@ -204,6 +206,7 @@ public final class QueryHandler implements SubcommandHandler {
                     String note = meta.note() == null || meta.note().isBlank()
                             ? plugin.lang().raw("common.none")
                             : meta.note();
+                    String server = displayServerName(meta.serverId());
 
                     Chat.plain(
                             ctx.sender(),
@@ -216,6 +219,7 @@ public final class QueryHandler implements SubcommandHandler {
                             "info.lines",
                             Placeholder.unparsed("time", time),
                             Placeholder.unparsed("trigger", plugin.lang().raw(meta.trigger().langKey())),
+                            Placeholder.unparsed("server", server),
                             Placeholder.unparsed("size", String.valueOf(meta.snapshotSizeBytes())),
                             Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(plugin, meta.worldName(), meta.targetWorldName())),
                             Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
@@ -321,6 +325,14 @@ public final class QueryHandler implements SubcommandHandler {
             case LOCAL, MYSQL, POSTGRESQL -> {
             }
         }
+    }
+
+    private String displayServerName(String serverId) {
+        var config = plugin.pluginConfig();
+        if (config == null) {
+            return serverId == null || serverId.isBlank() ? "default" : serverId;
+        }
+        return config.displayServerName(serverId);
     }
 
     private void sendSqliteSize(CommandContext ctx) {

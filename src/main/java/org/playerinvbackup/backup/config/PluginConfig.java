@@ -28,6 +28,7 @@ public record PluginConfig(
         Duration backupAllProgressInterval,
         int keepPerPlayer,
         Duration keepDuration,
+        ServerSettings server,
         boolean auditEnabled,
         boolean auditConsole,
         int auditKeepDays,
@@ -67,6 +68,7 @@ public record PluginConfig(
         var keepPerPlayer = Math.max(0, config.getInt("backup.keep-per-player", 0));
         var keepDays = Math.max(0, config.getLong("backup.keep-days", 0));
         var keepDuration = Duration.ofDays(keepDays);
+        ServerSettings server = ServerSettings.fromConfig(config, plugin.getLogger(), lang);
 
         boolean auditEnabled = config.getBoolean("audit.enabled", true);
         boolean auditConsole = config.getBoolean("audit.console", true);
@@ -212,6 +214,7 @@ public record PluginConfig(
                 Duration.ofSeconds(backupAllProgressIntervalSeconds),
                 keepPerPlayer,
                 keepDuration,
+                server,
                 auditEnabled,
                 auditConsole,
                 auditKeepDays,
@@ -254,5 +257,12 @@ public record PluginConfig(
             return worldName;
         }
         return alias;
+    }
+
+    public String displayServerName(String serverId) {
+        if (server == null) {
+            return serverId == null || serverId.isBlank() ? "default" : serverId;
+        }
+        return server.displayName(serverId);
     }
 }

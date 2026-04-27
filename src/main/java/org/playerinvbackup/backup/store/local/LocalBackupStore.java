@@ -380,6 +380,7 @@ public final class LocalBackupStore implements BackupStore {
         YamlConfiguration yaml = new YamlConfiguration();
         yaml.set("backup-id", meta.backupId());
         yaml.set("player-uuid", meta.playerUuid().toString());
+        yaml.set("server-id", meta.serverId());
         yaml.set("created-at-millis", meta.createdAtMillis());
         yaml.set("trigger", meta.trigger().name());
         yaml.set("sha256", meta.sha256Hex());
@@ -404,7 +405,8 @@ public final class LocalBackupStore implements BackupStore {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(metaPath.toFile());
             String backupId = yaml.getString("backup-id", null);
             String player = yaml.getString("player-uuid", null);
-            if (backupId == null || player == null) {
+            String serverId = yaml.getString("server-id", null);
+            if (backupId == null || player == null || serverId == null || serverId.isBlank()) {
                 return null;
             }
 
@@ -412,6 +414,7 @@ public final class LocalBackupStore implements BackupStore {
             return new BackupMeta(
                     backupId,
                     UUID.fromString(player),
+                    serverId,
                     yaml.getLong("created-at-millis", 0L),
                     TriggerType.valueOf(yaml.getString("trigger", TriggerType.TIMER.name())),
                     yaml.getString("sha256", ""),
@@ -578,6 +581,7 @@ public final class LocalBackupStore implements BackupStore {
                 upsertUnlocked(new BackupMeta(
                         existing.backupId(),
                         existing.playerUuid(),
+                        existing.serverId(),
                         existing.createdAtMillis(),
                         existing.trigger(),
                         existing.sha256Hex(),
@@ -610,6 +614,7 @@ public final class LocalBackupStore implements BackupStore {
                 upsertUnlocked(new BackupMeta(
                         existing.backupId(),
                         existing.playerUuid(),
+                        existing.serverId(),
                         existing.createdAtMillis(),
                         existing.trigger(),
                         existing.sha256Hex(),

@@ -106,6 +106,7 @@ info:
   lines:
     - "<prefix><#90A4AE>Time: </#90A4AE><white><time></white>"
     - "<prefix><#90A4AE>Trigger: </#90A4AE><white><trigger></white>"
+    - "<prefix><#90A4AE>Server: </#90A4AE><white><server></white>"
     - "<prefix><#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C>"
     - "<prefix><#90A4AE>World: </#90A4AE><white><world></white>"
     - "<prefix><#90A4AE>Position: </#90A4AE><white><position></white>"
@@ -146,7 +147,7 @@ warn:
 list:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup List</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(Page <page>)</#90A4AE>"
   empty: "<prefix><#90A4AE>No backups</#90A4AE>"
-  line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>ID: </#90A4AE><white><id></white> <#90A4AE>Trigger: </#90A4AE><white><trigger></white> <#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C> <#90A4AE>Pinned: </#90A4AE><white><locked></white> <#90A4AE>Note: </#90A4AE><white><note></white>"
+  line: "<prefix><#78909C>▪ </#78909C><#FFCA28><time></#FFCA28> <#90A4AE>ID: </#90A4AE><white><id></white> <#90A4AE>Trigger: </#90A4AE><white><trigger></white> <#90A4AE>Server: </#90A4AE><white><server></white> <#90A4AE>Size: </#90A4AE><white><size></white> <#78909C>bytes</#78909C> <#90A4AE>Pinned: </#90A4AE><white><locked></white> <#90A4AE>Note: </#90A4AE><white><note></white>"
 
 status:
   title: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Status</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
@@ -193,6 +194,7 @@ gui:
       lore:
         - "<#90A4AE>ID: </#90A4AE><white><id></white>"
         - "<#90A4AE>Trigger: </#90A4AE><white><trigger></white>"
+        - "<#90A4AE>Server: </#90A4AE><white><server></white>"
         - "<#90A4AE>Size: </#90A4AE><white><size></white><#78909C> bytes</#78909C>"
         - "<#90A4AE>World: </#90A4AE><white><world></white>"
         - "<#90A4AE>Position: </#90A4AE><white><position></white>"
@@ -311,6 +313,7 @@ gui:
       lore:
         - "<#90A4AE>Pinned: </#90A4AE><white><locked></white>"
         - "<#90A4AE>Note: </#90A4AE><white><note></white>"
+        - "<#90A4AE>Server: </#90A4AE><white><server></white>"
         - "<#90A4AE>World: </#90A4AE><white><world></white>"
         - "<#90A4AE>Position: </#90A4AE><white><position></white>"
         - "<#90A4AE>Pinned backups are not auto purged</#90A4AE>"
@@ -401,6 +404,8 @@ console:
   config:
     gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
     backup-time-format-invalid: "Invalid display.backup-time-format: <value>, using default yyyy-MM-dd HH:mm:ss"
+    server-id-invalid: "Invalid server.id, using default: <value>"
+    server-alias-key-invalid: "Ignored invalid server.aliases key: <key>"
     gui-time-filter-invalid: "Invalid GUI time filter config ignored: path=<path>, value=<value>"
     jdbc-pool:
       min-corrected: "<path> must not be less than <limit>, corrected to <fixed>."
