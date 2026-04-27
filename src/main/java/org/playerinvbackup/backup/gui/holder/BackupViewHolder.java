@@ -21,6 +21,7 @@ public final class BackupViewHolder implements InventoryHolder {
     // 视图在 GUI 内可切换, 需要原地更新
     private GuiView view;
     private final SnapshotParts parts;
+    private final boolean claimOnce;
     private final boolean[] claimedInv;
     private final boolean[] claimedEnder;
     private final boolean[] incompatibleInv;
@@ -49,6 +50,7 @@ public final class BackupViewHolder implements InventoryHolder {
             BackupQuery listQuery,
             GuiView view,
             SnapshotParts parts,
+            boolean claimOnce,
             boolean[] claimedInv,
             boolean[] claimedEnder,
             boolean[] incompatibleInv,
@@ -74,6 +76,7 @@ public final class BackupViewHolder implements InventoryHolder {
         this.listQuery = listQuery == null ? BackupQuery.all() : listQuery;
         this.view = view == null ? GuiView.INVENTORY : view;
         this.parts = parts;
+        this.claimOnce = claimOnce;
         this.claimedInv = claimedInv;
         this.claimedEnder = claimedEnder;
         this.incompatibleInv = incompatibleInv;
@@ -123,6 +126,10 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public SnapshotParts parts() {
         return parts;
+    }
+
+    public boolean claimOnce() {
+        return claimOnce;
     }
 
     public boolean[] claimedInv() {

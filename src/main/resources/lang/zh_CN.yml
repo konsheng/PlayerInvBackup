@@ -71,6 +71,7 @@ errors:
   claim-incompatible: "<prefix><#EF5350>✖ 当前服务端无法领取该物品</#EF5350>"
   claim-incompatible-backup: "<prefix><#EF5350>✖ 该备份包含不兼容物品, 当前配置已禁止整份备份领取</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ 该物品已被领取</#FFA726>"
+  preview-claim-inventory-full: "<prefix><#FFA726>⚠ 背包空间不足</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ 投递失败(数据库更新失败), 已回滚该物品, 请稍后重试</#EF5350>"
   claim-mark-failed-rollback: "<prefix><#EF5350>✖ 发放失败(数据库更新失败), 已回滚该物品, 请使用 <#FFCA28>/<label> pending</#FFCA28> 重试</#EF5350>"
   inventory-full-pending: "<prefix><#FFA726>⚠ 背包已满, 该物品已进入待投递队列: <#FFCA28>/<label> pending</#FFCA28></#FFA726>"
@@ -130,6 +131,7 @@ success:
   pending-none: "<prefix><#66BB6A>✔ 没有待投递物品</#66BB6A>"
   pending-delivered: "<prefix><#66BB6A>✔ 已投递: <#FFCA28><count></#FFCA28> 个物品</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ 已领取该格物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
+  preview-claim-success: "<prefix><#66BB6A>✔ 已领取物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ 已恢复玩家背包/末影箱(已扣除已领取格子)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ 已恢复玩家经验值</#66BB6A>"
 
@@ -138,6 +140,7 @@ warn:
   no-more-backups-back: "<prefix><#FFA726>⚠ 没有更多备份, 已返回上一页</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的背包/末影箱</#FFA726>"
   restored-experience-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的经验值</#FFA726>"
+  pending-incompatible-skipped: "<prefix><#FFA726>⚠ 有 <count> 个待投递物品无法在当前服务端发放, 已跳过</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ 请输入备份编号, 或输入 <#FFCA28><cancel></#FFCA28> 取消</#FFA726>"
 
 list:
@@ -418,6 +421,7 @@ console:
     snapshot-invalid: "备份数据损坏/无法解析: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>"
     pending-load-failed: "读取待投递物品失败: 操作者=<actor>(<actor_uuid>)"
     pending-mark-delivered-failed: "标记物品已投递失败: <reason>"
+    pending-incompatible: "待投递物品已跳过: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>, 原因=<reason>"
     lock-update-failed: "更新置顶状态失败: 目标=<target_uuid>, 备份编号=<backup_id>"
     claim-failed: "领取失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>"
     claim-incompatible: "领取已被拦截: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>, 模式=<mode>, 原因=<reason>"

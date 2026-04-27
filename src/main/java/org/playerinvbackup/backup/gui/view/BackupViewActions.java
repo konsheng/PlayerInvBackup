@@ -141,7 +141,7 @@ public final class BackupViewActions {
         if (slot < 0 || slot >= holder.parts().inventorySlotBytes().length) {
             return;
         }
-        if (holder.claimedInv()[slot]) {
+        if (holder.claimOnce() && holder.claimedInv()[slot]) {
             playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             return;
         }
@@ -162,14 +162,18 @@ public final class BackupViewActions {
             return;
         }
         playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
-        slotClaimService.claimSlot(admin, holder, SlotType.INV, slot, itemBytes);
+        if (holder.claimOnce()) {
+            slotClaimService.claimSlot(admin, holder, SlotType.INV, slot, itemBytes);
+            return;
+        }
+        slotClaimService.copySlot(admin, holder, SlotType.INV, slot, itemBytes);
     }
 
     private void handleEnderSlotClick(Player admin, BackupViewHolder holder, int slot) {
         if (slot < 0 || slot >= holder.parts().enderChestSlotBytes().length) {
             return;
         }
-        if (holder.claimedEnder()[slot]) {
+        if (holder.claimOnce() && holder.claimedEnder()[slot]) {
             playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             return;
         }
@@ -190,7 +194,11 @@ public final class BackupViewActions {
             return;
         }
         playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
-        slotClaimService.claimSlot(admin, holder, SlotType.ENDER, slot, itemBytes);
+        if (holder.claimOnce()) {
+            slotClaimService.claimSlot(admin, holder, SlotType.ENDER, slot, itemBytes);
+            return;
+        }
+        slotClaimService.copySlot(admin, holder, SlotType.ENDER, slot, itemBytes);
     }
 
     private void toggleLock(Player admin, BackupViewHolder holder) {

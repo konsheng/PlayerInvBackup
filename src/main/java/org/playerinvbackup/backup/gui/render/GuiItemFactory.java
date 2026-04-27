@@ -49,14 +49,14 @@ public final class GuiItemFactory {
 
     public ItemStack previewSlotItem(BackupViewHolder holder, SlotType slotType, int slotIndex, byte[] itemBytes) {
         Lang lang = plugin.lang();
-        if (slotType == SlotType.INV && holder.claimedInv()[slotIndex]) {
+        if (holder.claimOnce() && slotType == SlotType.INV && holder.claimedInv()[slotIndex]) {
             return namedItem(
                     Material.BARRIER,
                     lang.msg("gui.backup-view.claimed.name"),
                     lang.msgList("gui.backup-view.claimed.lore")
             );
         }
-        if (slotType == SlotType.ENDER && holder.claimedEnder()[slotIndex]) {
+        if (holder.claimOnce() && slotType == SlotType.ENDER && holder.claimedEnder()[slotIndex]) {
             return namedItem(
                     Material.BARRIER,
                     lang.msg("gui.backup-view.claimed.name"),

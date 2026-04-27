@@ -71,6 +71,7 @@ errors:
   claim-incompatible: "<prefix><#EF5350>✖ This item cannot be claimed on the current server version</#EF5350>"
   claim-incompatible-backup: "<prefix><#EF5350>✖ This backup contains incompatible items, claiming is blocked for the whole backup by config</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ This item has already been claimed</#FFA726>"
+  preview-claim-inventory-full: "<prefix><#FFA726>⚠ Inventory is full</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
   claim-mark-failed-rollback: "<prefix><#EF5350>✖ Give failed (database update failed), item rolled back, retry with <#FFCA28>/<label> pending</#FFCA28></#EF5350>"
   inventory-full-pending: "<prefix><#FFA726>⚠ Inventory is full, item moved to pending: <#FFCA28>/<label> pending</#FFCA28></#FFA726>"
@@ -130,6 +131,7 @@ success:
   pending-none: "<prefix><#66BB6A>✔ No pending items</#66BB6A>"
   pending-delivered: "<prefix><#66BB6A>✔ Delivered: <#FFCA28><count></#FFCA28> items</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ Claimed this slot (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
+  preview-claim-success: "<prefix><#66BB6A>✔ Item claimed (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ Player experience restored</#66BB6A>"
 
@@ -138,6 +140,7 @@ warn:
   no-more-backups-back: "<prefix><#FFA726>⚠ No more backups, returned to previous page</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ An admin restored your inventory and ender chest</#FFA726>"
   restored-experience-notify-target: "<prefix><#FFA726>⚠ An admin restored your experience</#FFA726>"
+  pending-incompatible-skipped: "<prefix><#FFA726>⚠ <count> pending item(s) cannot be delivered on the current server and were skipped</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ Please enter a backup ID, or type <#FFCA28><cancel></#FFCA28> to cancel</#FFA726>"
 
 list:
@@ -417,6 +420,7 @@ console:
     snapshot-invalid: "Backup data corrupted or cannot be parsed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>"
     pending-load-failed: "Failed to read pending items: actor=<actor>(<actor_uuid>)"
     pending-mark-delivered-failed: "Failed to mark delivered: <reason>"
+    pending-incompatible: "Pending item skipped due to incompatible item: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>, reason=<reason>"
     lock-update-failed: "Failed to update pin state: target=<target_uuid>, backup_id=<backup_id>"
     claim-failed: "Claim failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>"
     claim-incompatible: "Claim blocked due to incompatible item: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>, mode=<mode>, reason=<reason>"

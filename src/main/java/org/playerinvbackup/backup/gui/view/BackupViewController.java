@@ -186,9 +186,11 @@ public final class BackupViewController {
                     return;
                 }
 
+                boolean claimOnce = plugin.pluginConfig() != null
+                        && plugin.pluginConfig().guiPreview().claimOnce();
                 boolean blockWhole = plugin.pluginConfig() != null
                         && plugin.pluginConfig().guiBackupViewBlockWholeBackupClaimOnIncompatible();
-                PreviewSnapshotData previewData = previewSnapshotService.build(parts, claims, blockWhole);
+                PreviewSnapshotData previewData = previewSnapshotService.build(parts, claims, blockWhole, claimOnce);
 
                 runOnPlayer(admin, () -> {
                     if (!finalListHolder.isViewRefreshSeqCurrent(viewSeq)) {
@@ -207,6 +209,7 @@ public final class BackupViewController {
                             safeQuery,
                             safeView,
                             parts,
+                            claimOnce,
                             previewData.claimedInv(),
                             previewData.claimedEnder(),
                             previewData.incompatibleInv(),

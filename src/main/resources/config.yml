@@ -175,6 +175,11 @@ gui:
   # Backups shown per page, must be <= 45
   list-page-size: 45
 
+  # Backup preview behavior settings
+  preview:
+    # Whether items can only be claimed once
+    claim-once: false
+
   # Backup preview screen related settings
   backup-view:
     incompatible-claim:

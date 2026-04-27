@@ -175,6 +175,11 @@ gui:
   # 备份列表每页显示数量, 必须 <= 45
   list-page-size: 45
 
+  # 备份预览配置
+  preview:
+    # 物品是否只能领取一次
+    claim-once: false
+
   # 备份预览界面相关设置
   backup-view:
     incompatible-claim:

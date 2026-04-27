@@ -42,6 +42,7 @@ public record PluginConfig(
         double maxWritesPerSecond,
         Duration guiLoadingIndicatorDelay,
         int guiListPageSize,
+        GuiPreviewSettings guiPreview,
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible,
         List<GuiTimeFilterOption> guiTimeFilters,
         GuiMode guiMode,
@@ -137,6 +138,7 @@ public record PluginConfig(
 
         var guiLoadingIndicatorDelaySeconds = Math.max(0, config.getLong("gui.loading-indicator-delay-seconds", 3));
         var guiListPageSize = Math.min(45, Math.max(9, config.getInt("gui.list-page-size", 45)));
+        GuiPreviewSettings guiPreview = GuiPreviewSettings.fromConfig(config);
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible =
                 config.getBoolean("gui.backup-view.incompatible-claim.block-whole-backup", false);
         List<GuiTimeFilterOption> guiTimeFilters = GuiTimeFilterOption.fromConfig(
@@ -224,6 +226,7 @@ public record PluginConfig(
                 maxWritesPerSecond,
                 Duration.ofSeconds(guiLoadingIndicatorDelaySeconds),
                 guiListPageSize,
+                guiPreview,
                 guiBackupViewBlockWholeBackupClaimOnIncompatible,
                 guiTimeFilters,
                 guiMode,

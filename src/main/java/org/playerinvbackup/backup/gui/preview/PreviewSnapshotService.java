@@ -14,11 +14,12 @@ public final class PreviewSnapshotService {
     public PreviewSnapshotData build(
             SnapshotParts parts,
             List<SlotClaim> claims,
-            boolean blockWholeBackupOnIncompatible
+            boolean blockWholeBackupOnIncompatible,
+            boolean claimOnce
     ) {
         boolean[] claimedInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
         boolean[] claimedEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
-        if (claims != null) {
+        if (claimOnce && claims != null) {
             for (SlotClaim claim : claims) {
                 if (claim.slotType() == SlotType.INV
                         && claim.slotIndex() >= 0

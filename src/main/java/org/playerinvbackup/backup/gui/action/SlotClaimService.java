@@ -112,8 +112,7 @@ public final class SlotClaimService {
                 try {
                     item = ItemStack.deserializeBytes(itemBytes);
                 } catch (Exception e) {
-                    plugin.getLogger().log(
-                            Level.WARNING,
+                    plugin.getLogger().warning(
                             plugin.lang().plain(
                                     "console.gui.claim-incompatible",
                                     Placeholder.unparsed("actor", actorName),
@@ -123,8 +122,7 @@ public final class SlotClaimService {
                                     Placeholder.unparsed("slot", slotType + ":" + slotIndex),
                                     Placeholder.unparsed("mode", "runtime_deserialize_failed"),
                                     Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
-                            ),
-                            e
+                            )
                     );
                     Chat.error(admin, "errors.claim-incompatible");
                     restoreOriginalSlot(admin, holder, slotType, slotIndex);
@@ -208,6 +206,69 @@ public final class SlotClaimService {
                 }
             });
         });
+    }
+
+    public void copySlot(
+            Player admin,
+            BackupViewHolder holder,
+            SlotType slotType,
+            int slotIndex,
+            byte[] itemBytes
+    ) {
+        if (admin == null || itemBytes == null || itemBytes.length == 0) {
+            return;
+        }
+
+        final ItemStack item;
+        try {
+            item = ItemStack.deserializeBytes(itemBytes);
+        } catch (Exception e) {
+            plugin.getLogger().warning(
+                    plugin.lang().plain(
+                            "console.gui.claim-incompatible",
+                            Placeholder.unparsed("actor", admin.getName()),
+                            Placeholder.unparsed("actor_uuid", admin.getUniqueId().toString()),
+                            Placeholder.unparsed("target_uuid", holder.targetUuid().toString()),
+                            Placeholder.unparsed("backup_id", holder.backupId()),
+                            Placeholder.unparsed("slot", slotType + ":" + slotIndex),
+                            Placeholder.unparsed("mode", "runtime_deserialize_failed"),
+                            Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
+                    )
+            );
+            Chat.error(admin, "errors.claim-incompatible");
+            return;
+        }
+
+        ItemStack copy = item.clone();
+        boolean delivered = InventoryUtil.tryInsertIntoStorage(admin.getInventory(), copy);
+        if (!delivered) {
+            Chat.warn(admin, "errors.preview-claim-inventory-full");
+            plugin.auditService().log(
+                    "CLAIM_SLOT",
+                    admin,
+                    holder.targetUuid(),
+                    holder.targetName(),
+                    holder.backupId(),
+                    "slot=" + slotType.name() + ":" + slotIndex
+                            + " mode=infinite delivered=false reason=inventory_full"
+                            + " item=" + item.getType().name()
+                            + " x" + item.getAmount()
+            );
+            return;
+        }
+
+        Chat.success(admin, "success.preview-claim-success", Placeholder.unparsed("amount", String.valueOf(item.getAmount())));
+        plugin.auditService().log(
+                "CLAIM_SLOT",
+                admin,
+                holder.targetUuid(),
+                holder.targetName(),
+                holder.backupId(),
+                "slot=" + slotType.name() + ":" + slotIndex
+                        + " mode=infinite delivered=true"
+                        + " item=" + item.getType().name()
+                        + " x" + item.getAmount()
+        );
     }
 
     private void refreshSingleSlot(Player admin, BackupViewHolder holder, SlotType slotType, int slotIndex, boolean claimed) {
