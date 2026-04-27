@@ -85,7 +85,6 @@ public final class BackupService {
                         playerUuid,
                         now,
                         triggerType,
-                        SnapshotCodec.SCHEMA_VERSION,
                         sha256,
                         snapshotBytes.length,
                         false,

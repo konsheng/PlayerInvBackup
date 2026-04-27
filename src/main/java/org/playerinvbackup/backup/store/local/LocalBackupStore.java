@@ -382,7 +382,6 @@ public final class LocalBackupStore implements BackupStore {
         yaml.set("player-uuid", meta.playerUuid().toString());
         yaml.set("created-at-millis", meta.createdAtMillis());
         yaml.set("trigger", meta.trigger().name());
-        yaml.set("schema-version", meta.schemaVersion());
         yaml.set("sha256", meta.sha256Hex());
         yaml.set("snapshot-size-bytes", meta.snapshotSizeBytes());
         yaml.set("locked", meta.locked());
@@ -415,7 +414,6 @@ public final class LocalBackupStore implements BackupStore {
                     UUID.fromString(player),
                     yaml.getLong("created-at-millis", 0L),
                     TriggerType.valueOf(yaml.getString("trigger", TriggerType.TIMER.name())),
-                    yaml.getInt("schema-version", 0),
                     yaml.getString("sha256", ""),
                     yaml.getInt("snapshot-size-bytes", 0),
                     yaml.getBoolean("locked", false),
@@ -582,7 +580,6 @@ public final class LocalBackupStore implements BackupStore {
                         existing.playerUuid(),
                         existing.createdAtMillis(),
                         existing.trigger(),
-                        existing.schemaVersion(),
                         existing.sha256Hex(),
                         existing.snapshotSizeBytes(),
                         locked,
@@ -615,7 +612,6 @@ public final class LocalBackupStore implements BackupStore {
                         existing.playerUuid(),
                         existing.createdAtMillis(),
                         existing.trigger(),
-                        existing.schemaVersion(),
                         existing.sha256Hex(),
                         existing.snapshotSizeBytes(),
                         existing.locked(),

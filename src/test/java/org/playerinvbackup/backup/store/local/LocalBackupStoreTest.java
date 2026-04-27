@@ -2,9 +2,12 @@ package org.playerinvbackup.backup.store.local;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
@@ -19,8 +22,8 @@ import org.playerinvbackup.backup.store.BackupQuery;
 
 /**
  * 该测试文件用于验证本地文件存储后端的核心读写行为
- * 覆盖缓存刷新 查询筛选 领取投递和元数据兼容场景
- * 确保状态变化后返回的数据仍然一致 完整 且可继续读取
+ * 覆盖缓存刷新 查询筛选 领取投递 元数据兼容和本地元数据落盘场景
+ * 确保状态变化后返回的数据仍然一致 完整 且不会继续写入旧的 schema 字段
  */
 class LocalBackupStoreTest {
     @TempDir
@@ -125,7 +128,6 @@ class LocalBackupStoreTest {
                 playerUuid,
                 1_000L,
                 TriggerType.WORLD_CHANGE,
-                1,
                 "sha256-wc1",
                 3,
                 false,
@@ -176,7 +178,6 @@ class LocalBackupStoreTest {
                 playerUuid,
                 2_000L,
                 TriggerType.DEATH,
-                1,
                 "sha256-b2",
                 1,
                 false,
@@ -191,7 +192,6 @@ class LocalBackupStoreTest {
                 playerUuid,
                 3_000L,
                 TriggerType.DEATH,
-                1,
                 "sha256-b3",
                 1,
                 false,
@@ -221,7 +221,6 @@ class LocalBackupStoreTest {
                 playerUuid,
                 1_000L,
                 TriggerType.DEATH,
-                2,
                 "sha256-death1",
                 3,
                 false,
@@ -269,6 +268,22 @@ class LocalBackupStoreTest {
         assertNull(loaded.killerPlayerName());
     }
 
+    @Test
+    // 验证新的本地元数据文件只写当前需要的字段
+    // 不会再写入旧的 schema-version 节点
+    void savedMetadataDoesNotContainSchemaVersionField() throws Exception {
+        LocalBackupStore store = new LocalBackupStore(tempDir.resolve("store"));
+        store.init();
+
+        UUID playerUuid = UUID.randomUUID();
+        BackupRecord record = backup(playerUuid, "meta1", 1_000L, false, "", new byte[]{5});
+        store.saveBackup(record);
+
+        Path metaPath = tempDir.resolve("store").resolve("backups").resolve(playerUuid.toString()).resolve("meta1.yml");
+        String yaml = Files.readString(metaPath, StandardCharsets.UTF_8);
+        assertFalse(yaml.contains("schema-version"));
+    }
+
     private static BackupRecord backup(
             UUID playerUuid,
             String backupId,
@@ -282,7 +297,6 @@ class LocalBackupStoreTest {
                 playerUuid,
                 createdAtMillis,
                 TriggerType.MANUAL,
-                1,
                 "sha256-" + backupId,
                 snapshotBytes.length,
                 locked,

@@ -228,7 +228,6 @@ public final class QueryHandler implements SubcommandHandler {
                                     meta.targetLocationZ()
                             )),
                             Placeholder.unparsed("sha256", meta.sha256Hex()),
-                            Placeholder.unparsed("schema", String.valueOf(meta.schemaVersion())),
                             Placeholder.unparsed("claimed", String.valueOf(claimedCount)),
                             Placeholder.unparsed("locked", locked),
                             Placeholder.unparsed("note", note)

@@ -13,15 +13,13 @@ import org.playerinvbackup.backup.domain.SnapshotParts;
  * 背包快照编解码器
  *
  * <p>将背包与末影箱槽位序列化为二进制, 并使用 GZIP 压缩保存
- * 采用自定义 header (magic + schemaVersion + slotCounts) 便于做兼容校验
+ * 快照格式固定为当前最新结构, 仅保留 magic 与槽位数量校验
  */
 public final class SnapshotCodec {
-    public static final int SCHEMA_VERSION = 2;
-
     public static final int INVENTORY_SLOT_COUNT = 41;
     public static final int ENDER_CHEST_SLOT_COUNT = 27;
 
-    private static final int MAGIC = 0x424D4255; // BMBU (插件标识)
+    private static final int MAGIC = 0x424D4255; // BMBU
 
     private SnapshotCodec() {
     }
@@ -38,17 +36,14 @@ public final class SnapshotCodec {
         try (GZIPOutputStream gzip = new GZIPOutputStream(out);
              DataOutputStream data = new DataOutputStream(gzip)) {
             data.writeInt(MAGIC);
-            data.writeInt(SCHEMA_VERSION);
             data.writeInt(INVENTORY_SLOT_COUNT);
             data.writeInt(ENDER_CHEST_SLOT_COUNT);
             writeSlots(data, parts.inventorySlotBytes());
             writeSlots(data, parts.enderChestSlotBytes());
             data.writeBoolean(parts.hasExperienceData());
-            if (parts.hasExperienceData()) {
-                data.writeInt(parts.experienceLevel());
-                data.writeFloat(parts.experienceProgress());
-                data.writeInt(parts.totalExperience());
-            }
+            data.writeInt(parts.experienceLevel());
+            data.writeFloat(parts.experienceProgress());
+            data.writeInt(parts.totalExperience());
         }
         return out.toByteArray();
     }
@@ -58,32 +53,21 @@ public final class SnapshotCodec {
              DataInputStream data = new DataInputStream(gzip)) {
             int magic = data.readInt();
             if (magic != MAGIC) {
-                throw new IOException("备份快照标识不匹配: " + Integer.toHexString(magic));
-            }
-            int schemaVersion = data.readInt();
-            if (schemaVersion != 1 && schemaVersion != SCHEMA_VERSION) {
-                throw new IOException("不支持的快照版本: " + schemaVersion);
+                throw new IOException("快照数据格式无效: magic=" + Integer.toHexString(magic));
             }
             int invCount = data.readInt();
             int enderCount = data.readInt();
             if (invCount != INVENTORY_SLOT_COUNT || enderCount != ENDER_CHEST_SLOT_COUNT) {
-                throw new IOException("不支持的槽位数量: inv=" + invCount + ", ender=" + enderCount);
-            }
-            byte[][] inv = readSlots(data, invCount);
-            byte[][] ender = readSlots(data, enderCount);
-            if (schemaVersion == 1) {
-                return new SnapshotParts(inv, ender, false, 0, 0.0f, 0);
+                throw new IOException("快照数据格式无效: inv=" + invCount + ", ender=" + enderCount);
             }
 
+            byte[][] inv = readSlots(data, invCount);
+            byte[][] ender = readSlots(data, enderCount);
             boolean hasExperienceData = data.readBoolean();
-            int experienceLevel = 0;
-            float experienceProgress = 0.0f;
-            int totalExperience = 0;
-            if (hasExperienceData) {
-                experienceLevel = data.readInt();
-                experienceProgress = data.readFloat();
-                totalExperience = data.readInt();
-            }
+            int experienceLevel = data.readInt();
+            float experienceProgress = data.readFloat();
+            int totalExperience = data.readInt();
+
             return new SnapshotParts(
                     inv,
                     ender,

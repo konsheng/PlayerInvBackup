@@ -109,7 +109,6 @@ info:
     - "<prefix><#90A4AE>世界: </#90A4AE><white><world></white>"
     - "<prefix><#90A4AE>坐标: </#90A4AE><white><position></white>"
     - "<prefix><#90A4AE>SHA256: </#90A4AE><#B0BEC5><sha256></#B0BEC5>"
-    - "<prefix><#90A4AE>Schema: </#90A4AE><white><schema></white>"
     - "<prefix><#90A4AE>已领取格子: </#90A4AE><white><claimed></white>"
     - "<prefix><#90A4AE>置顶显示: </#90A4AE><white><locked></white>"
     - "<prefix><#90A4AE>备注: </#90A4AE><white><note></white>"
