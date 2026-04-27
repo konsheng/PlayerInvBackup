@@ -92,21 +92,21 @@ storage:
     parameters: "useSSL=false&serverTimezone=UTC&characterEncoding=utf8"
     # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
-    # 连接池配置
+    # Connection pool settings
     pool:
-      # 最大连接数
+      # Maximum pool size
       maximum-pool-size: 4
-      # 最小空闲连接数
+      # Minimum idle connections
       minimum-idle: 1
-      # 获取连接超时时间
+      # Connection acquisition timeout
       connection-timeout-ms: 5000
-      # 连接检测超时时间
+      # Connection validation timeout
       validation-timeout-ms: 3000
-      # 空闲连接保留时间
+      # Idle connection retention time
       idle-timeout-ms: 300000
-      # 连接最长生命周期
+      # Maximum connection lifetime
       max-lifetime-ms: 1800000
-      # 连接泄漏检测
+      # Leak detection threshold
       leak-detection-threshold-ms: 0
 
   # PostgreSQL storage settings
@@ -122,21 +122,21 @@ storage:
     parameters: "sslmode=disable"
     # Table prefix, set to an empty string to disable prefixes
     table-prefix: "pib_"
-    # 连接池配置
+    # Connection pool settings
     pool:
-      # 最大连接数
+      # Maximum pool size
       maximum-pool-size: 4
-      # 最小空闲连接数
+      # Minimum idle connections
       minimum-idle: 1
-      # 获取连接超时时间
+      # Connection acquisition timeout
       connection-timeout-ms: 5000
-      # 连接检测超时时间
+      # Connection validation timeout
       validation-timeout-ms: 3000
-      # 空闲连接保留时间
+      # Idle connection retention time
       idle-timeout-ms: 300000
-      # 连接最长生命周期
+      # Maximum connection lifetime
       max-lifetime-ms: 1800000
-      # 连接泄漏检测
+      # Leak detection threshold
       leak-detection-threshold-ms: 0
 
   # H2 storage settings
