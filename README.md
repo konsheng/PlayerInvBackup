@@ -8,6 +8,7 @@ Paper / Folia `1.21.1+` player backup plugin, PlayerInvBackup stores player inve
 - Automatic backups by timer and by player events: join, quit, death, and world change
 - Manual self backup, manual target backup, and one-by-one batch backup for all online players
 - Backup scope includes inventory storage, hotbar, armor, offhand, ender chest, and experience
+- Purpur expanded ender chest support: automatically detects 9-54 ender chest slots and works with `six-rows` and `use-permissions-for-rows`
 - GUI backup list with pagination, time filters, trigger filters, backup ID search, refresh, and fast page jumps
 - GUI backup preview with inventory / ender chest switching, slot claiming, restore confirmation, standalone experience restore, pending delivery, pin toggle, and shulker export
 - Shulker export for the current preview view, with separate inventory and ender chest exports

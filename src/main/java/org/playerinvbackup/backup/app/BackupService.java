@@ -18,6 +18,7 @@ import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.util.Hashing;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -209,10 +210,13 @@ public final class BackupService {
 
         invSlots[40] = toBytes(inv.getItemInOffHand());
 
-        ItemStack[] ender = player.getEnderChest().getContents();
-        byte[][] enderSlots = new byte[ender.length][];
-        for (int i = 0; i < ender.length; i++) {
-            enderSlots[i] = toBytes(ender[i]);
+        Inventory enderInventory = player.getEnderChest();
+        int enderSlotCount = enderInventory.getSize();
+        ItemStack[] ender = enderInventory.getContents();
+        byte[][] enderSlots = new byte[enderSlotCount][];
+        for (int i = 0; i < enderSlotCount; i++) {
+            ItemStack item = i < ender.length ? ender[i] : null;
+            enderSlots[i] = toBytes(item);
         }
 
         return new SnapshotParts(

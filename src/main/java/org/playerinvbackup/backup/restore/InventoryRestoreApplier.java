@@ -123,7 +123,7 @@ final class InventoryRestoreApplier {
     }
 
     private static int targetEnderSlotCount(Player target) {
-        return target.getEnderChest().getContents().length;
+        return target.getEnderChest().getSize();
     }
 
     static final class EnderChestCapacityException extends IllegalArgumentException {
