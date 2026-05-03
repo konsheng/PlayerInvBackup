@@ -11,6 +11,7 @@ import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.codec.SnapshotCodec;
 import org.playerinvbackup.backup.domain.BackupRecord;
 import org.playerinvbackup.backup.domain.SnapshotParts;
+import org.playerinvbackup.backup.gui.BackupGuiMode;
 import org.playerinvbackup.backup.gui.GuiView;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
@@ -67,6 +68,19 @@ public final class BackupViewController {
             String backupId,
             GuiView view
     ) {
+        openBackupView(admin, targetUuid, targetName, listPage, listQuery, backupId, view, BackupGuiMode.MANAGE);
+    }
+
+    public void openBackupView(
+            Player admin,
+            UUID targetUuid,
+            String targetName,
+            int listPage,
+            BackupQuery listQuery,
+            String backupId,
+            GuiView view,
+            BackupGuiMode guiMode
+    ) {
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -77,6 +91,7 @@ public final class BackupViewController {
         int safeListPage = Math.max(0, listPage);
         BackupQuery safeQuery = listQuery == null ? BackupQuery.all() : listQuery;
         GuiView safeView = view == null ? GuiView.INVENTORY : view;
+        BackupGuiMode safeMode = guiMode == null ? BackupGuiMode.MANAGE : guiMode;
         String safeTargetName = targetName == null ? String.valueOf(targetUuid) : targetName;
 
         plugin.auditService().log(
@@ -85,7 +100,10 @@ public final class BackupViewController {
                 targetUuid,
                 targetName,
                 backupId,
-                "view=" + safeView.name() + " listPage=" + safeListPage
+                "mode=" + safeMode.name()
+                        + " scope=" + scope(admin, targetUuid)
+                        + " view=" + safeView.name()
+                        + " listPage=" + safeListPage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
         );
@@ -96,7 +114,7 @@ public final class BackupViewController {
         runOnPlayer(admin, () -> {
             BackupListHolder listHolder = listController.findOpenBackupListHolder(admin, targetUuid);
             if (listHolder == null) {
-                listHolder = new BackupListHolder(targetUuid, safeTargetName, safeListPage, safeQuery, List.of());
+                listHolder = new BackupListHolder(targetUuid, safeTargetName, safeListPage, safeQuery, List.of(), safeMode);
                 Inventory inventory = Bukkit.createInventory(listHolder, GUI_SIZE, title);
                 listHolder.setInventory(inventory);
                 listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
@@ -113,6 +131,7 @@ public final class BackupViewController {
                 listHolder.nextRefreshSeq();
                 listHolder.setPage(safeListPage);
                 listHolder.setQuery(safeQuery);
+                listHolder.setGuiMode(safeMode);
                 listHolder.setViewHolder(null);
                 listHolder.setScreen(BackupListHolder.Screen.VIEW_LOADING);
             }
@@ -134,7 +153,7 @@ public final class BackupViewController {
                                 return;
                             }
                             Chat.error(admin, "errors.backup-not-found", Placeholder.unparsed("backup_id", backupId));
-                            listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                            listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery, safeMode);
                         });
                         return;
                     }
@@ -156,7 +175,7 @@ public final class BackupViewController {
                             return;
                         }
                         Chat.error(admin, "errors.load-failed");
-                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery, safeMode);
                     });
                     return;
                 }
@@ -181,7 +200,7 @@ public final class BackupViewController {
                             return;
                         }
                         Chat.error(admin, "errors.snapshot-invalid");
-                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery);
+                        listController.openBackupList(admin, targetUuid, safeTargetName, safeListPage, safeQuery, safeMode);
                     });
                     return;
                 }
@@ -208,6 +227,7 @@ public final class BackupViewController {
                             record.meta().serverId(),
                             safeListPage,
                             safeQuery,
+                            safeMode,
                             safeView,
                             parts,
                             claimOnce,
@@ -244,6 +264,18 @@ public final class BackupViewController {
 
     public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {
         openBackupView(admin, targetUuid, targetName, listPage, BackupQuery.all(), backupId, view);
+    }
+
+    public void openBackupView(
+            Player admin,
+            UUID targetUuid,
+            String targetName,
+            int listPage,
+            String backupId,
+            GuiView view,
+            BackupGuiMode guiMode
+    ) {
+        openBackupView(admin, targetUuid, targetName, listPage, BackupQuery.all(), backupId, view, guiMode);
     }
 
     private void scheduleDelayedViewLoading(
@@ -288,6 +320,13 @@ public final class BackupViewController {
             return DEFAULT_LOADING_INDICATOR_DELAY_SECONDS;
         }
         return Math.max(0L, config.guiLoadingIndicatorDelay().toSeconds());
+    }
+
+    private static String scope(Player admin, UUID targetUuid) {
+        if (admin == null || targetUuid == null) {
+            return "unknown";
+        }
+        return admin.getUniqueId().equals(targetUuid) ? "self" : "others";
     }
 
     private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {

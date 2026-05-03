@@ -20,6 +20,8 @@ permissions:
     default: op
     children:
       playerinvbackup.open: true
+      playerinvbackup.view: true
+      playerinvbackup.view.others: true
       playerinvbackup.backup: true
       playerinvbackup.backupall: true
       playerinvbackup.self: true
@@ -35,6 +37,14 @@ permissions:
 
   playerinvbackup.open:
     description: 允许打开并使用备份 GUI
+    default: false
+
+  playerinvbackup.view:
+    description: 允许以只读模式查看自己的备份 GUI
+    default: false
+
+  playerinvbackup.view.others:
+    description: 允许以只读模式查看其他玩家的备份 GUI
     default: false
 
   playerinvbackup.backup:

@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.domain.BackupMeta;
+import org.playerinvbackup.backup.gui.BackupGuiMode;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.platform.GuiPlatformBridge;
 import org.playerinvbackup.backup.gui.render.BackupListRenderer;
@@ -45,10 +46,21 @@ public final class BackupListController {
     }
 
     public void openBackupList(Player admin, UUID targetUuid, String targetName, int page) {
-        openBackupList(admin, targetUuid, targetName, page, BackupQuery.all());
+        openBackupList(admin, targetUuid, targetName, page, BackupQuery.all(), BackupGuiMode.MANAGE);
     }
 
     public void openBackupList(Player admin, UUID targetUuid, String targetName, int page, BackupQuery query) {
+        openBackupList(admin, targetUuid, targetName, page, query, BackupGuiMode.MANAGE);
+    }
+
+    public void openBackupList(
+            Player admin,
+            UUID targetUuid,
+            String targetName,
+            int page,
+            BackupQuery query,
+            BackupGuiMode guiMode
+    ) {
         BackupStore store = resolveStoreOrError(admin, false);
         if (store == null) {
             return;
@@ -56,15 +68,18 @@ public final class BackupListController {
 
         int safePage = Math.max(0, page);
         BackupQuery safeQuery = query == null ? BackupQuery.all() : query;
+        BackupGuiMode safeMode = guiMode == null ? BackupGuiMode.MANAGE : guiMode;
         Component loadingLabel = plugin.lang().msgNoPrefix("gui.backup-list.loading-title");
 
         plugin.auditService().log(
-                "OPEN_LIST",
+                safeMode.viewOnly() ? "OPEN_VIEW_LIST" : "OPEN_LIST",
                 admin,
                 targetUuid,
                 targetName,
                 null,
-                "page=" + safePage
+                "mode=" + safeMode.name()
+                        + " scope=" + scope(admin, targetUuid)
+                        + " page=" + safePage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
         );
@@ -74,6 +89,7 @@ public final class BackupListController {
             if (existing != null) {
                 existing.nextViewRefreshSeq();
                 existing.setViewHolder(null);
+                existing.setGuiMode(safeMode);
 
                 boolean same = safePage == existing.page() && safeQuery.equals(existing.query());
                 int limit = plugin.pluginConfig().guiListPageSize();
@@ -97,7 +113,7 @@ public final class BackupListController {
 
             String name = targetName == null ? String.valueOf(targetUuid) : targetName;
             Component title = listRenderer.title(name, safePage, 1);
-            BackupListHolder holder = new BackupListHolder(targetUuid, name, safePage, safeQuery, List.of());
+            BackupListHolder holder = new BackupListHolder(targetUuid, name, safePage, safeQuery, List.of(), safeMode);
             holder.setScreen(BackupListHolder.Screen.LIST_LOADING);
             Inventory inventory = Bukkit.createInventory(holder, GUI_SIZE, title);
             holder.setInventory(inventory);
@@ -275,6 +291,13 @@ public final class BackupListController {
             return DEFAULT_LOADING_INDICATOR_DELAY_SECONDS;
         }
         return Math.max(0L, config.guiLoadingIndicatorDelay().toSeconds());
+    }
+
+    private static String scope(Player admin, UUID targetUuid) {
+        if (admin == null || targetUuid == null) {
+            return "unknown";
+        }
+        return admin.getUniqueId().equals(targetUuid) ? "self" : "others";
     }
 
     private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {

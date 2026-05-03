@@ -73,7 +73,10 @@ Command list:
   Shows plugin information and a clickable help entry
 - **`/pib open [player]`**<br>
   Permission: `playerinvbackup.open`<br>
-  Opens your own backup list or the specified player's backup list
+  Opens your own backup list or the specified player's backup list, in-game only
+- **`/pib view [player]`**<br>
+  Permission: `playerinvbackup.view` for self, plus `playerinvbackup.view.others` for another player<br>
+  Opens a read-only backup list and preview, in-game only
 - **`/pib backup [player]`**<br>
   Permission: `playerinvbackup.self` without target, `playerinvbackup.backup` with target<br>
   Creates a manual backup for yourself or an online target player
@@ -82,7 +85,7 @@ Command list:
   Creates one batch backup run for all currently online players
 - **`/pib pending`**<br>
   Permission: `playerinvbackup.pending`<br>
-  Delivers pending items into your inventory
+  Delivers pending items into your inventory, in-game only
 - **`/pib restore <player> <backup id>`**<br>
   Permission: `playerinvbackup.restore`<br>
   Restores the backup to the target online player
@@ -122,6 +125,12 @@ Command list:
 - **`playerinvbackup.open`**<br>
   Default: `false`<br>
   Open and use the backup GUI
+- **`playerinvbackup.view`**<br>
+  Default: `false`<br>
+  Open a read-only GUI for your own backups
+- **`playerinvbackup.view.others`**<br>
+  Default: `false`<br>
+  Open a read-only GUI for other players' backups, also requires `playerinvbackup.view`
 - **`playerinvbackup.backup`**<br>
   Default: `false`<br>
   Manually back up a specified online player

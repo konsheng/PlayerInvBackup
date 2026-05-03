@@ -73,7 +73,10 @@ Paper / Folia `1.21.1+` 玩家备份插件，PlayerInvBackup 会备份玩家物�
   显示插件信息和可点击的帮助入口
 - **`/pib open [玩家名]`**<br>
   权限：`playerinvbackup.open`<br>
-  打开自己的备份列表或指定玩家的备份列表
+  打开自己的备份列表或指定玩家的备份列表，需要游戏内执行
+- **`/pib view [玩家名]`**<br>
+  权限：查看自己需要 `playerinvbackup.view`，查看其他玩家还需要 `playerinvbackup.view.others`<br>
+  以只读模式打开备份列表和预览，需要游戏内执行
 - **`/pib backup [玩家名]`**<br>
   权限：不带目标需要 `playerinvbackup.self`，带目标需要 `playerinvbackup.backup`<br>
   立即备份自己或指定在线玩家
@@ -82,7 +85,7 @@ Paper / Folia `1.21.1+` 玩家备份插件，PlayerInvBackup 会备份玩家物�
   为当前所有在线玩家创建一轮批量备份
 - **`/pib pending`**<br>
   权限：`playerinvbackup.pending`<br>
-  将待投递物品发放到自己的背包
+  将待投递物品发放到自己的背包，需要游戏内执行
 - **`/pib restore <玩家名> <备份编号>`**<br>
   权限：`playerinvbackup.restore`<br>
   将指定备份恢复到目标在线玩家
@@ -122,6 +125,12 @@ Paper / Folia `1.21.1+` 玩家备份插件，PlayerInvBackup 会备份玩家物�
 - **`playerinvbackup.open`**<br>
   默认：`false`<br>
   打开并使用备份 GUI
+- **`playerinvbackup.view`**<br>
+  默认：`false`<br>
+  以只读模式查看自己的备份 GUI
+- **`playerinvbackup.view.others`**<br>
+  默认：`false`<br>
+  以只读模式查看其他玩家的备份 GUI，同时需要 `playerinvbackup.view`
 - **`playerinvbackup.backup`**<br>
   默认：`false`<br>
   手动备份指定在线玩家

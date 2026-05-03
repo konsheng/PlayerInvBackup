@@ -60,23 +60,27 @@ public final class BackupViewRenderer {
                 lang.msg("gui.backup-view.toggle.name"),
                 lang.msgList("gui.backup-view.toggle.lore")
         ));
-        boolean online = Bukkit.getPlayer(holder.targetUuid()) != null;
-        inventory.setItem(SLOT_VIEW_RESTORE, online
-                ? itemFactory.namedItem(Material.REDSTONE_BLOCK, lang.msg("gui.backup-view.restore.name"), lang.msgList("gui.backup-view.restore.lore"))
-                : itemFactory.namedItem(Material.BARRIER, lang.msg("gui.backup-view.restore-offline.name"), lang.msgList("gui.backup-view.restore-offline.lore")));
-        renderExperienceItem(inventory, holder);
-        inventory.setItem(SLOT_VIEW_PENDING, itemFactory.namedItem(
-                Material.CHEST,
-                lang.msg("gui.backup-view.pending.name"),
-                lang.msgList("gui.backup-view.pending.lore")
-        ));
-        inventory.setItem(SLOT_VIEW_EXPORT, itemFactory.namedItem(
-                exportIconMaterial(),
-                lang.msg("gui.backup-view.export.name"),
-                lang.msgList("gui.backup-view.export.lore")
-        ));
+        if (!holder.viewOnly()) {
+            boolean online = Bukkit.getPlayer(holder.targetUuid()) != null;
+            inventory.setItem(SLOT_VIEW_RESTORE, online
+                    ? itemFactory.namedItem(Material.REDSTONE_BLOCK, lang.msg("gui.backup-view.restore.name"), lang.msgList("gui.backup-view.restore.lore"))
+                    : itemFactory.namedItem(Material.BARRIER, lang.msg("gui.backup-view.restore-offline.name"), lang.msgList("gui.backup-view.restore-offline.lore")));
+            renderExperienceItem(inventory, holder);
+            inventory.setItem(SLOT_VIEW_PENDING, itemFactory.namedItem(
+                    Material.CHEST,
+                    lang.msg("gui.backup-view.pending.name"),
+                    lang.msgList("gui.backup-view.pending.lore")
+            ));
+            inventory.setItem(SLOT_VIEW_EXPORT, itemFactory.namedItem(
+                    exportIconMaterial(),
+                    lang.msg("gui.backup-view.export.name"),
+                    lang.msgList("gui.backup-view.export.lore")
+            ));
+        }
         renderEnderPageItems(inventory, holder);
-        renderLockItem(inventory, holder);
+        if (!holder.viewOnly()) {
+            renderLockItem(inventory, holder);
+        }
     }
 
     private void renderEnderPageItems(Inventory inventory, BackupViewHolder holder) {

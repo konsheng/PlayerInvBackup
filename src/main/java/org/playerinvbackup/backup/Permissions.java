@@ -15,6 +15,8 @@ public final class Permissions {
     public static final String ADMIN = "playerinvbackup.admin";
 
     public static final String OPEN = "playerinvbackup.open";
+    public static final String VIEW = "playerinvbackup.view";
+    public static final String VIEW_OTHERS = "playerinvbackup.view.others";
     public static final String BACKUP = "playerinvbackup.backup";
     public static final String BACKUP_ALL = "playerinvbackup.backupall";
     public static final String SELF_BACKUP = "playerinvbackup.self";

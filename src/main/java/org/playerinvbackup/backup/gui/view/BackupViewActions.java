@@ -66,7 +66,14 @@ public final class BackupViewActions {
     public void handleClick(Player admin, BackupViewHolder holder, int slot) {
         if (slot == BackupViewRenderer.SLOT_VIEW_BACK) {
             playGuiSound(admin, GuiSoundAction.VIEW_BACK);
-            listController.openBackupList(admin, holder.targetUuid(), holder.targetName(), holder.listPage(), holder.listQuery());
+            listController.openBackupList(
+                    admin,
+                    holder.targetUuid(),
+                    holder.targetName(),
+                    holder.listPage(),
+                    holder.listQuery(),
+                    holder.guiMode()
+            );
             return;
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_TOGGLE) {
@@ -92,6 +99,9 @@ public final class BackupViewActions {
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_NEXT_PAGE) {
             handleEnderPageClick(admin, holder, 1);
+            return;
+        }
+        if (holder.viewOnly()) {
             return;
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_PENDING) {

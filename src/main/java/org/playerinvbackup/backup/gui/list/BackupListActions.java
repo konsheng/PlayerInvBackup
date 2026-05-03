@@ -148,7 +148,8 @@ public final class BackupListActions {
                 holder.page(),
                 query,
                 meta.backupId(),
-                GuiView.INVENTORY
+                GuiView.INVENTORY,
+                holder.guiMode()
         );
     }
 

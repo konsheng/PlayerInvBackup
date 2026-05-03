@@ -2,6 +2,7 @@ package org.playerinvbackup.backup.gui.holder;
 
 import java.util.UUID;
 import org.playerinvbackup.backup.domain.SnapshotParts;
+import org.playerinvbackup.backup.gui.BackupGuiMode;
 import org.playerinvbackup.backup.gui.GuiView;
 import org.playerinvbackup.backup.gui.view.EnderChestPageMapper;
 import org.playerinvbackup.backup.store.BackupQuery;
@@ -20,6 +21,7 @@ public final class BackupViewHolder implements InventoryHolder {
     private final String serverId;
     private final int listPage;
     private final BackupQuery listQuery;
+    private final BackupGuiMode guiMode;
     // 视图在 GUI 内可切换, 需要原地更新
     private GuiView view;
     private final SnapshotParts parts;
@@ -54,6 +56,7 @@ public final class BackupViewHolder implements InventoryHolder {
             String serverId,
             int listPage,
             BackupQuery listQuery,
+            BackupGuiMode guiMode,
             GuiView view,
             SnapshotParts parts,
             boolean claimOnce,
@@ -83,6 +86,7 @@ public final class BackupViewHolder implements InventoryHolder {
         this.serverId = serverId;
         this.listPage = Math.max(0, listPage);
         this.listQuery = listQuery == null ? BackupQuery.all() : listQuery;
+        this.guiMode = guiMode == null ? BackupGuiMode.MANAGE : guiMode;
         this.view = view == null ? GuiView.INVENTORY : view;
         this.parts = parts;
         this.claimOnce = claimOnce;
@@ -129,6 +133,14 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public BackupQuery listQuery() {
         return listQuery;
+    }
+
+    public BackupGuiMode guiMode() {
+        return guiMode;
+    }
+
+    public boolean viewOnly() {
+        return guiMode.viewOnly();
     }
 
     public GuiView view() {

@@ -6,6 +6,7 @@ help:
     - "<#78909C>-</#78909C> <#90A4AE>Common note: Use </#90A4AE><#4FC3F7>/<label> tips</#4FC3F7><#90A4AE> to view usage tips</#90A4AE>"
   commands:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> open [player]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Open your own backup list with no argument, or open the specified player's list</#E0E0E0>"
+    - "<#78909C>-</#78909C> <#4FC3F7>/<label> view [player]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Read-only view of your own backup list, or the specified player's list</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> list <player> [page]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>List backups</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> info <player> <backup id></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show backup details</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> lock <player> <backup id> [note]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Pin a backup</#E0E0E0>"
@@ -19,7 +20,7 @@ help:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> tips</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show usage tips and notes</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Reload config and language</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>Show this help</#E0E0E0>"
-  example: "<#78909C>-</#78909C> <#90A4AE>Example: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>or</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
+  example: "<#78909C>-</#78909C> <#90A4AE>Example: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>or</#78909C> <#4FC3F7>/<label> view Steve</#4FC3F7>"
 
 tips:
   header: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup Tips</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
@@ -31,7 +32,7 @@ tips:
     - "<#78909C>-</#78909C> <#4FC3F7>💡 Tip: </#4FC3F7><#B0BEC5>In claim-once mode, a full inventory sends the item to pending (/<label> pending); incompatible items are skipped and kept in the queue</#B0BEC5>"
     - "<#78909C>-</#78909C> <#4FC3F7>💡 Tip: </#4FC3F7><#B0BEC5>Backup ID is shown on the paper item under 'ID'; /<label> note and /<label> lock can add notes and pin important backups, and pinned backups are not auto purged</#B0BEC5>"
     - "<#78909C>-</#78909C> <#4FC3F7>💡 Tip: </#4FC3F7><#B0BEC5>Restore is best done from GUI through 'Restore to player' with confirmation; experience can be restored separately, and inventory/ender chest restore overwrites the target's current data</#B0BEC5>"
-    - "<#78909C>-</#78909C> <#EF5350>⚠ Warning: </#EF5350><#FF8A65>On Folia, restore only supports online players; open and pending are GUI or inventory actions and only work in game</#FF8A65>"
+    - "<#78909C>-</#78909C> <#EF5350>⚠ Warning: </#EF5350><#FF8A65>On Folia, restore only supports online players; open, view, and pending are GUI or inventory actions and only work in game</#FF8A65>"
 
 errors:
   no-permission: "<prefix><#EF5350>✖ You do not have permission (requires <#FFCA28><perm></#FFCA28>)</#EF5350>"
@@ -43,6 +44,7 @@ errors:
   backup-queue-full: "<prefix><#EF5350>✖ Backup queue is full or unavailable, try again later</#EF5350>"
   backup-cooldown: "<prefix><#FFA726>⚠ Wait <#FFCA28><seconds></#FFCA28> more seconds before backing yourself up again</#FFA726>"
   usage-open: "<prefix><#EF5350>Usage: <#FFCA28>/<label> open [player]</#FFCA28></#EF5350>"
+  usage-view: "<prefix><#EF5350>Usage: <#FFCA28>/<label> view [player]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backup [player]</#FFCA28></#EF5350>"
   usage-backupall: "<prefix><#EF5350>Usage: <#FFCA28>/<label> backupall</#FFCA28></#EF5350>"
   backupall-running: "<prefix><#EF5350>A backup task is already in progress, wait until the current backup task finishes before trying again</#EF5350>"
@@ -55,6 +57,7 @@ errors:
   note-too-long: "<prefix><#EF5350>✖ Note is too long (max <#FFCA28><max></#FFCA28> chars)</#EF5350>"
   offline-not-cached: "<prefix><#EF5350>✖ Player is offline and server has no cache, use UUID</#EF5350>"
   open-offline-not-cached: "<prefix><#EF5350>✖ Player is offline and server has no cache, use UUID (/<label> open <UUID>)</#EF5350>"
+  view-offline-not-cached: "<prefix><#EF5350>✖ Player is offline and server has no cache, use UUID (/<label> view <UUID>)</#EF5350>"
   player-not-online: "<prefix><#EF5350>✖ Target player is not online</#EF5350>"
   target-offline: "<prefix><#EF5350>✖ Target player is offline</#EF5350>"
   restore-target-offline: "<prefix><#EF5350>✖ Target player is not online (Folia only supports online restore)</#EF5350>"

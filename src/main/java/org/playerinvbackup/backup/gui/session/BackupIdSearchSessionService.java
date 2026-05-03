@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
+import org.playerinvbackup.backup.gui.BackupGuiMode;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.list.BackupListController;
 import org.playerinvbackup.backup.gui.platform.GuiPlatformBridge;
@@ -42,7 +43,7 @@ public final class BackupIdSearchSessionService {
         }
         sessions.put(
                 admin.getUniqueId(),
-                new BackupIdSearchSession(holder.targetUuid(), holder.targetName(), holder.page(), holder.query())
+                new BackupIdSearchSession(holder.targetUuid(), holder.targetName(), holder.page(), holder.query(), holder.guiMode())
         );
         platformBridge.closeMenu(admin);
         Lang lang = plugin.lang();
@@ -66,7 +67,8 @@ public final class BackupIdSearchSessionService {
                     session.targetUuid(),
                     session.targetName(),
                     session.page(),
-                    session.query()
+                    session.query(),
+                    session.guiMode()
             ));
             return true;
         }
@@ -78,7 +80,14 @@ public final class BackupIdSearchSessionService {
                         "warn.search-backup-id-empty",
                         Placeholder.unparsed("cancel", cancelKeywordDisplay(lang))
                 );
-                listController.openBackupList(admin, session.targetUuid(), session.targetName(), session.page(), session.query());
+                listController.openBackupList(
+                        admin,
+                        session.targetUuid(),
+                        session.targetName(),
+                        session.page(),
+                        session.query(),
+                        session.guiMode()
+                );
             });
             return true;
         }
@@ -90,7 +99,8 @@ public final class BackupIdSearchSessionService {
                 session.page(),
                 session.query(),
                 input,
-                org.playerinvbackup.backup.gui.GuiView.INVENTORY
+                org.playerinvbackup.backup.gui.GuiView.INVENTORY,
+                session.guiMode()
         ));
         return true;
     }
@@ -146,6 +156,12 @@ public final class BackupIdSearchSessionService {
         return false;
     }
 
-    private record BackupIdSearchSession(UUID targetUuid, String targetName, int page, org.playerinvbackup.backup.store.BackupQuery query) {
+    private record BackupIdSearchSession(
+            UUID targetUuid,
+            String targetName,
+            int page,
+            org.playerinvbackup.backup.store.BackupQuery query,
+            BackupGuiMode guiMode
+    ) {
     }
 }

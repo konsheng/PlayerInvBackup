@@ -117,6 +117,10 @@ public final class GuiService {
         backupListController.openBackupList(admin, targetUuid, targetName, page, query);
     }
 
+    public void openBackupList(Player admin, UUID targetUuid, String targetName, int page, BackupQuery query, BackupGuiMode guiMode) {
+        backupListController.openBackupList(admin, targetUuid, targetName, page, query, guiMode);
+    }
+
     public void openBackupView(
             Player admin,
             UUID targetUuid,
@@ -127,6 +131,19 @@ public final class GuiService {
             GuiView view
     ) {
         backupViewController.openBackupView(admin, targetUuid, targetName, listPage, listQuery, backupId, view);
+    }
+
+    public void openBackupView(
+            Player admin,
+            UUID targetUuid,
+            String targetName,
+            int listPage,
+            BackupQuery listQuery,
+            String backupId,
+            GuiView view,
+            BackupGuiMode guiMode
+    ) {
+        backupViewController.openBackupView(admin, targetUuid, targetName, listPage, listQuery, backupId, view, guiMode);
     }
 
     public void openBackupView(Player admin, UUID targetUuid, String targetName, int listPage, String backupId, GuiView view) {

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.playerinvbackup.backup.domain.BackupMeta;
+import org.playerinvbackup.backup.gui.BackupGuiMode;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -30,17 +31,30 @@ public final class BackupListHolder implements InventoryHolder {
     private int totalPages = 1;
     private BackupQuery query;
     private List<BackupMeta> backups;
+    private BackupGuiMode guiMode;
     private volatile boolean listLoaded;
     private volatile Screen screen = Screen.LIST;
     private BackupViewHolder viewHolder;
     private Inventory inventory;
 
     public BackupListHolder(UUID targetUuid, String targetName, int page, BackupQuery query, List<BackupMeta> backups) {
+        this(targetUuid, targetName, page, query, backups, BackupGuiMode.MANAGE);
+    }
+
+    public BackupListHolder(
+            UUID targetUuid,
+            String targetName,
+            int page,
+            BackupQuery query,
+            List<BackupMeta> backups,
+            BackupGuiMode guiMode
+    ) {
         this.targetUuid = targetUuid;
         this.targetName = targetName;
         this.page = Math.max(0, page);
         this.query = query == null ? BackupQuery.all() : query;
         this.backups = backups == null ? List.of() : List.copyOf(backups);
+        this.guiMode = guiMode == null ? BackupGuiMode.MANAGE : guiMode;
     }
 
     public UUID targetUuid() {
@@ -81,6 +95,18 @@ public final class BackupListHolder implements InventoryHolder {
 
     public void setBackups(List<BackupMeta> backups) {
         this.backups = backups == null ? List.of() : List.copyOf(backups);
+    }
+
+    public BackupGuiMode guiMode() {
+        return guiMode;
+    }
+
+    public void setGuiMode(BackupGuiMode guiMode) {
+        this.guiMode = guiMode == null ? BackupGuiMode.MANAGE : guiMode;
+    }
+
+    public boolean viewOnly() {
+        return guiMode.viewOnly();
     }
 
     public long nextRefreshSeq() {

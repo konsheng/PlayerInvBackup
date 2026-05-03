@@ -6,6 +6,7 @@ help:
     - "<#78909C>-</#78909C> <#90A4AE>常用说明: 输入 </#90A4AE><#4FC3F7>/<label> tips</#4FC3F7><#90A4AE> 查看使用提示</#90A4AE>"
   commands:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> open [玩家名]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>不填参数时打开自己的备份列表, 填写后打开指定玩家</#E0E0E0>"
+    - "<#78909C>-</#78909C> <#4FC3F7>/<label> view [玩家名]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>只读查看自己的备份列表, 填写后只读查看指定玩家</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> list <玩家名> [页码]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>列出备份</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> info <玩家名> <备份编号></#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看备份详情</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> lock <玩家名> <备份编号> [备注]</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>置顶显示备份</#E0E0E0>"
@@ -19,7 +20,7 @@ help:
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> tips</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看使用提示与注意事项</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> reload</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>重载配置/语言</#E0E0E0>"
     - "<#78909C>-</#78909C> <#4FC3F7>/<label> help</#4FC3F7> <#78909C>▸</#78909C> <#E0E0E0>查看本帮助</#E0E0E0>"
-  example: "<#78909C>-</#78909C> <#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> open Steve</#4FC3F7>"
+  example: "<#78909C>-</#78909C> <#90A4AE>示例: </#90A4AE><#4FC3F7>/<label> open</#4FC3F7> <#78909C>或</#78909C> <#4FC3F7>/<label> view Steve</#4FC3F7>"
 
 tips:
   header: "<gradient:#FFB75E:#ED8F03><bold>PlayerInvBackup 提示</bold></gradient> <#90A4AE>(v<version>)</#90A4AE>"
@@ -31,7 +32,7 @@ tips:
     - "<#78909C>-</#78909C> <#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>一次性领取模式下, 背包满会进入待投递(/<label> pending); 如果物品与当前服务端不兼容, 会被跳过并继续保留</#B0BEC5>"
     - "<#78909C>-</#78909C> <#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>备份编号可在列表纸片的 '编号' 一行查看; /<label> note 和 /<label> lock 可给重要备份加备注并置顶, 置顶备份不会被自动清理</#B0BEC5>"
     - "<#78909C>-</#78909C> <#4FC3F7>💡 提示: </#4FC3F7><#B0BEC5>恢复建议在 GUI 内点 '恢复到玩家' 并二次确认; 经验值可单独恢复, 背包/末影箱恢复会覆盖目标当前数据</#B0BEC5>"
-    - "<#78909C>-</#78909C> <#EF5350>⚠ 注意: </#EF5350><#FF8A65>Folia 下仅支持对在线玩家进行恢复; open 和 pending 为 GUI/背包操作, 仅支持游戏内执行</#FF8A65>"
+    - "<#78909C>-</#78909C> <#EF5350>⚠ 注意: </#EF5350><#FF8A65>Folia 下仅支持对在线玩家进行恢复; open, view 和 pending 为 GUI/背包操作, 仅支持游戏内执行</#FF8A65>"
 
 errors:
   no-permission: "<prefix><#EF5350>✖ 你没有权限(需要 <#FFCA28><perm></#FFCA28>)</#EF5350>"
@@ -43,6 +44,7 @@ errors:
   backup-queue-full: "<prefix><#EF5350>✖ 备份队列已满或不可用, 请稍后再试</#EF5350>"
   backup-cooldown: "<prefix><#FFA726>⚠ 请等待 <#FFCA28><seconds></#FFCA28> 秒后再备份自己</#FFA726>"
   usage-open: "<prefix><#EF5350>用法: <#FFCA28>/<label> open [玩家名]</#FFCA28></#EF5350>"
+  usage-view: "<prefix><#EF5350>用法: <#FFCA28>/<label> view [玩家名]</#FFCA28></#EF5350>"
   usage-backup: "<prefix><#EF5350>用法: <#FFCA28>/<label> backup [玩家名]</#FFCA28></#EF5350>"
   usage-backupall: "<prefix><#EF5350>用法: <#FFCA28>/<label> backupall</#FFCA28></#EF5350>"
   backupall-running: "<prefix><#EF5350>已有备份任务正在进行中, 请等待当前备份任务完成后再试</#EF5350>"
@@ -55,6 +57,7 @@ errors:
   note-too-long: "<prefix><#EF5350>✖ 备注过长(最多 <#FFCA28><max></#FFCA28> 字符)</#EF5350>"
   offline-not-cached: "<prefix><#EF5350>✖ 玩家不在线且服务器无缓存数据, 请使用 UUID</#EF5350>"
   open-offline-not-cached: "<prefix><#EF5350>✖ 玩家不在线且服务器无缓存数据, 请使用 UUID(/<label> open <UUID>)</#EF5350>"
+  view-offline-not-cached: "<prefix><#EF5350>✖ 玩家不在线且服务器无缓存数据, 请使用 UUID(/<label> view <UUID>)</#EF5350>"
   player-not-online: "<prefix><#EF5350>✖ 目标玩家不在线</#EF5350>"
   target-offline: "<prefix><#EF5350>✖ 目标玩家已离线</#EF5350>"
   restore-target-offline: "<prefix><#EF5350>✖ 目标玩家不在线(Folia 下仅支持在线恢复)</#EF5350>"
