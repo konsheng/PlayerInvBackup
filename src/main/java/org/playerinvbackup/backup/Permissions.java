@@ -20,6 +20,7 @@ public final class Permissions {
     public static final String SELF_BACKUP = "playerinvbackup.self";
     public static final String SELF_BACKUP_BYPASS = "playerinvbackup.backup.bypass";
     public static final String RESTORE = "playerinvbackup.restore";
+    public static final String EXPORT = "playerinvbackup.export";
     public static final String PENDING = "playerinvbackup.pending";
     public static final String STATUS = "playerinvbackup.status";
     public static final String RELOAD = "playerinvbackup.reload";

@@ -6,6 +6,8 @@ package org.playerinvbackup.backup.gui.preview;
 public record PreviewSnapshotData(
         boolean[] claimedInv,
         boolean[] claimedEnder,
+        boolean[] claimRecordInv,
+        boolean[] claimRecordEnder,
         boolean[] incompatibleInv,
         boolean[] incompatibleEnder,
         boolean incompatibleClaimBlocksWholeBackup

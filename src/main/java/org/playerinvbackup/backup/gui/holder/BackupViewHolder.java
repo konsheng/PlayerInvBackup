@@ -25,6 +25,8 @@ public final class BackupViewHolder implements InventoryHolder {
     private final boolean claimOnce;
     private final boolean[] claimedInv;
     private final boolean[] claimedEnder;
+    private final boolean[] claimRecordInv;
+    private final boolean[] claimRecordEnder;
     private final boolean[] incompatibleInv;
     private final boolean[] incompatibleEnder;
     private final boolean incompatibleClaimBlocksWholeBackup;
@@ -55,6 +57,8 @@ public final class BackupViewHolder implements InventoryHolder {
             boolean claimOnce,
             boolean[] claimedInv,
             boolean[] claimedEnder,
+            boolean[] claimRecordInv,
+            boolean[] claimRecordEnder,
             boolean[] incompatibleInv,
             boolean[] incompatibleEnder,
             boolean incompatibleClaimBlocksWholeBackup,
@@ -82,6 +86,8 @@ public final class BackupViewHolder implements InventoryHolder {
         this.claimOnce = claimOnce;
         this.claimedInv = claimedInv;
         this.claimedEnder = claimedEnder;
+        this.claimRecordInv = claimRecordInv;
+        this.claimRecordEnder = claimRecordEnder;
         this.incompatibleInv = incompatibleInv;
         this.incompatibleEnder = incompatibleEnder;
         this.incompatibleClaimBlocksWholeBackup = incompatibleClaimBlocksWholeBackup;
@@ -145,6 +151,14 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public boolean[] claimedEnder() {
         return claimedEnder;
+    }
+
+    public boolean[] claimRecordInv() {
+        return claimRecordInv;
+    }
+
+    public boolean[] claimRecordEnder() {
+        return claimRecordEnder;
     }
 
     public boolean[] incompatibleInv() {

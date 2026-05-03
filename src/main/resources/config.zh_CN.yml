@@ -195,6 +195,10 @@ gui:
       # false, 只屏蔽不兼容的单个槽位
       # true, 只要存在不兼容物品就禁用整份备份的槽位领取
       block-whole-backup: false
+    export:
+      # 备份预览导出时使用的潜影盒材质
+      # 支持 SHULKER_BOX 和所有颜色潜影盒, 例如 RED_SHULKER_BOX
+      shulker-box-material: "SHULKER_BOX"
 
   # 备份列表界面相关设置
   backup-list:
@@ -317,6 +321,11 @@ sounds:
         pitch: 1.0
       # 置顶显示切换
       lock:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # 导出当前预览视图到潜影盒
+      export:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0

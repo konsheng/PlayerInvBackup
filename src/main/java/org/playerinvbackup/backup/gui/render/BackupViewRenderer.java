@@ -22,7 +22,8 @@ public final class BackupViewRenderer {
     public static final int SLOT_VIEW_TOGGLE = 46;
     public static final int SLOT_VIEW_RESTORE = 47;
     public static final int SLOT_VIEW_EXPERIENCE = 48;
-    public static final int SLOT_VIEW_LOCK = 52;
+    public static final int SLOT_VIEW_LOCK = 51;
+    public static final int SLOT_VIEW_EXPORT = 52;
     public static final int SLOT_VIEW_PENDING = 53;
 
     private final PlayerInvBackupPlugin plugin;
@@ -66,6 +67,11 @@ public final class BackupViewRenderer {
                 Material.CHEST,
                 lang.msg("gui.backup-view.pending.name"),
                 lang.msgList("gui.backup-view.pending.lore")
+        ));
+        inventory.setItem(SLOT_VIEW_EXPORT, itemFactory.namedItem(
+                exportIconMaterial(),
+                lang.msg("gui.backup-view.export.name"),
+                lang.msgList("gui.backup-view.export.lore")
         ));
         renderLockItem(inventory, holder);
     }
@@ -183,5 +189,13 @@ public final class BackupViewRenderer {
             return serverId == null || serverId.isBlank() ? "default" : serverId;
         }
         return config.displayServerName(serverId);
+    }
+
+    private Material exportIconMaterial() {
+        var config = plugin.pluginConfig();
+        if (config == null || config.guiExport() == null || config.guiExport().shulkerBoxMaterial() == null) {
+            return Material.SHULKER_BOX;
+        }
+        return config.guiExport().shulkerBoxMaterial();
     }
 }

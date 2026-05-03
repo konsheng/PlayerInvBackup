@@ -45,6 +45,7 @@ public record PluginConfig(
         int guiListPageSize,
         GuiPreviewSettings guiPreview,
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible,
+        GuiExportSettings guiExport,
         List<GuiTimeFilterOption> guiTimeFilters,
         GuiMode guiMode,
         String languageFile,
@@ -143,6 +144,7 @@ public record PluginConfig(
         GuiPreviewSettings guiPreview = GuiPreviewSettings.fromConfig(config);
         boolean guiBackupViewBlockWholeBackupClaimOnIncompatible =
                 config.getBoolean("gui.backup-view.incompatible-claim.block-whole-backup", false);
+        GuiExportSettings guiExport = GuiExportSettings.fromConfig(plugin, lang, config);
         List<GuiTimeFilterOption> guiTimeFilters = GuiTimeFilterOption.fromConfig(
                 plugin,
                 lang,
@@ -231,6 +233,7 @@ public record PluginConfig(
                 guiListPageSize,
                 guiPreview,
                 guiBackupViewBlockWholeBackupClaimOnIncompatible,
+                guiExport,
                 guiTimeFilters,
                 guiMode,
                 languageFile,

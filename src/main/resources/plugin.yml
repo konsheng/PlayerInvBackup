@@ -25,6 +25,7 @@ permissions:
       playerinvbackup.self: true
       playerinvbackup.backup.bypass: true
       playerinvbackup.restore: true
+      playerinvbackup.export: true
       playerinvbackup.pending: true
       playerinvbackup.status: true
       playerinvbackup.reload: true
@@ -54,6 +55,10 @@ permissions:
 
   playerinvbackup.restore:
     description: 允许将备份恢复到玩家, 仅支持在线恢复
+    default: false
+
+  playerinvbackup.export:
+    description: 允许将备份预览内容导出到潜影盒
     default: false
 
   playerinvbackup.pending:

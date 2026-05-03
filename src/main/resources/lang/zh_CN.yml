@@ -72,6 +72,10 @@ errors:
   claim-failed: "<prefix><#EF5350>✖ 领取失败, 请查看控制台日志</#EF5350>"
   claim-incompatible: "<prefix><#EF5350>✖ 当前服务端无法领取该物品</#EF5350>"
   claim-incompatible-backup: "<prefix><#EF5350>✖ 该备份包含不兼容物品, 当前配置已禁止整份备份领取</#EF5350>"
+  export-incompatible: "<prefix><#EF5350>✖ 当前视图包含不兼容物品, 已取消导出</#EF5350>"
+  export-failed: "<prefix><#EF5350>✖ 导出失败, 请查看控制台日志</#EF5350>"
+  export-empty: "<prefix><#FFA726>⚠ 当前视图没有可导出的物品</#FFA726>"
+  export-inventory-full: "<prefix><#FFA726>⚠ 背包空间不足, 需要至少 <#FFCA28><boxes></#FFCA28> 个空格</#FFA726>"
   already-claimed: "<prefix><#FFA726>⚠ 该物品已被领取</#FFA726>"
   preview-claim-inventory-full: "<prefix><#FFA726>⚠ 背包空间不足</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ 投递失败(数据库更新失败), 已回滚该物品, 请稍后重试</#EF5350>"
@@ -135,6 +139,7 @@ success:
   pending-delivered: "<prefix><#66BB6A>✔ 已投递: <#FFCA28><count></#FFCA28> 个物品</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ 已领取该格物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   preview-claim-success: "<prefix><#66BB6A>✔ 已领取物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
+  export-shulker: "<prefix><#66BB6A>✔ 已导出 <#FFCA28><boxes></#FFCA28> 个潜影盒, 共 <#FFCA28><items></#FFCA28> 个物品堆</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ 已恢复玩家背包/末影箱(已扣除已领取格子)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ 已恢复玩家经验值</#66BB6A>"
 
@@ -310,6 +315,13 @@ gui:
       name: "<#FFCA28>📦 领取待投递</#FFCA28>"
       lore:
         - "<#90A4AE>背包满时的待领取物品</#90A4AE>"
+    export:
+      name: "<#4FC3F7>▣ 导出到潜影盒</#4FC3F7>"
+      lore:
+        - "<#90A4AE>按当前视图导出背包或末影箱</#90A4AE>"
+        - "<#90A4AE>已领取格子会被跳过</#90A4AE>"
+      inventory-box-name: "<target> 的背包 (<part>/<total>)"
+      ender-box-name: "<target> 的末影箱"
     lock:
       name: "<#FFCA28>📌 置顶显示</#FFCA28>"
       lore:
@@ -407,6 +419,7 @@ console:
   config:
     gui-mode-invalid: "gui.mode 配置无效, 已使用自动模式: <value>"
     backup-time-format-invalid: "display.backup-time-format 配置无效: <value>, 已使用默认格式 yyyy-MM-dd HH:mm:ss"
+    export-shulker-material-invalid: "<path> 配置无效: <value>, 已回退为 <fallback>"
     server-id-invalid: "server.id 配置无效, 已回退为 default: <value>"
     server-alias-key-invalid: "server.aliases 存在无效键, 已忽略: <key>"
     gui-time-filter-invalid: "GUI 时间筛选配置无效, 已忽略: path=<path>, value=<value>"
@@ -432,6 +445,7 @@ console:
     lock-update-failed: "更新置顶状态失败: 目标=<target_uuid>, 备份编号=<backup_id>"
     claim-failed: "领取失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>"
     claim-incompatible: "领取已被拦截: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>, 模式=<mode>, 原因=<reason>"
+    export-failed: "导出潜影盒失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 原因=<reason>"
 
   packet-gui:
     unsupported-size: "不支持的 GUI 大小: size=<size>, player=<player>"

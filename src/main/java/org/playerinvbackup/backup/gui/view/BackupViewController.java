@@ -213,6 +213,8 @@ public final class BackupViewController {
                             claimOnce,
                             previewData.claimedInv(),
                             previewData.claimedEnder(),
+                            previewData.claimRecordInv(),
+                            previewData.claimRecordEnder(),
                             previewData.incompatibleInv(),
                             previewData.incompatibleEnder(),
                             previewData.incompatibleClaimBlocksWholeBackup(),

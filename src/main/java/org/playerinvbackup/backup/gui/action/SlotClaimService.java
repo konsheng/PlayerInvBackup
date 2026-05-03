@@ -278,8 +278,14 @@ public final class SlotClaimService {
         }
         if (slotType == SlotType.INV && slotIndex >= 0 && slotIndex < holder.claimedInv().length) {
             holder.claimedInv()[slotIndex] = claimed;
+            if (slotIndex < holder.claimRecordInv().length) {
+                holder.claimRecordInv()[slotIndex] = claimed;
+            }
         } else if (slotType == SlotType.ENDER && slotIndex >= 0 && slotIndex < holder.claimedEnder().length) {
             holder.claimedEnder()[slotIndex] = claimed;
+            if (slotIndex < holder.claimRecordEnder().length) {
+                holder.claimRecordEnder()[slotIndex] = claimed;
+            }
         }
         inventory.setItem(
                 slotIndex,

@@ -72,6 +72,10 @@ errors:
   claim-failed: "<prefix><#EF5350>✖ Claim failed, check console logs</#EF5350>"
   claim-incompatible: "<prefix><#EF5350>✖ This item cannot be claimed on the current server version</#EF5350>"
   claim-incompatible-backup: "<prefix><#EF5350>✖ This backup contains incompatible items, claiming is blocked for the whole backup by config</#EF5350>"
+  export-incompatible: "<prefix><#EF5350>✖ Current view contains incompatible items, export cancelled</#EF5350>"
+  export-failed: "<prefix><#EF5350>✖ Export failed, check console logs</#EF5350>"
+  export-empty: "<prefix><#FFA726>⚠ Current view has no exportable items</#FFA726>"
+  export-inventory-full: "<prefix><#FFA726>⚠ Inventory does not have enough space, requires at least <#FFCA28><boxes></#FFCA28> empty slot(s)</#FFA726>"
   already-claimed: "<prefix><#FFA726>⚠ This item has already been claimed</#FFA726>"
   preview-claim-inventory-full: "<prefix><#FFA726>⚠ Inventory is full</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
@@ -135,6 +139,7 @@ success:
   pending-delivered: "<prefix><#66BB6A>✔ Delivered: <#FFCA28><count></#FFCA28> items</#66BB6A>"
   claim-success: "<prefix><#66BB6A>✔ Claimed this slot (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   preview-claim-success: "<prefix><#66BB6A>✔ Item claimed (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
+  export-shulker: "<prefix><#66BB6A>✔ Exported <#FFCA28><boxes></#FFCA28> shulker box(es), <#FFCA28><items></#FFCA28> item stack(s)</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ Player experience restored</#66BB6A>"
 
@@ -310,6 +315,13 @@ gui:
       name: "<#FFCA28>📦 Claim pending</#FFCA28>"
       lore:
         - "<#90A4AE>Items pending due to full inventory</#90A4AE>"
+    export:
+      name: "<#4FC3F7>▣ Export to shulker box</#4FC3F7>"
+      lore:
+        - "<#90A4AE>Export the current inventory or ender chest view</#90A4AE>"
+        - "<#90A4AE>Already claimed slots are skipped</#90A4AE>"
+      inventory-box-name: "<target>'s Inventory (<part>/<total>)"
+      ender-box-name: "<target>'s Ender Chest"
     lock:
       name: "<#FFCA28>📌 Pin backup</#FFCA28>"
       lore:
@@ -406,6 +418,7 @@ console:
   config:
     gui-mode-invalid: "Invalid gui.mode, using auto mode: <value>"
     backup-time-format-invalid: "Invalid display.backup-time-format: <value>, using default yyyy-MM-dd HH:mm:ss"
+    export-shulker-material-invalid: "<path> is invalid: <value>, using <fallback>"
     server-id-invalid: "Invalid server.id, using default: <value>"
     server-alias-key-invalid: "Ignored invalid server.aliases key: <key>"
     gui-time-filter-invalid: "Invalid GUI time filter config ignored: path=<path>, value=<value>"
@@ -431,6 +444,7 @@ console:
     lock-update-failed: "Failed to update pin state: target=<target_uuid>, backup_id=<backup_id>"
     claim-failed: "Claim failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>"
     claim-incompatible: "Claim blocked due to incompatible item: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>, mode=<mode>, reason=<reason>"
+    export-failed: "Shulker export failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, reason=<reason>"
 
   packet-gui:
     unsupported-size: "Unsupported GUI size: size=<size>, player=<player>"

@@ -20,6 +20,7 @@ public enum GuiSoundAction {
     VIEW_TOGGLE("sounds.gui.backup-view.toggle"),
     VIEW_RESTORE("sounds.gui.backup-view.restore"),
     VIEW_LOCK("sounds.gui.backup-view.lock"),
+    VIEW_EXPORT("sounds.gui.backup-view.export"),
     VIEW_PENDING("sounds.gui.backup-view.pending"),
     VIEW_CLAIM_SLOT("sounds.gui.backup-view.claim-slot"),
     RESTORE_CONFIRM_OK("sounds.gui.restore-confirm.confirm"),

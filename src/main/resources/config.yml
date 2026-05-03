@@ -195,6 +195,10 @@ gui:
       # false, only block incompatible slots
       # true, if any incompatible item exists, block claiming from the whole backup
       block-whole-backup: false
+    export:
+      # Shulker box material used by backup view export
+      # Supported values: SHULKER_BOX and all colored shulker boxes, for example RED_SHULKER_BOX
+      shulker-box-material: "SHULKER_BOX"
 
   # Backup list screen related settings
   backup-list:
@@ -317,6 +321,11 @@ sounds:
         pitch: 1.0
       # Toggle pinned display
       lock:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # Export current preview view into shulker box
+      export:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0

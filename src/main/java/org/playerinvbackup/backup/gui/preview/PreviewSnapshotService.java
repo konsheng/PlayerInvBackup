@@ -17,21 +17,23 @@ public final class PreviewSnapshotService {
             boolean blockWholeBackupOnIncompatible,
             boolean claimOnce
     ) {
-        boolean[] claimedInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
-        boolean[] claimedEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
-        if (claimOnce && claims != null) {
+        boolean[] claimRecordInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
+        boolean[] claimRecordEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
+        if (claims != null) {
             for (SlotClaim claim : claims) {
                 if (claim.slotType() == SlotType.INV
                         && claim.slotIndex() >= 0
-                        && claim.slotIndex() < claimedInv.length) {
-                    claimedInv[claim.slotIndex()] = true;
+                        && claim.slotIndex() < claimRecordInv.length) {
+                    claimRecordInv[claim.slotIndex()] = true;
                 } else if (claim.slotType() == SlotType.ENDER
                         && claim.slotIndex() >= 0
-                        && claim.slotIndex() < claimedEnder.length) {
-                    claimedEnder[claim.slotIndex()] = true;
+                        && claim.slotIndex() < claimRecordEnder.length) {
+                    claimRecordEnder[claim.slotIndex()] = true;
                 }
             }
         }
+        boolean[] claimedInv = claimOnce ? claimRecordInv.clone() : new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
+        boolean[] claimedEnder = claimOnce ? claimRecordEnder.clone() : new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
 
         boolean[] incompatibleInv = detectIncompatibleSlots(parts.inventorySlotBytes());
         boolean[] incompatibleEnder = detectIncompatibleSlots(parts.enderChestSlotBytes());
@@ -41,6 +43,8 @@ public final class PreviewSnapshotService {
         return new PreviewSnapshotData(
                 claimedInv,
                 claimedEnder,
+                claimRecordInv,
+                claimRecordEnder,
                 incompatibleInv,
                 incompatibleEnder,
                 incompatibleClaimBlocksWholeBackup

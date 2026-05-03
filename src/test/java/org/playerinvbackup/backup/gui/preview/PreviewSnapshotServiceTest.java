@@ -32,6 +32,8 @@ class PreviewSnapshotServiceTest {
 
         assertFalse(data.claimedInv()[2]);
         assertFalse(data.claimedEnder()[5]);
+        assertTrue(data.claimRecordInv()[2]);
+        assertTrue(data.claimRecordEnder()[5]);
     }
 
     @Test

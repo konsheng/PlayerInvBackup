@@ -11,6 +11,7 @@ import org.playerinvbackup.backup.config.GuiSoundAction;
 import org.playerinvbackup.backup.domain.SlotType;
 import org.playerinvbackup.backup.gui.GuiView;
 import org.playerinvbackup.backup.gui.action.PendingDeliveryService;
+import org.playerinvbackup.backup.gui.action.ShulkerExportService;
 import org.playerinvbackup.backup.gui.action.SlotClaimService;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
@@ -38,6 +39,7 @@ public final class BackupViewActions {
     private final RestoreConfirmRenderer restoreConfirmRenderer;
     private final PendingDeliveryService pendingDeliveryService;
     private final SlotClaimService slotClaimService;
+    private final ShulkerExportService shulkerExportService;
 
     public BackupViewActions(
             PlayerInvBackupPlugin plugin,
@@ -47,7 +49,8 @@ public final class BackupViewActions {
             BackupViewRenderer viewRenderer,
             RestoreConfirmRenderer restoreConfirmRenderer,
             PendingDeliveryService pendingDeliveryService,
-            SlotClaimService slotClaimService
+            SlotClaimService slotClaimService,
+            ShulkerExportService shulkerExportService
     ) {
         this.plugin = plugin;
         this.platformBridge = platformBridge;
@@ -57,6 +60,7 @@ public final class BackupViewActions {
         this.restoreConfirmRenderer = restoreConfirmRenderer;
         this.pendingDeliveryService = pendingDeliveryService;
         this.slotClaimService = slotClaimService;
+        this.shulkerExportService = shulkerExportService;
     }
 
     public void handleClick(Player admin, BackupViewHolder holder, int slot) {
@@ -86,6 +90,15 @@ public final class BackupViewActions {
                 return;
             }
             pendingDeliveryService.deliverPending(admin);
+            return;
+        }
+        if (slot == BackupViewRenderer.SLOT_VIEW_EXPORT) {
+            playGuiSound(admin, GuiSoundAction.VIEW_EXPORT);
+            if (!Permissions.has(admin, Permissions.EXPORT)) {
+                Chat.error(admin, "errors.no-permission", Placeholder.unparsed("perm", Permissions.EXPORT));
+                return;
+            }
+            shulkerExportService.exportCurrentView(admin, holder);
             return;
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_RESTORE) {
