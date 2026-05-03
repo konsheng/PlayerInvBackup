@@ -32,6 +32,7 @@ import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.LoadingHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
+import org.playerinvbackup.backup.gui.holder.SearchModeHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -375,6 +376,8 @@ public final class PacketGuiManager {
                 service.handleViewClick(player, viewHolder, clickedSlot);
             } else if (holder instanceof RestoreConfirmHolder confirmHolder) {
                 service.handleRestoreConfirmClick(player, confirmHolder, clickedSlot);
+            } else if (holder instanceof SearchModeHolder searchModeHolder) {
+                service.handleSearchModeClick(player, searchModeHolder, clickedSlot);
             } else if (holder instanceof LoadingHolder) {
                 // Loading 界面不响应点击
             }

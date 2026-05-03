@@ -129,11 +129,15 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     """.formatted(tables.backups()));
             TriggerType triggerFilter = query == null ? null : query.trigger();
             long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
+            long createdBeforeMillis = query == null ? 0L : query.createdBeforeMillis();
             if (triggerFilter != null) {
                 sql.append(" AND trigger_type=?");
             }
             if (createdAfterMillis > 0) {
                 sql.append(" AND created_at>=?");
+            }
+            if (createdBeforeMillis > 0) {
+                sql.append(" AND created_at<=?");
             }
             sql.append(" ORDER BY locked DESC, created_at DESC LIMIT ? OFFSET ?");
 
@@ -145,6 +149,9 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                 }
                 if (createdAfterMillis > 0) {
                     ps.setLong(idx++, createdAfterMillis);
+                }
+                if (createdBeforeMillis > 0) {
+                    ps.setLong(idx++, createdBeforeMillis);
                 }
                 ps.setInt(idx++, limit);
                 ps.setInt(idx, Math.max(0, offset));
@@ -169,11 +176,15 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     """.formatted(tables.backups()));
             TriggerType triggerFilter = query == null ? null : query.trigger();
             long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
+            long createdBeforeMillis = query == null ? 0L : query.createdBeforeMillis();
             if (triggerFilter != null) {
                 sql.append(" AND trigger_type=?");
             }
             if (createdAfterMillis > 0) {
                 sql.append(" AND created_at>=?");
+            }
+            if (createdBeforeMillis > 0) {
+                sql.append(" AND created_at<=?");
             }
 
             try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -183,7 +194,10 @@ public abstract class AbstractJdbcBackupStore implements BackupStore {
                     ps.setString(idx++, triggerFilter.name());
                 }
                 if (createdAfterMillis > 0) {
-                    ps.setLong(idx, createdAfterMillis);
+                    ps.setLong(idx++, createdAfterMillis);
+                }
+                if (createdBeforeMillis > 0) {
+                    ps.setLong(idx, createdBeforeMillis);
                 }
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next() ? rs.getInt(1) : 0;

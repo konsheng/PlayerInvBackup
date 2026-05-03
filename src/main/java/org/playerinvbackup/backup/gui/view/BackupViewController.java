@@ -106,6 +106,7 @@ public final class BackupViewController {
                         + " listPage=" + safeListPage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
+                        + " before=" + safeQuery.createdBeforeMillis()
         );
 
         Component title = viewRenderer.title(safeTargetName);

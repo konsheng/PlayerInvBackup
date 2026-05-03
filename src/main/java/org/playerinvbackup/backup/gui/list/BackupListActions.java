@@ -106,7 +106,7 @@ public final class BackupListActions {
         }
         if (slot == org.playerinvbackup.backup.gui.render.BackupListRenderer.SLOT_LIST_SEARCH) {
             playGuiSound(admin, GuiSoundAction.LIST_SEARCH);
-            searchSessionService.beginSearch(admin, holder);
+            searchSessionService.openSearchMode(admin, holder);
             return;
         }
         if (slot == org.playerinvbackup.backup.gui.render.BackupListRenderer.SLOT_LIST_JUMP_BACK) {
@@ -163,7 +163,7 @@ public final class BackupListActions {
         }
         GuiTimeFilterOption next = filters.get((index + 1) % filters.size());
         long after = next.createdAfterMillis(System.currentTimeMillis());
-        return new BackupQuery(safe.trigger(), after);
+        return new BackupQuery(safe.trigger(), after, 0L);
     }
 
     private BackupQuery nextTriggerFilterQuery(BackupQuery current) {
@@ -192,7 +192,7 @@ public final class BackupListActions {
                 next = types[idx + 1];
             }
         }
-        return new BackupQuery(next, safe.createdAfterMillis());
+        return new BackupQuery(next, safe.createdAfterMillis(), safe.createdBeforeMillis());
     }
 
     private GuiTimeFilterOption resolveTimeFilterWindow(BackupQuery query, List<GuiTimeFilterOption> filters) {
@@ -200,7 +200,7 @@ public final class BackupListActions {
                 ? GuiTimeFilterOption.defaults()
                 : filters;
         GuiTimeFilterOption allOption = safeFilters.get(0);
-        if (query == null || query.createdAfterMillis() <= 0) {
+        if (query == null || query.createdBeforeMillis() > 0 || query.createdAfterMillis() <= 0) {
             return allOption;
         }
 

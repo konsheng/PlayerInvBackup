@@ -180,6 +180,11 @@ public final class BackupListRenderer {
     }
 
     private String timeFilterDisplayValue(Lang lang, BackupQuery query) {
+        if (query != null && query.createdBeforeMillis() > 0) {
+            return timeFormatter().format(Instant.ofEpochMilli(query.createdAfterMillis()))
+                    + " ~ "
+                    + timeFormatter().format(Instant.ofEpochMilli(query.createdBeforeMillis()));
+        }
         GuiTimeFilterOption window = resolveTimeFilterWindow(query);
         return window.displayText(lang);
     }
@@ -187,7 +192,7 @@ public final class BackupListRenderer {
     private GuiTimeFilterOption resolveTimeFilterWindow(BackupQuery query) {
         List<GuiTimeFilterOption> filters = timeFilters();
         GuiTimeFilterOption allOption = filters.get(0);
-        if (query == null || query.createdAfterMillis() <= 0) {
+        if (query == null || query.createdBeforeMillis() > 0 || query.createdAfterMillis() <= 0) {
             return allOption;
         }
 

@@ -112,6 +112,7 @@ info:
   reload-backup-discarded: "<prefix><#4FC3F7>ℹ Cancelled <#FFCA28><queue_targets></#FFCA28> batch backup target(s) and discarded <#FFCA28><io_tasks></#FFCA28> queued I/O task(s) that had not started yet</#4FC3F7>"
   backupall-progress: "<prefix><#4FC3F7>ℹ Running backup for all online players: completed <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, success <#66BB6A><success></#66BB6A>, skipped <#EF5350><skipped></#EF5350>, failed <#EF5350><failed></#EF5350>, remaining <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ Enter backup ID (e.g., <#FFCA28>1730000000000-abc12345</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
+  search-backup-time-prompt: "<prefix><#4FC3F7>ℹ Enter time or time range (e.g., <#FFCA28>2026-05-04</#FFCA28> or <#FFCA28>2026-05-04 20:00 ~ 2026-05-04 21:00</#FFCA28>), type <#FFCA28><cancel></#FFCA28> to cancel</#4FC3F7>"
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup Info</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(<id>)</#90A4AE>"
   lines:
     - "<prefix><#90A4AE>Time: </#90A4AE><white><time></white>"
@@ -154,6 +155,8 @@ warn:
   restored-experience-notify-target: "<prefix><#FFA726>⚠ An admin restored your experience</#FFA726>"
   pending-incompatible-skipped: "<prefix><#FFA726>⚠ <count> pending item(s) cannot be delivered on the current server and were skipped</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ Please enter a backup ID, or type <#FFCA28><cancel></#FFCA28> to cancel</#FFA726>"
+  search-backup-time-empty: "<prefix><#FFA726>⚠ Please enter time or time range, or type <#FFCA28><cancel></#FFCA28> to cancel</#FFA726>"
+  search-backup-time-invalid: "<prefix><#FFA726>⚠ Invalid time format, supports yyyy-MM-dd, yyyy-MM-dd HH:mm, yyyy-MM-dd HH:mm:ss, and time ranges</#FFA726>"
 
 list:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>Backup List</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(Page <page>)</#90A4AE>"
@@ -248,14 +251,14 @@ gui:
       value:
         all: "All"
     search:
-      name: "<#FFCA28>🔍 Search by ID</#FFCA28>"
+      name: "<#FFCA28>🔍 ID / Time Search</#FFCA28>"
       lore:
-        - "<#90A4AE>Enter backup ID in chat</#90A4AE>"
-        - "<#78909C>Type <white><cancel></white> to cancel</#78909C>"
+        - "<#90A4AE>Search by backup ID or time</#90A4AE>"
+        - "<#78909C>Click to choose ID search or time search</#78909C>"
     clear:
       name: "<#EF5350>✖ Clear filters</#EF5350>"
       lore:
-        - "<#90A4AE>Reset to: all time + all triggers</#90A4AE>"
+        - "<#90A4AE>Reset to: all time + all triggers + clear time search</#90A4AE>"
     jump-back:
       name: "<#FFCA28>⏪ Jump back 5 pages</#FFCA28>"
       lore:
@@ -268,6 +271,19 @@ gui:
       name: "<#81C784>🔄 Refresh</#81C784>"
       lore:
         - "<#90A4AE>Reload current page: <page></#90A4AE>"
+  search-mode:
+    title: "<gradient:#FFB75E:#ED8F03><bold>Choose Search Mode</bold></gradient>"
+    by-id:
+      name: "<#4FC3F7>🔍 Search by ID</#4FC3F7>"
+      lore:
+        - "<#90A4AE>Enter backup ID in chat</#90A4AE>"
+    by-time:
+      name: "<#FFCA28>🕒 Search by time</#FFCA28>"
+      lore:
+        - "<#90A4AE>Supports date, date time, and time ranges</#90A4AE>"
+        - "<#90A4AE>Example: 2026-05-04 20:00 ~ 2026-05-04 21:00</#90A4AE>"
+    back:
+      name: "<#EF5350>Back to list</#EF5350>"
   backup-view:
     loading-title: "<#4FC3F7>Loading backup...</#4FC3F7>"
     title: "<gradient:#FFB75E:#ED8F03><bold>Backup Preview</bold></gradient> <#78909C>▸</#78909C> <target>"

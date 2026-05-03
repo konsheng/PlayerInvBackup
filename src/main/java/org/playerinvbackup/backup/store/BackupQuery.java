@@ -9,9 +9,14 @@ import org.playerinvbackup.backup.domain.TriggerType;
  */
 public record BackupQuery(
         TriggerType trigger,
-        long createdAfterMillis
+        long createdAfterMillis,
+        long createdBeforeMillis
 ) {
+    public BackupQuery(TriggerType trigger, long createdAfterMillis) {
+        this(trigger, createdAfterMillis, 0L);
+    }
+
     public static BackupQuery all() {
-        return new BackupQuery(null, 0L);
+        return new BackupQuery(null, 0L, 0L);
     }
 }

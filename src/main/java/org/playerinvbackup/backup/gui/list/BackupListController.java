@@ -82,6 +82,7 @@ public final class BackupListController {
                         + " page=" + safePage
                         + " trigger=" + (safeQuery.trigger() == null ? "-" : safeQuery.trigger().name())
                         + " after=" + safeQuery.createdAfterMillis()
+                        + " before=" + safeQuery.createdBeforeMillis()
         );
 
         runOnPlayer(admin, () -> {

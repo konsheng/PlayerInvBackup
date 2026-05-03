@@ -87,6 +87,7 @@ public final class LocalBackupStore implements BackupStore {
     private List<BackupMeta> filteredBackups(UUID playerUuid, BackupQuery query) throws IOException {
         TriggerType triggerFilter = query == null ? null : query.trigger();
         long createdAfterMillis = query == null ? 0L : query.createdAfterMillis();
+        long createdBeforeMillis = query == null ? 0L : query.createdBeforeMillis();
 
         List<BackupMeta> filtered = new ArrayList<>();
         for (BackupMeta meta : playerIndex(playerUuid).snapshot()) {
@@ -94,6 +95,9 @@ public final class LocalBackupStore implements BackupStore {
                 continue;
             }
             if (createdAfterMillis > 0 && meta.createdAtMillis() < createdAfterMillis) {
+                continue;
+            }
+            if (createdBeforeMillis > 0 && meta.createdAtMillis() > createdBeforeMillis) {
                 continue;
             }
             filtered.add(meta);

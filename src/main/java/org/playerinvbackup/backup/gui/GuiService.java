@@ -9,6 +9,7 @@ import org.playerinvbackup.backup.gui.confirm.RestoreConfirmActions;
 import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
+import org.playerinvbackup.backup.gui.holder.SearchModeHolder;
 import org.playerinvbackup.backup.gui.list.BackupListActions;
 import org.playerinvbackup.backup.gui.list.BackupListController;
 import org.playerinvbackup.backup.gui.platform.DefaultGuiPlatformBridge;
@@ -18,6 +19,7 @@ import org.playerinvbackup.backup.gui.render.BackupViewRenderer;
 import org.playerinvbackup.backup.gui.render.GuiItemFactory;
 import org.playerinvbackup.backup.gui.render.LoadingScreenRenderer;
 import org.playerinvbackup.backup.gui.render.RestoreConfirmRenderer;
+import org.playerinvbackup.backup.gui.render.SearchModeRenderer;
 import org.playerinvbackup.backup.gui.session.BackupIdSearchSessionService;
 import org.playerinvbackup.backup.gui.view.BackupViewActions;
 import org.playerinvbackup.backup.gui.view.BackupViewController;
@@ -50,6 +52,7 @@ public final class GuiService {
         BackupListRenderer backupListRenderer = new BackupListRenderer(plugin, itemFactory);
         BackupViewRenderer backupViewRenderer = new BackupViewRenderer(plugin, itemFactory);
         RestoreConfirmRenderer restoreConfirmRenderer = new RestoreConfirmRenderer(plugin, itemFactory);
+        SearchModeRenderer searchModeRenderer = new SearchModeRenderer(plugin, itemFactory);
         PreviewSnapshotService previewSnapshotService = new PreviewSnapshotService();
 
         this.backupListController = new BackupListController(
@@ -75,7 +78,8 @@ public final class GuiService {
                 plugin,
                 platformBridge,
                 backupListController,
-                backupViewController
+                backupViewController,
+                searchModeRenderer
         );
 
         this.restoreConfirmActions = new RestoreConfirmActions(
@@ -164,6 +168,10 @@ public final class GuiService {
 
     public void handleRestoreConfirmClick(Player admin, RestoreConfirmHolder holder, int slot) {
         restoreConfirmActions.handleClick(admin, holder, slot);
+    }
+
+    public void handleSearchModeClick(Player admin, SearchModeHolder holder, int slot) {
+        backupIdSearchSessionService.handleSearchModeClick(admin, holder, slot);
     }
 
     public boolean handleBackupIdSearchChat(Player admin, String message) {

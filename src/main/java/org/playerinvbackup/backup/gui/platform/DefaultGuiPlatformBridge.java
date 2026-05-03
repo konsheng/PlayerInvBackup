@@ -7,6 +7,7 @@ import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.LoadingHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
+import org.playerinvbackup.backup.gui.holder.SearchModeHolder;
 import org.playerinvbackup.backup.gui.packet.PacketGuiManager;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -182,6 +183,7 @@ public final class DefaultGuiPlatformBridge implements GuiPlatformBridge {
         return holder instanceof BackupListHolder
                 || holder instanceof BackupViewHolder
                 || holder instanceof RestoreConfirmHolder
+                || holder instanceof SearchModeHolder
                 || holder instanceof LoadingHolder;
     }
 }

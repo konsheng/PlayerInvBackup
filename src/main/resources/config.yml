@@ -276,7 +276,7 @@ sounds:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
-      # Search by backup id
+      # Open search mode selection
       search:
         name: "INHERIT"
         volume: 1.0
@@ -299,6 +299,24 @@ sounds:
       # Refresh current page
       refresh:
         name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+        volume: 1.0
+        pitch: 1.0
+
+    # Button sounds for the search mode selection screen
+    search-mode:
+      # Start backup ID search
+      by-id:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # Start time search
+      by-time:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # Back to backup list
+      back:
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 

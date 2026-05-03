@@ -210,6 +210,8 @@ class LocalBackupStoreTest {
         assertEquals(3, store.countBackups(playerUuid, BackupQuery.all()));
         assertEquals(2, store.countBackups(playerUuid, new BackupQuery(TriggerType.DEATH, 0L)));
         assertEquals(1, store.countBackups(playerUuid, new BackupQuery(TriggerType.DEATH, 2_500L)));
+        assertEquals(1, store.countBackups(playerUuid, new BackupQuery(TriggerType.DEATH, 0L, 2_500L)));
+        assertEquals(2, store.countBackups(playerUuid, new BackupQuery(null, 1_500L, 3_000L)));
     }
 
     @Test

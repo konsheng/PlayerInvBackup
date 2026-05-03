@@ -276,7 +276,7 @@ sounds:
         name: "INHERIT"
         volume: 1.0
         pitch: 1.0
-      # 按编号搜索
+      # 打开搜索方式选择
       search:
         name: "INHERIT"
         volume: 1.0
@@ -299,6 +299,24 @@ sounds:
       # 刷新当前页
       refresh:
         name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+        volume: 1.0
+        pitch: 1.0
+
+    # 搜索方式选择界面的按钮音效
+    search-mode:
+      # 开始按备份编号搜索
+      by-id:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # 开始按时间搜索
+      by-time:
+        name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # 返回备份列表
+      back:
+        name: "INHERIT"
         volume: 1.0
         pitch: 1.0
 

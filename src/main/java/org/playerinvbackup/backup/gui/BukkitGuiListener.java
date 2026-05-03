@@ -4,6 +4,7 @@ import org.playerinvbackup.backup.gui.holder.BackupListHolder;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.holder.LoadingHolder;
 import org.playerinvbackup.backup.gui.holder.RestoreConfirmHolder;
+import org.playerinvbackup.backup.gui.holder.SearchModeHolder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -47,6 +48,7 @@ public final class BukkitGuiListener implements Listener {
         if (!(holder instanceof BackupListHolder
                 || holder instanceof BackupViewHolder
                 || holder instanceof RestoreConfirmHolder
+                || holder instanceof SearchModeHolder
                 || holder instanceof LoadingHolder)) {
             return;
         }
@@ -79,6 +81,8 @@ public final class BukkitGuiListener implements Listener {
             service.handleViewClick(player, viewHolder, rawSlot);
         } else if (holder instanceof RestoreConfirmHolder confirmHolder) {
             service.handleRestoreConfirmClick(player, confirmHolder, rawSlot);
+        } else if (holder instanceof SearchModeHolder searchModeHolder) {
+            service.handleSearchModeClick(player, searchModeHolder, rawSlot);
         }
     }
 
@@ -100,6 +104,7 @@ public final class BukkitGuiListener implements Listener {
         if (!(holder instanceof BackupListHolder
                 || holder instanceof BackupViewHolder
                 || holder instanceof RestoreConfirmHolder
+                || holder instanceof SearchModeHolder
                 || holder instanceof LoadingHolder)) {
             return;
         }

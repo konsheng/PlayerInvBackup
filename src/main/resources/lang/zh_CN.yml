@@ -112,6 +112,7 @@ info:
   reload-backup-discarded: "<prefix><#4FC3F7>ℹ 已取消 <#FFCA28><queue_targets></#FFCA28> 个批量备份目标, 丢弃 I/O 队列中 <#FFCA28><io_tasks></#FFCA28> 个未开始任务</#4FC3F7>"
   backupall-progress: "<prefix><#4FC3F7>ℹ 正在对所有在线玩家进行备份: 已完成 <#FFCA28><completed></#FFCA28>/<#FFCA28><total></#FFCA28>, 成功 <#66BB6A><success></#66BB6A>, 跳过 <#EF5350><skipped></#EF5350>, 失败 <#EF5350><failed></#EF5350>, 剩余 <#FFCA28><remaining></#FFCA28></#4FC3F7>"
   search-backup-id-prompt: "<prefix><#4FC3F7>ℹ 请输入备份编号(例如 <#FFCA28>1730000000000-abc12345</#FFCA28>), 输入 <#FFCA28><cancel></#FFCA28> 取消</#4FC3F7>"
+  search-backup-time-prompt: "<prefix><#4FC3F7>ℹ 请输入时间或时间范围(例如 <#FFCA28>2026-05-04</#FFCA28> 或 <#FFCA28>2026-05-04 20:00 ~ 2026-05-04 21:00</#FFCA28>), 输入 <#FFCA28><cancel></#FFCA28> 取消</#4FC3F7>"
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>备份信息</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(<id>)</#90A4AE>"
   lines:
     - "<prefix><#90A4AE>时间: </#90A4AE><white><time></white>"
@@ -154,6 +155,8 @@ warn:
   restored-experience-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的经验值</#FFA726>"
   pending-incompatible-skipped: "<prefix><#FFA726>⚠ 有 <count> 个待投递物品无法在当前服务端发放, 已跳过</#FFA726>"
   search-backup-id-empty: "<prefix><#FFA726>⚠ 请输入备份编号, 或输入 <#FFCA28><cancel></#FFCA28> 取消</#FFA726>"
+  search-backup-time-empty: "<prefix><#FFA726>⚠ 请输入时间或时间范围, 或输入 <#FFCA28><cancel></#FFCA28> 取消</#FFA726>"
+  search-backup-time-invalid: "<prefix><#FFA726>⚠ 时间格式无效, 支持 yyyy-MM-dd, yyyy-MM-dd HH:mm, yyyy-MM-dd HH:mm:ss 和时间范围</#FFA726>"
 
 list:
   title: "<prefix><gradient:#FFB75E:#ED8F03><bold>备份列表</bold></gradient> <#78909C>▸</#78909C> <white><target></white> <#90A4AE>(第 <page> 页)</#90A4AE>"
@@ -248,14 +251,14 @@ gui:
       value:
         all: "全部"
     search:
-      name: "<#FFCA28>🔍 按编号搜索</#FFCA28>"
+      name: "<#FFCA28>🔍 编号/时间搜索</#FFCA28>"
       lore:
-        - "<#90A4AE>在聊天框输入备份编号</#90A4AE>"
-        - "<#78909C>输入 <white><cancel></white> 取消</#78909C>"
+        - "<#90A4AE>按备份编号或时间搜索</#90A4AE>"
+        - "<#78909C>点击选择按编号搜索或按时间搜索</#78909C>"
     clear:
       name: "<#EF5350>✖ 清空筛选</#EF5350>"
       lore:
-        - "<#90A4AE>重置为: 全部时间 + 全部触发</#90A4AE>"
+        - "<#90A4AE>重置为: 全部时间 + 全部触发 + 清除时间搜索</#90A4AE>"
     jump-back:
       name: "<#FFCA28>⏪ 快退 5 页</#FFCA28>"
       lore:
@@ -268,6 +271,19 @@ gui:
       name: "<#81C784>🔄 刷新</#81C784>"
       lore:
         - "<#90A4AE>重新加载当前页: <page></#90A4AE>"
+  search-mode:
+    title: "<gradient:#FFB75E:#ED8F03><bold>选择搜索方式</bold></gradient>"
+    by-id:
+      name: "<#4FC3F7>🔍 按编号搜索</#4FC3F7>"
+      lore:
+        - "<#90A4AE>在聊天框输入备份编号</#90A4AE>"
+    by-time:
+      name: "<#FFCA28>🕒 按时间搜索</#FFCA28>"
+      lore:
+        - "<#90A4AE>支持日期, 日期时间和时间范围</#90A4AE>"
+        - "<#90A4AE>例如 2026-05-04 20:00 ~ 2026-05-04 21:00</#90A4AE>"
+    back:
+      name: "<#EF5350>返回列表</#EF5350>"
   backup-view:
     loading-title: "<#4FC3F7>正在加载备份内容...</#4FC3F7>"
     title: "<gradient:#FFB75E:#ED8F03><bold>备份预览</bold></gradient> <#78909C>▸</#78909C> <target>"
