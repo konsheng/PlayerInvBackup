@@ -2,129 +2,208 @@
 
 [中文说明](README.zh-CN.md)
 
-Paper / Folia `1.21.1+` player backup plugin. Backup data includes player inventory, ender chest, and experience.
-
----
+Paper / Folia `1.21.1+` player backup plugin, PlayerInvBackup stores player inventory, armor, offhand, ender chest, and experience, then provides GUI and command tools for browsing, claiming, exporting, and restoring backups
 
 ## 🔂 Features
-- Supports automatic backups with both scheduled and event-based triggers
-- Event triggers support join, quit, death, and world change
-- Provides GUI backup list, preview, search, filter, fast pagination, and restore confirmation
-- Allows claiming a full item stack directly from the preview GUI
-- Adds an experience bottle button at the bottom of the preview GUI for standalone experience restore
-- When the inventory is full, items go into a pending-delivery queue and can be claimed later with `/pib pending`
-- Supports pinned backups and notes; pinned backups are excluded from automatic cleanup
-- Creates a safeguard backup before restore and validates snapshot `SHA-256`
-- Provides console-friendly commands such as `list`, `info`, `lock`, `unlock`, `note`, `status`, and `backupall`
-- Supports five storage backends: `SQLite`, `Local`, `MySQL`, `PostgreSQL`, and `H2`
-- Supports automatic fallback between native Bukkit GUI and ProtocolLib packet GUI
-- Supports configurable GUI button sounds and time filter presets
-- Supports audit logging
+- Automatic backups by timer and by player events: join, quit, death, and world change
+- Manual self backup, manual target backup, and one-by-one batch backup for all online players
+- Backup scope includes inventory storage, hotbar, armor, offhand, ender chest, and experience
+- GUI backup list with pagination, time filters, trigger filters, backup ID search, refresh, and fast page jumps
+- GUI backup preview with inventory / ender chest switching, slot claiming, restore confirmation, standalone experience restore, pending delivery, pin toggle, and shulker export
+- Shulker export for the current preview view, with separate inventory and ender chest exports
+- Pending-delivery queue for items that cannot fit into the operator's inventory during claiming
+- Pinned backups and notes; pinned backups are listed first and excluded from automatic cleanup
+- SHA-256 snapshot verification and pre-restore safety backup before restore
+- Incompatible item protection for claiming, exporting, and restoring old or cross-version data
+- Audit logs for sensitive operations such as backup, restore, slot claim, pending delivery, pin, note, and shulker export
+- Storage backends: `SQLite`, `Local`, `MySQL`, `PostgreSQL`, and `H2`
+- Bukkit native GUI and optional ProtocolLib packet GUI with automatic fallback
+- Configurable GUI sounds, language files, time filters, retention, queue limits, and shulker box material
+- bStats support
 
-## 🌋 Runtime Environment
-Built against the Paper API:
-- Supports Paper / Folia `1.21.1+`
-- Java `21`
+## 🌋 Runtime
+- Java `21+`
+- Paper API `1.21`
+- Recommended server version: Paper / Folia `1.21.1+`
 - Optional dependency: `ProtocolLib`
 
-`ProtocolLib` only affects the packet GUI. If it is not installed, the plugin still works normally and falls back to the native Bukkit GUI automatically.
+`ProtocolLib` is only used for packet GUI mode; if it is not installed, the plugin still works and falls back to Bukkit native GUI automatically
 
 ## 🖥️ Server Support
 
-| Server             | Support         |
-|--------------------|-----------------|
-| Paper 1.21.1+      | ✅ Supported     |
-| Folia 1.21.1+      | ✅ Supported     |
-| Leaf 1.21.1+       | ✅ Supported     |
-| Purpur 1.21.1+     | ✅ Supported     |
-| Pufferfish 1.21.1+ | ✅ Supported     |
-| Spigot             | ❌ Not supported |
-| CraftBukkit        | ❌ Not supported |
+| Server | Support |
+|---|---|
+| Paper 1.21.1+ | ✅ Supported |
+| Folia 1.21.1+ | ✅ Supported |
+| Leaf 1.21.1+ | ✅ Supported |
+| Purpur 1.21.1+ | ✅ Supported |
+| Pufferfish 1.21.1+ | ✅ Supported |
+| Spigot | ❌ Not supported |
+| CraftBukkit | ❌ Not supported |
 
-Other server types have not been fully tested. Evaluate compatibility yourself.
+Other server forks have not been fully tested, please evaluate and test them yourself
+
+## 📦 Installation
+Download: [GitHub Releases](https://github.com/konsheng/PlayerInvBackup/releases)
+
+- Download the latest `PlayerInvBackup.jar` from the release Assets
+- Confirm the server is running Java `21+` and Paper / Folia `1.21.1+`
+- Stop the server before replacing or installing the jar
+- Put `PlayerInvBackup.jar` into the server `plugins` directory
+- Optional: install `ProtocolLib` if you want packet GUI mode
+- Start the server once and wait for `plugins/PlayerInvBackup/` files to be generated
+- Edit `plugins/PlayerInvBackup/config.yml` as needed
+- Run `/pib reload` after editing config and language files, or restart the server
+- Grant the required `playerinvbackup.*` permissions to administrators or permission groups
 
 ## ⌨️ Commands
-Main command:
 
+Main command:
 - `/playerinvbackup`
 - Aliases: `/pib`, `/invb`, `/invbackup`
 
 Argument convention:
-
-- `<>` required `[]` optional
+- `<>` required
+- `[]` optional
 
 Command list:
-
-- `/pib open [player name]`  
-  Opens your own backup list when omitted; otherwise opens the specified player's backup list
-- `/pib backup [player name]`  
-  Backs up yourself when omitted; otherwise backs up the specified online player
-- `/pib backupall`  
+- **`/pib`**<br>
+  Permission: none<br>
+  Shows plugin information and a clickable help entry
+- **`/pib open [player]`**<br>
+  Permission: `playerinvbackup.open`<br>
+  Opens your own backup list or the specified player's backup list
+- **`/pib backup [player]`**<br>
+  Permission: `playerinvbackup.self` without target, `playerinvbackup.backup` with target<br>
+  Creates a manual backup for yourself or an online target player
+- **`/pib backupall`**<br>
+  Permission: `playerinvbackup.backupall`<br>
   Creates one batch backup run for all currently online players
-- `/pib pending`  
-  Claims pending-delivery items
-- `/pib restore <player name> <backup id>`  
-  Restores the specified backup to the target online player
-- `/pib list <player name> [page]`  
-  Lists backups in command form
-- `/pib info <player name> <backup id>`  
-  Shows backup details
-- `/pib lock <player name> <backup id> [note]`  
+- **`/pib pending`**<br>
+  Permission: `playerinvbackup.pending`<br>
+  Delivers pending items into your inventory
+- **`/pib restore <player> <backup id>`**<br>
+  Permission: `playerinvbackup.restore`<br>
+  Restores the backup to the target online player
+- **`/pib list <player> [page]`**<br>
+  Permission: `playerinvbackup.list`<br>
+  Lists backups in chat, 10 records per page
+- **`/pib info <player> <backup id>`**<br>
+  Permission: `playerinvbackup.info`<br>
+  Shows backup metadata, location, SHA-256, claimed slots, pin state, and note
+- **`/pib lock <player> <backup id> [note]`**<br>
+  Permission: `playerinvbackup.lock`<br>
   Pins a backup and optionally writes a note
-- `/pib unlock <player name> <backup id>`  
+- **`/pib unlock <player> <backup id>`**<br>
+  Permission: `playerinvbackup.lock`<br>
   Unpins a backup
-- `/pib note <player name> <backup id> [note]`  
-  Sets or clears a note
-- `/pib status`  
-  Shows plugin runtime status
-- `/pib reload`  
+- **`/pib note <player> <backup id> [note]`**<br>
+  Permission: `playerinvbackup.lock`<br>
+  Sets or clears a backup note
+- **`/pib status`**<br>
+  Permission: `playerinvbackup.status`<br>
+  Shows runtime status, storage, GUI mode, audit settings, and queue usage
+- **`/pib reload`**<br>
+  Permission: `playerinvbackup.reload`<br>
   Reloads config and language files
-- `/pib help`  
-  Shows help
-- `/pib tips`  
+- **`/pib help`**<br>
+  Permission: `playerinvbackup.admin`<br>
+  Shows command help
+- **`/pib tips`**<br>
+  Permission: `playerinvbackup.admin`<br>
   Shows usage tips
 
-## 📝 Usage Notes
-- `/pib open` and `/pib backup` both default to self when called without arguments
-- `/pib backupall` only allows one batch backup task at a time and periodically reports progress while running
-- `/pib backupall` reports success, skipped, failed, and elapsed time when finished
-- Clicking an item slot in the preview GUI claims the whole stack
-- The experience bottle in the preview GUI opens a dedicated experience-restore confirmation screen; confirming restores only experience and does not restore items at the same time
-- Old backups that do not contain experience data are shown in GUI as unavailable for standalone experience restore
-- If the inventory is full, items are moved into the pending-delivery queue
-- Pinned backups are not automatically cleaned up
-- Backups with undelivered items are also excluded from automatic cleanup
-- By default, `keep-per-player = 0` and `keep-days = 0`, so old backups are not deleted automatically
-- On first config generation, Chinese environments receive the Chinese config template; all other environments receive the English config template by default
+## 🔐 Permissions
 
-Target resolution rules:
+- **`playerinvbackup.admin`**<br>
+  Default: `op`<br>
+  Command administration permission, also treated as all command sub-permissions by the plugin permission helper
+- **`playerinvbackup.open`**<br>
+  Default: `false`<br>
+  Open and use the backup GUI
+- **`playerinvbackup.backup`**<br>
+  Default: `false`<br>
+  Manually back up a specified online player
+- **`playerinvbackup.backupall`**<br>
+  Default: `false`<br>
+  Manually back up all online players
+- **`playerinvbackup.self`**<br>
+  Default: `false`<br>
+  Manually back up yourself
+- **`playerinvbackup.backup.bypass`**<br>
+  Default: `false`<br>
+  Bypass self-backup cooldown
+- **`playerinvbackup.restore`**<br>
+  Default: `false`<br>
+  Restore backups to online players
+- **`playerinvbackup.export`**<br>
+  Default: `false`<br>
+  Export backup preview contents to shulker boxes
+- **`playerinvbackup.pending`**<br>
+  Default: `false`<br>
+  Deliver pending items into your own inventory
+- **`playerinvbackup.status`**<br>
+  Default: `false`<br>
+  View plugin runtime status
+- **`playerinvbackup.reload`**<br>
+  Default: `false`<br>
+  Reload config and language files
+- **`playerinvbackup.list`**<br>
+  Default: `false`<br>
+  List backups by command
+- **`playerinvbackup.info`**<br>
+  Default: `false`<br>
+  View backup details by command
+- **`playerinvbackup.lock`**<br>
+  Default: `false`<br>
+  Pin, unpin, and edit backup notes
+- **`playerinvbackup.backup.exempt`**<br>
+  Default: `false`<br>
+  Exempt a player from automatic backups by timer and events; grant separately when needed
 
-- Online-mode server (`online-mode=true`)  
-  If the target is offline, prefer UUID or an offline name already cached by the server
-- Offline-mode server (`online-mode=false`)  
-  If the target is offline, the plugin can calculate the offline UUID from the player name
+## 🛡️ Data Safety
 
-Restore limitations:
+- Backups store a SHA-256 hash and restore verifies the snapshot before applying it
+- Restore creates a pre-restore safety backup first; if that safety backup fails, restore is cancelled
+- Restoring inventory and ender chest overwrites the target player's current inventory and ender chest
+- Standalone experience restore only overwrites the target player's level, total experience, and progress
+- Claimed slots are excluded from restore
+- Pinned backups and backups with undelivered items are excluded from automatic cleanup
+- Incompatible items are blocked or skipped depending on the operation and config
 
-- Current restore implementation requires the target player to be online
-- Both GUI restore and `/pib restore` are executed against an online `Player` entity
+## 🧾 Audit
+
+Audit records administrator-sensitive operations for later review and troubleshooting
+
+- Records actor, target, backup ID, action type, and operation details
+- Covers manual backup, batch backup, restore, slot claim, pending delivery, pin, note, and shulker export
+- Can also print audit entries to console
+- Supports automatic retention cleanup
 
 ## 🛠️ Build
-Windows
+
+Windows:
+
 ```powershell
 ./gradlew.bat clean build
 ```
 
-Linux
+Linux:
+
 ```bash
 ./gradlew clean build
 ```
 
 Local artifact:
 
-- `build/libs/PlayerInvBackup.jar`
+```text
+build/libs/PlayerInvBackup.jar
+```
 
-----
+## 📄 License
+
+This project is licensed under the GNU General Public License version 3, see [LICENSE](LICENSE)
 
 ## 📊 bStats
+
 [![bStats](https://bstats.org/signatures/bukkit/PlayerInvBackup.svg)](https://bstats.org/plugin/bukkit/PlayerInvBackup/30660)
