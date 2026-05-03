@@ -1,10 +1,13 @@
 package org.playerinvbackup.backup.gui.session;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
@@ -24,6 +27,8 @@ import org.playerinvbackup.backup.text.Lang;
  * 备份编号搜索会话服务
  */
 public final class BackupIdSearchSessionService {
+    private static final long SEARCH_TIMEOUT_SECONDS = 60L;
+
     private enum SearchKind {
         BACKUP_ID,
         TIME
@@ -96,17 +101,28 @@ public final class BackupIdSearchSessionService {
     }
 
     private void beginSearch(Player admin, SearchModeHolder holder, SearchKind kind) {
-        sessions.put(
-                admin.getUniqueId(),
-                new BackupIdSearchSession(
-                        kind,
-                        holder.targetUuid(),
-                        holder.targetName(),
-                        holder.page(),
-                        holder.query(),
-                        holder.guiMode()
-                )
+        BackupIdSearchSession session = new BackupIdSearchSession(
+                kind,
+                holder.targetUuid(),
+                holder.targetName(),
+                holder.page(),
+                holder.query(),
+                holder.guiMode()
         );
+        BackupIdSearchSession previous = sessions.put(admin.getUniqueId(), session);
+        cancelTimeout(previous);
+
+        ScheduledTask timeoutTask = Bukkit.getAsyncScheduler().runDelayed(
+                plugin,
+                ignored -> expireSearch(admin, session),
+                SEARCH_TIMEOUT_SECONDS,
+                TimeUnit.SECONDS
+        );
+        session.timeoutTask(timeoutTask);
+        if (sessions.get(admin.getUniqueId()) != session) {
+            cancelTimeout(session);
+        }
+
         platformBridge.closeMenu(admin);
         Lang lang = plugin.lang();
         if (kind == SearchKind.TIME) {
@@ -124,18 +140,12 @@ public final class BackupIdSearchSessionService {
         if (session == null) {
             return false;
         }
+        cancelTimeout(session);
 
         Lang lang = plugin.lang();
         String input = message == null ? "" : message.trim();
         if (isCancelInput(lang, input)) {
-            runOnPlayer(admin, () -> listController.openBackupList(
-                    admin,
-                    session.targetUuid(),
-                    session.targetName(),
-                    session.page(),
-                    session.query(),
-                    session.guiMode()
-            ));
+            runOnPlayer(admin, () -> Chat.info(admin, "info.search-backup-cancelled"));
             return true;
         }
 
@@ -221,7 +231,8 @@ public final class BackupIdSearchSessionService {
         if (adminUuid == null) {
             return;
         }
-        sessions.remove(adminUuid);
+        BackupIdSearchSession session = sessions.remove(adminUuid);
+        cancelTimeout(session);
     }
 
     private void runOnPlayer(Player player, Runnable runnable) {
@@ -275,6 +286,30 @@ public final class BackupIdSearchSessionService {
         return admin.getUniqueId().equals(targetUuid) ? "self" : "others";
     }
 
+    private void expireSearch(Player admin, BackupIdSearchSession session) {
+        if (admin == null || session == null) {
+            return;
+        }
+        if (!sessions.remove(admin.getUniqueId(), session)) {
+            return;
+        }
+        runOnPlayer(admin, () -> Chat.warn(admin, "warn.search-backup-timeout"));
+    }
+
+    private static void cancelTimeout(BackupIdSearchSession session) {
+        if (session == null) {
+            return;
+        }
+        ScheduledTask task = session.timeoutTask();
+        if (task == null) {
+            return;
+        }
+        try {
+            task.cancel();
+        } catch (IllegalStateException ignored) {
+        }
+    }
+
     private void playGuiSound(Player player, GuiSoundAction action) {
         var config = plugin.pluginConfig();
         if (config == null || !config.guiSoundsEnabled()) {
@@ -287,13 +322,61 @@ public final class BackupIdSearchSessionService {
         runOnPlayer(player, () -> player.playSound(player.getLocation(), effect.sound(), effect.volume(), effect.pitch()));
     }
 
-    private record BackupIdSearchSession(
-            SearchKind kind,
-            UUID targetUuid,
-            String targetName,
-            int page,
-            BackupQuery query,
-            BackupGuiMode guiMode
-    ) {
+    private static final class BackupIdSearchSession {
+        private final SearchKind kind;
+        private final UUID targetUuid;
+        private final String targetName;
+        private final int page;
+        private final BackupQuery query;
+        private final BackupGuiMode guiMode;
+        private volatile ScheduledTask timeoutTask;
+
+        private BackupIdSearchSession(
+                SearchKind kind,
+                UUID targetUuid,
+                String targetName,
+                int page,
+                BackupQuery query,
+                BackupGuiMode guiMode
+        ) {
+            this.kind = kind;
+            this.targetUuid = targetUuid;
+            this.targetName = targetName;
+            this.page = page;
+            this.query = query;
+            this.guiMode = guiMode;
+        }
+
+        private SearchKind kind() {
+            return kind;
+        }
+
+        private UUID targetUuid() {
+            return targetUuid;
+        }
+
+        private String targetName() {
+            return targetName;
+        }
+
+        private int page() {
+            return page;
+        }
+
+        private BackupQuery query() {
+            return query;
+        }
+
+        private BackupGuiMode guiMode() {
+            return guiMode;
+        }
+
+        private ScheduledTask timeoutTask() {
+            return timeoutTask;
+        }
+
+        private void timeoutTask(ScheduledTask timeoutTask) {
+            this.timeoutTask = timeoutTask;
+        }
     }
 }
