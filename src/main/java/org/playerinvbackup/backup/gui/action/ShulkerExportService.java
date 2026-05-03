@@ -21,8 +21,13 @@ import org.playerinvbackup.backup.text.Chat;
  */
 public final class ShulkerExportService {
     private static final int SHULKER_SIZE = 27;
+    private static final int INVENTORY_EXPORT_PRIMARY_BOX = 0;
+    private static final int INVENTORY_EXPORT_STORAGE_BOX = 1;
 
     private final PlayerInvBackupPlugin plugin;
+
+    record InventoryExportSlotMapping(int boxIndex, int targetSlot) {
+    }
 
     public ShulkerExportService(PlayerInvBackupPlugin plugin) {
         this.plugin = plugin;
@@ -74,16 +79,13 @@ public final class ShulkerExportService {
         ItemStack[] first = new ItemStack[SHULKER_SIZE];
         ItemStack[] second = new ItemStack[SHULKER_SIZE];
 
-        for (int sourceSlot = 0; sourceSlot <= 26; sourceSlot++) {
-            copySlot(holder, SlotType.INV, sourceSlot, first, sourceSlot, accumulator);
-            if (accumulator.failed()) {
-                return accumulator.toFailure();
+        for (int sourceSlot = 0; sourceSlot <= 40; sourceSlot++) {
+            InventoryExportSlotMapping mapping = mapInventoryExportSlot(sourceSlot);
+            if (mapping == null) {
+                continue;
             }
-        }
-
-        for (int sourceSlot = 27; sourceSlot <= 40; sourceSlot++) {
-            int targetSlot = sourceSlot - 27;
-            copySlot(holder, SlotType.INV, sourceSlot, second, targetSlot, accumulator);
+            ItemStack[] target = mapping.boxIndex() == INVENTORY_EXPORT_PRIMARY_BOX ? first : second;
+            copySlot(holder, SlotType.INV, sourceSlot, target, mapping.targetSlot(), accumulator);
             if (accumulator.failed()) {
                 return accumulator.toFailure();
             }
@@ -115,6 +117,19 @@ public final class ShulkerExportService {
         }
 
         return accumulator.success(boxes);
+    }
+
+    static InventoryExportSlotMapping mapInventoryExportSlot(int sourceSlot) {
+        if (sourceSlot >= 0 && sourceSlot <= 8) {
+            return new InventoryExportSlotMapping(INVENTORY_EXPORT_PRIMARY_BOX, sourceSlot);
+        }
+        if (sourceSlot >= 36 && sourceSlot <= 40) {
+            return new InventoryExportSlotMapping(INVENTORY_EXPORT_PRIMARY_BOX, sourceSlot - 27);
+        }
+        if (sourceSlot >= 9 && sourceSlot <= 35) {
+            return new InventoryExportSlotMapping(INVENTORY_EXPORT_STORAGE_BOX, sourceSlot - 9);
+        }
+        return null;
     }
 
     private ExportBuildResult buildEnderExport(BackupViewHolder holder) {
