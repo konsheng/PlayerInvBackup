@@ -32,9 +32,32 @@ class ShulkerExportServiceTest {
         assertNull(ShulkerExportService.mapInventoryExportSlot(41));
     }
 
+    @Test
+    void enderExportSplitsByShulkerSize() {
+        assertEnderMapping(0, 54, 0, 0);
+        assertEnderMapping(26, 54, 0, 26);
+        assertEnderMapping(27, 54, 1, 0);
+        assertEnderMapping(53, 54, 1, 26);
+    }
+
+    @Test
+    void enderExportIgnoresOutOfRangeSlots() {
+        assertNull(ShulkerExportService.mapEnderExportSlot(-1, 54));
+        assertNull(ShulkerExportService.mapEnderExportSlot(54, 54));
+        assertNull(ShulkerExportService.mapEnderExportSlot(27, 27));
+    }
+
     private static void assertMapping(int sourceSlot, int boxIndex, int targetSlot) {
         ShulkerExportService.InventoryExportSlotMapping mapping =
                 ShulkerExportService.mapInventoryExportSlot(sourceSlot);
+
+        assertEquals(boxIndex, mapping.boxIndex());
+        assertEquals(targetSlot, mapping.targetSlot());
+    }
+
+    private static void assertEnderMapping(int sourceSlot, int enderSlotCount, int boxIndex, int targetSlot) {
+        ShulkerExportService.EnderExportSlotMapping mapping =
+                ShulkerExportService.mapEnderExportSlot(sourceSlot, enderSlotCount);
 
         assertEquals(boxIndex, mapping.boxIndex());
         assertEquals(targetSlot, mapping.targetSlot());

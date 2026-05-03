@@ -29,6 +29,9 @@ public final class ShulkerExportService {
     record InventoryExportSlotMapping(int boxIndex, int targetSlot) {
     }
 
+    record EnderExportSlotMapping(int boxIndex, int targetSlot) {
+    }
+
     public ShulkerExportService(PlayerInvBackupPlugin plugin) {
         this.plugin = plugin;
     }
@@ -91,24 +94,21 @@ public final class ShulkerExportService {
             }
         }
 
-        List<ItemStack> boxes = new ArrayList<>(2);
-        Material material = shulkerMaterial();
+        List<ItemStack[]> nonEmptyContents = new ArrayList<>(2);
         if (hasAnyItem(first)) {
-            ItemStack box = createShulkerBox(
-                    material,
-                    inventoryBoxName(holder, 1, 2),
-                    first
-            );
-            if (box == null) {
-                return accumulator.failure(BuildFailure.BOX_CREATE_FAILED);
-            }
-            boxes.add(box);
+            nonEmptyContents.add(first);
         }
         if (hasAnyItem(second)) {
+            nonEmptyContents.add(second);
+        }
+
+        List<ItemStack> boxes = new ArrayList<>(nonEmptyContents.size());
+        Material material = shulkerMaterial();
+        for (int i = 0; i < nonEmptyContents.size(); i++) {
             ItemStack box = createShulkerBox(
                     material,
-                    inventoryBoxName(holder, 2, 2),
-                    second
+                    inventoryBoxName(holder, i + 1, nonEmptyContents.size()),
+                    nonEmptyContents.get(i)
             );
             if (box == null) {
                 return accumulator.failure(BuildFailure.BOX_CREATE_FAILED);
@@ -134,21 +134,38 @@ public final class ShulkerExportService {
 
     private ExportBuildResult buildEnderExport(BackupViewHolder holder) {
         ExportAccumulator accumulator = new ExportAccumulator();
-        ItemStack[] contents = new ItemStack[SHULKER_SIZE];
+        int enderSlotCount = holder.parts().enderChestSlotBytes().length;
+        int boxCount = (enderSlotCount + SHULKER_SIZE - 1) / SHULKER_SIZE;
+        List<ItemStack[]> boxContents = new ArrayList<>(boxCount);
+        for (int i = 0; i < boxCount; i++) {
+            boxContents.add(new ItemStack[SHULKER_SIZE]);
+        }
 
-        for (int sourceSlot = 0; sourceSlot < SHULKER_SIZE; sourceSlot++) {
-            copySlot(holder, SlotType.ENDER, sourceSlot, contents, sourceSlot, accumulator);
+        for (int sourceSlot = 0; sourceSlot < enderSlotCount; sourceSlot++) {
+            EnderExportSlotMapping mapping = mapEnderExportSlot(sourceSlot, enderSlotCount);
+            if (mapping == null) {
+                continue;
+            }
+            copySlot(holder, SlotType.ENDER, sourceSlot, boxContents.get(mapping.boxIndex()), mapping.targetSlot(), accumulator);
             if (accumulator.failed()) {
                 return accumulator.toFailure();
             }
         }
 
-        List<ItemStack> boxes = new ArrayList<>(1);
-        if (hasAnyItem(contents)) {
+        List<ItemStack[]> nonEmptyContents = new ArrayList<>(boxCount);
+        for (ItemStack[] contents : boxContents) {
+            if (hasAnyItem(contents)) {
+                nonEmptyContents.add(contents);
+            }
+        }
+
+        List<ItemStack> boxes = new ArrayList<>(nonEmptyContents.size());
+        Material material = shulkerMaterial();
+        for (int i = 0; i < nonEmptyContents.size(); i++) {
             ItemStack box = createShulkerBox(
-                    shulkerMaterial(),
-                    enderBoxName(holder),
-                    contents
+                    material,
+                    enderBoxName(holder, i + 1, nonEmptyContents.size()),
+                    nonEmptyContents.get(i)
             );
             if (box == null) {
                 return accumulator.failure(BuildFailure.BOX_CREATE_FAILED);
@@ -157,6 +174,13 @@ public final class ShulkerExportService {
         }
 
         return accumulator.success(boxes);
+    }
+
+    static EnderExportSlotMapping mapEnderExportSlot(int sourceSlot, int enderSlotCount) {
+        if (sourceSlot < 0 || sourceSlot >= enderSlotCount) {
+            return null;
+        }
+        return new EnderExportSlotMapping(sourceSlot / SHULKER_SIZE, sourceSlot % SHULKER_SIZE);
     }
 
     private void copySlot(
@@ -240,6 +264,12 @@ public final class ShulkerExportService {
     }
 
     private Component inventoryBoxName(BackupViewHolder holder, int part, int total) {
+        if (total <= 1) {
+            return plugin.lang().msgNoPrefix(
+                    "gui.backup-view.export.inventory-box-single-name",
+                    Placeholder.unparsed("target", safeTargetName(holder))
+            );
+        }
         return plugin.lang().msgNoPrefix(
                 "gui.backup-view.export.inventory-box-name",
                 Placeholder.unparsed("target", safeTargetName(holder)),
@@ -248,7 +278,15 @@ public final class ShulkerExportService {
         );
     }
 
-    private Component enderBoxName(BackupViewHolder holder) {
+    private Component enderBoxName(BackupViewHolder holder, int part, int total) {
+        if (total > 1) {
+            return plugin.lang().msgNoPrefix(
+                    "gui.backup-view.export.ender-box-part-name",
+                    Placeholder.unparsed("target", safeTargetName(holder)),
+                    Placeholder.unparsed("part", String.valueOf(part)),
+                    Placeholder.unparsed("total", String.valueOf(total))
+            );
+        }
         return plugin.lang().msgNoPrefix(
                 "gui.backup-view.export.ender-box-name",
                 Placeholder.unparsed("target", safeTargetName(holder))

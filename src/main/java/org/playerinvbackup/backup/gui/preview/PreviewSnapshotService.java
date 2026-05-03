@@ -18,7 +18,8 @@ public final class PreviewSnapshotService {
             boolean claimOnce
     ) {
         boolean[] claimRecordInv = new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
-        boolean[] claimRecordEnder = new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
+        int enderSlotCount = parts.enderChestSlotBytes().length;
+        boolean[] claimRecordEnder = new boolean[enderSlotCount];
         if (claims != null) {
             for (SlotClaim claim : claims) {
                 if (claim.slotType() == SlotType.INV
@@ -33,7 +34,7 @@ public final class PreviewSnapshotService {
             }
         }
         boolean[] claimedInv = claimOnce ? claimRecordInv.clone() : new boolean[SnapshotCodec.INVENTORY_SLOT_COUNT];
-        boolean[] claimedEnder = claimOnce ? claimRecordEnder.clone() : new boolean[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
+        boolean[] claimedEnder = claimOnce ? claimRecordEnder.clone() : new boolean[enderSlotCount];
 
         boolean[] incompatibleInv = detectIncompatibleSlots(parts.inventorySlotBytes());
         boolean[] incompatibleEnder = detectIncompatibleSlots(parts.enderChestSlotBytes());

@@ -209,9 +209,9 @@ public final class BackupService {
 
         invSlots[40] = toBytes(inv.getItemInOffHand());
 
-        byte[][] enderSlots = new byte[SnapshotCodec.ENDER_CHEST_SLOT_COUNT][];
         ItemStack[] ender = player.getEnderChest().getContents();
-        for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT; i++) {
+        byte[][] enderSlots = new byte[ender.length][];
+        for (int i = 0; i < ender.length; i++) {
             enderSlots[i] = toBytes(ender[i]);
         }
 

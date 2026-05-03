@@ -66,6 +66,7 @@ errors:
   lang-key-missing: "<prefix><#EF5350>✖ Missing language text: <key></#EF5350>"
   restore-failed: "<prefix><#EF5350>✖ Restore failed, check console logs</#EF5350>"
   restore-incompatible-backup: "<prefix><#EF5350>✖ This backup contains items that cannot be restored on the current server, item restore has been cancelled</#EF5350>"
+  restore-ender-capacity-too-small: "<prefix><#EF5350>✖ Target ender chest is too small, backup requires <#FFCA28><snapshot_ender_slots></#FFCA28> slots but target has <#FFCA28><target_ender_slots></#FFCA28></#EF5350>"
   restore-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current items</#EF5350>"
   restore-experience-pre-backup-failed: "<prefix><#EF5350>✖ Auto backup before restore failed, restore has been cancelled to protect the current experience</#EF5350>"
   backup-experience-unavailable: "<prefix><#EF5350>✖ This backup does not contain experience data and cannot restore experience separately</#EF5350>"
@@ -320,8 +321,26 @@ gui:
       lore:
         - "<#90A4AE>Export the current inventory or ender chest view</#90A4AE>"
         - "<#90A4AE>Already claimed slots are skipped</#90A4AE>"
+      inventory-box-single-name: "<target>'s Inventory"
       inventory-box-name: "<target>'s Inventory (<part>/<total>)"
       ender-box-name: "<target>'s Ender Chest"
+      ender-box-part-name: "<target>'s Ender Chest (<part>/<total>)"
+    ender-prev:
+      name: "<#4FC3F7>◀ Previous ender page</#4FC3F7>"
+      lore:
+        - "<#90A4AE>View previous ender chest slots</#90A4AE>"
+    ender-prev-disabled:
+      name: "<#78909C>◀ Previous ender page</#78909C>"
+      lore:
+        - "<#90A4AE>Already on the first page</#90A4AE>"
+    ender-next:
+      name: "<#4FC3F7>Next ender page ▶</#4FC3F7>"
+      lore:
+        - "<#90A4AE>View next ender chest slots</#90A4AE>"
+    ender-next-disabled:
+      name: "<#78909C>Next ender page ▶</#78909C>"
+      lore:
+        - "<#90A4AE>No next page</#90A4AE>"
     lock:
       name: "<#FFCA28>📌 Pin backup</#FFCA28>"
       lore:
@@ -486,6 +505,7 @@ console:
     sha-mismatch: "Backup verification failed (sha256 mismatch): actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, expected=<expected>, actual=<actual>"
     snapshot-invalid: "Backup data corrupted or cannot be parsed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"
     incompatible-backup: "Restore blocked because the backup contains incompatible items: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, reason=<reason>"
+    ender-capacity-too-small: "Restore blocked: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>, snapshot_ender_slots=<snapshot_ender_slots>, target_ender_slots=<target_ender_slots>"
     pre-backup-failed: "Restore cancelled because the pre-restore safety backup failed: actor=<actor>, target=<target>(<target_uuid>), source backup_id=<backup_id>, pre_restore_backup_id=<pre_restore_backup_id>, reason=<reason>"
     pre-backup-succeeded: "Pre-restore safety backup created successfully: actor=<actor>, target=<target>(<target_uuid>), source backup_id=<backup_id>, pre_restore_backup_id=<pre_restore_backup_id>"
     apply-failed: "Restore failed: actor=<actor>, target=<target>(<target_uuid>), backup_id=<backup_id>"

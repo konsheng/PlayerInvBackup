@@ -22,6 +22,8 @@ public final class BackupViewRenderer {
     public static final int SLOT_VIEW_TOGGLE = 46;
     public static final int SLOT_VIEW_RESTORE = 47;
     public static final int SLOT_VIEW_EXPERIENCE = 48;
+    public static final int SLOT_VIEW_ENDER_PREV_PAGE = 49;
+    public static final int SLOT_VIEW_ENDER_NEXT_PAGE = 50;
     public static final int SLOT_VIEW_LOCK = 51;
     public static final int SLOT_VIEW_EXPORT = 52;
     public static final int SLOT_VIEW_PENDING = 53;
@@ -73,7 +75,29 @@ public final class BackupViewRenderer {
                 lang.msg("gui.backup-view.export.name"),
                 lang.msgList("gui.backup-view.export.lore")
         ));
+        renderEnderPageItems(inventory, holder);
         renderLockItem(inventory, holder);
+    }
+
+    private void renderEnderPageItems(Inventory inventory, BackupViewHolder holder) {
+        if (holder.view() != GuiView.ENDER_CHEST || !holder.hasMultipleEnderPages()) {
+            return;
+        }
+        Lang lang = plugin.lang();
+        boolean hasPrev = holder.enderPage() > 0;
+        boolean hasNext = holder.enderPage() < holder.enderMaxPage();
+        inventory.setItem(
+                SLOT_VIEW_ENDER_PREV_PAGE,
+                hasPrev
+                        ? itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-prev.name"), lang.msgList("gui.backup-view.ender-prev.lore"))
+                        : itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-prev-disabled.name"), lang.msgList("gui.backup-view.ender-prev-disabled.lore"))
+        );
+        inventory.setItem(
+                SLOT_VIEW_ENDER_NEXT_PAGE,
+                hasNext
+                        ? itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-next.name"), lang.msgList("gui.backup-view.ender-next.lore"))
+                        : itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-next-disabled.name"), lang.msgList("gui.backup-view.ender-next-disabled.lore"))
+        );
     }
 
     public void renderLockItem(Inventory inventory, BackupViewHolder holder) {
@@ -140,9 +164,14 @@ public final class BackupViewRenderer {
             return;
         }
 
-        for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT && i < inventory.getSize(); i++) {
-            byte[] itemBytes = holder.parts().enderChestSlotBytes()[i];
-            inventory.setItem(i, itemFactory.previewSlotItem(holder, org.playerinvbackup.backup.domain.SlotType.ENDER, i, itemBytes));
+        int startSlot = holder.enderPageStartSlot();
+        for (int displaySlot = 0; displaySlot < 45 && displaySlot < inventory.getSize(); displaySlot++) {
+            int realSlot = startSlot + displaySlot;
+            if (realSlot >= holder.parts().enderChestSlotBytes().length) {
+                break;
+            }
+            byte[] itemBytes = holder.parts().enderChestSlotBytes()[realSlot];
+            inventory.setItem(displaySlot, itemFactory.previewSlotItem(holder, org.playerinvbackup.backup.domain.SlotType.ENDER, realSlot, itemBytes));
         }
     }
 

@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.gui.holder;
 import java.util.UUID;
 import org.playerinvbackup.backup.domain.SnapshotParts;
 import org.playerinvbackup.backup.gui.GuiView;
+import org.playerinvbackup.backup.gui.view.EnderChestPageMapper;
 import org.playerinvbackup.backup.store.BackupQuery;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -43,6 +44,7 @@ public final class BackupViewHolder implements InventoryHolder {
     // GUI 内部状态需要原地更新, 所以这里不使用 final
     private boolean locked;
     private String note;
+    private int enderPage;
     private Inventory inventory;
 
     public BackupViewHolder(
@@ -135,6 +137,9 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public void setView(GuiView view) {
         this.view = view == null ? GuiView.INVENTORY : view;
+        if (this.view == GuiView.ENDER_CHEST) {
+            this.enderPage = EnderChestPageMapper.clampPage(enderPage, enderSlotCount());
+        }
     }
 
     public SnapshotParts parts() {
@@ -171,6 +176,38 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public boolean incompatibleClaimBlocksWholeBackup() {
         return incompatibleClaimBlocksWholeBackup;
+    }
+
+    public int enderPage() {
+        return enderPage;
+    }
+
+    public void setEnderPage(int enderPage) {
+        this.enderPage = EnderChestPageMapper.clampPage(enderPage, enderSlotCount());
+    }
+
+    public int enderMaxPage() {
+        return EnderChestPageMapper.maxPage(enderSlotCount());
+    }
+
+    public boolean hasMultipleEnderPages() {
+        return EnderChestPageMapper.hasMultiplePages(enderSlotCount());
+    }
+
+    public int enderSlotCount() {
+        return parts == null || parts.enderChestSlotBytes() == null ? 0 : parts.enderChestSlotBytes().length;
+    }
+
+    public int enderPageStartSlot() {
+        return enderPage * EnderChestPageMapper.PAGE_SIZE;
+    }
+
+    public int enderDisplaySlotToRealSlot(int displaySlot) {
+        return EnderChestPageMapper.displaySlotToRealSlot(enderPage, displaySlot, enderSlotCount());
+    }
+
+    public int enderRealSlotToDisplaySlot(int realSlot) {
+        return EnderChestPageMapper.realSlotToDisplaySlot(enderPage, realSlot, enderSlotCount());
     }
 
     public String worldName() {

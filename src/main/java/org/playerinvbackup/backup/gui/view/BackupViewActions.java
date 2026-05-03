@@ -78,9 +78,20 @@ public final class BackupViewActions {
                     return;
                 }
                 holder.setView(next);
-                viewRenderer.renderInventory(top, holder);
+                if (next == GuiView.ENDER_CHEST) {
+                    holder.setEnderPage(0);
+                }
+                viewRenderer.renderScreen(top, holder);
                 platformBridge.syncIfViewing(admin, top);
             });
+            return;
+        }
+        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_PREV_PAGE) {
+            handleEnderPageClick(admin, holder, -1);
+            return;
+        }
+        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_NEXT_PAGE) {
+            handleEnderPageClick(admin, holder, 1);
             return;
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_PENDING) {
@@ -150,6 +161,34 @@ public final class BackupViewActions {
         handleEnderSlotClick(admin, holder, slot);
     }
 
+    private void handleEnderPageClick(Player admin, BackupViewHolder holder, int delta) {
+        if (holder.view() != GuiView.ENDER_CHEST || !holder.hasMultipleEnderPages()) {
+            return;
+        }
+        int currentPage = holder.enderPage();
+        int nextPage = currentPage + delta;
+        if (nextPage < 0) {
+            playGuiSound(admin, GuiSoundAction.LIST_PAGE_DISABLED);
+            Chat.warn(admin, "errors.already-first-page");
+            return;
+        }
+        if (nextPage > holder.enderMaxPage()) {
+            playGuiSound(admin, GuiSoundAction.LIST_PAGE_DISABLED);
+            Chat.warn(admin, "errors.no-next-page");
+            return;
+        }
+        playGuiSound(admin, delta < 0 ? GuiSoundAction.LIST_PREV : GuiSoundAction.LIST_NEXT);
+        runOnPlayer(admin, () -> {
+            Inventory top = holder.getInventory();
+            if (top == null || !platformBridge.isViewing(admin, top)) {
+                return;
+            }
+            holder.setEnderPage(nextPage);
+            viewRenderer.renderScreen(top, holder);
+            platformBridge.syncIfViewing(admin, top);
+        });
+    }
+
     private void handleInventorySlotClick(Player admin, BackupViewHolder holder, int slot) {
         if (slot < 0 || slot >= holder.parts().inventorySlotBytes().length) {
             return;
@@ -183,35 +222,36 @@ public final class BackupViewActions {
     }
 
     private void handleEnderSlotClick(Player admin, BackupViewHolder holder, int slot) {
-        if (slot < 0 || slot >= holder.parts().enderChestSlotBytes().length) {
+        int realSlot = holder.enderDisplaySlotToRealSlot(slot);
+        if (realSlot < 0 || realSlot >= holder.parts().enderChestSlotBytes().length) {
             return;
         }
-        if (holder.claimOnce() && holder.claimedEnder()[slot]) {
+        if (holder.claimOnce() && holder.claimedEnder()[realSlot]) {
             playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             return;
         }
-        byte[] itemBytes = holder.parts().enderChestSlotBytes()[slot];
+        byte[] itemBytes = holder.parts().enderChestSlotBytes()[realSlot];
         if (itemBytes == null || itemBytes.length == 0) {
             return;
         }
         if (holder.incompatibleClaimBlocksWholeBackup()) {
             playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             Chat.error(admin, "errors.claim-incompatible-backup");
-            logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, slot, "whole_backup_blocked");
+            logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, realSlot, "whole_backup_blocked");
             return;
         }
-        if (holder.incompatibleEnder()[slot]) {
+        if (holder.incompatibleEnder()[realSlot]) {
             playBarrierSlotSoundIfPresent(admin, holder.getInventory(), slot);
             Chat.error(admin, "errors.claim-incompatible");
-            logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, slot, "slot_incompatible");
+            logIncompatibleClaimBlocked(admin, holder, SlotType.ENDER, realSlot, "slot_incompatible");
             return;
         }
         playGuiSound(admin, GuiSoundAction.VIEW_CLAIM_SLOT);
         if (holder.claimOnce()) {
-            slotClaimService.claimSlot(admin, holder, SlotType.ENDER, slot, itemBytes);
+            slotClaimService.claimSlot(admin, holder, SlotType.ENDER, realSlot, itemBytes);
             return;
         }
-        slotClaimService.copySlot(admin, holder, SlotType.ENDER, slot, itemBytes);
+        slotClaimService.copySlot(admin, holder, SlotType.ENDER, realSlot, itemBytes);
     }
 
     private void toggleLock(Player admin, BackupViewHolder holder) {

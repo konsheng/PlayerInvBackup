@@ -3,7 +3,6 @@ package org.playerinvbackup.backup.restore;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.playerinvbackup.backup.codec.SnapshotCodec;
 import org.playerinvbackup.backup.domain.SlotClaim;
 import org.playerinvbackup.backup.domain.SlotType;
 import org.playerinvbackup.backup.domain.SnapshotParts;
@@ -55,8 +54,14 @@ final class InventoryRestoreApplier {
             offhand = bytes == null ? null : ItemStack.deserializeBytes(bytes);
         }
 
-        ItemStack[] ender = new ItemStack[SnapshotCodec.ENDER_CHEST_SLOT_COUNT];
-        for (int i = 0; i < SnapshotCodec.ENDER_CHEST_SLOT_COUNT; i++) {
+        int targetEnderSlotCount = targetEnderSlotCount(target);
+        assertTargetEnderCapacity(parts, targetEnderSlotCount);
+        ItemStack[] ender = new ItemStack[targetEnderSlotCount];
+        for (int i = 0; i < targetEnderSlotCount; i++) {
+            if (i >= parts.enderChestSlotBytes().length) {
+                ender[i] = null;
+                continue;
+            }
             if (claimedKeys.contains(SlotType.ENDER.name() + ":" + i)) {
                 ender[i] = null;
                 continue;
@@ -71,6 +76,19 @@ final class InventoryRestoreApplier {
         target.getInventory().setItemInOffHand(offhand);
         target.getEnderChest().setContents(ender);
         target.updateInventory();
+    }
+
+    void assertTargetEnderCapacity(Player target, SnapshotParts parts) {
+        assertTargetEnderCapacity(parts, targetEnderSlotCount(target));
+    }
+
+    static void assertTargetEnderCapacity(SnapshotParts parts, int targetEnderSlotCount) {
+        int snapshotEnderSlotCount = parts == null || parts.enderChestSlotBytes() == null
+                ? 0
+                : parts.enderChestSlotBytes().length;
+        if (snapshotEnderSlotCount > targetEnderSlotCount) {
+            throw new EnderChestCapacityException(snapshotEnderSlotCount, targetEnderSlotCount);
+        }
     }
 
     private Set<String> toClaimedKeys(List<SlotClaim> claims) {
@@ -101,6 +119,29 @@ final class InventoryRestoreApplier {
                         e
                 );
             }
+        }
+    }
+
+    private static int targetEnderSlotCount(Player target) {
+        return target.getEnderChest().getContents().length;
+    }
+
+    static final class EnderChestCapacityException extends IllegalArgumentException {
+        private final int snapshotSlots;
+        private final int targetSlots;
+
+        private EnderChestCapacityException(int snapshotSlots, int targetSlots) {
+            super("snapshotEnderSlots=" + snapshotSlots + ", targetEnderSlots=" + targetSlots);
+            this.snapshotSlots = snapshotSlots;
+            this.targetSlots = targetSlots;
+        }
+
+        int snapshotSlots() {
+            return snapshotSlots;
+        }
+
+        int targetSlots() {
+            return targetSlots;
         }
     }
 }

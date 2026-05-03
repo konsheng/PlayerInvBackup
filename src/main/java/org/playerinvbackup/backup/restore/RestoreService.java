@@ -184,6 +184,36 @@ public final class RestoreService {
             runOnActor(actor, () -> Chat.error(actor, "errors.target-offline"));
             return;
         }
+        try {
+            inventoryRestoreApplier.assertTargetEnderCapacity(target, parts);
+        } catch (InventoryRestoreApplier.EnderChestCapacityException e) {
+            plugin.getLogger().warning(plugin.lang().plain(
+                    "console.restore.ender-capacity-too-small",
+                    Placeholder.unparsed("actor", actorDetails),
+                    Placeholder.unparsed("target", targetName),
+                    Placeholder.unparsed("target_uuid", targetUuid.toString()),
+                    Placeholder.unparsed("backup_id", backupId),
+                    Placeholder.unparsed("snapshot_ender_slots", String.valueOf(e.snapshotSlots())),
+                    Placeholder.unparsed("target_ender_slots", String.valueOf(e.targetSlots()))
+            ));
+            runOnActor(actor, () -> Chat.error(
+                    actor,
+                    "errors.restore-ender-capacity-too-small",
+                    Placeholder.unparsed("snapshot_ender_slots", String.valueOf(e.snapshotSlots())),
+                    Placeholder.unparsed("target_ender_slots", String.valueOf(e.targetSlots()))
+            ));
+            plugin.auditService().log(
+                    "RESTORE",
+                    actor,
+                    targetUuid,
+                    targetName,
+                    backupId,
+                    "success=false reason=ender_capacity_too_small"
+                            + " snapshotEnderSlots=" + e.snapshotSlots()
+                            + " targetEnderSlots=" + e.targetSlots()
+            );
+            return;
+        }
 
         preRestoreBackupGuard.request(
                 target,

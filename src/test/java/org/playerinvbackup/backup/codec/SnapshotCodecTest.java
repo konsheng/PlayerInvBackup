@@ -13,21 +13,16 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.playerinvbackup.backup.domain.SnapshotParts;
 
-/**
- * 该测试文件用于验证快照编解码器已经完全切换到固定的新格式
- * 覆盖新格式头部写入 经验数据往返保留和旧版本头部拒绝场景
- * 确保当前实现不再写入或读取 schemaVersion
- */
 class SnapshotCodecTest {
     private static final int MAGIC = 0x424D4255;
 
     @Test
-    // 验证新快照头部在 magic 之后直接写入背包和末影箱槽位数量
-    // 同时确认经验数据在编码和解码后保持完整
     void encodedSnapshotUsesSchemaLessHeaderAndPreservesExperienceData() throws Exception {
-        SnapshotParts parts = sampleSnapshotParts();
+        SnapshotParts parts = sampleSnapshotParts(SnapshotCodec.ENDER_CHEST_SLOT_COUNT);
 
         byte[] encoded = SnapshotCodec.encodeGzip(parts);
 
@@ -48,32 +43,58 @@ class SnapshotCodecTest {
         assertEquals(parts.totalExperience(), decoded.totalExperience());
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {9, 18, 27, 36, 45, 54})
+    void roundTripSupportsDynamicEnderSlotCounts(int enderSlotCount) throws Exception {
+        SnapshotParts parts = sampleSnapshotParts(enderSlotCount);
+
+        SnapshotParts decoded = SnapshotCodec.decodeGzip(SnapshotCodec.encodeGzip(parts));
+
+        assertEquals(enderSlotCount, decoded.enderChestSlotBytes().length);
+        assertArrayEquals(
+                parts.enderChestSlotBytes()[enderSlotCount - 1],
+                decoded.enderChestSlotBytes()[enderSlotCount - 1]
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 8, 10, 55, 63})
+    void invalidEnderSlotCountsAreRejectedOnEncode(int enderSlotCount) {
+        assertThrows(IllegalArgumentException.class, () -> SnapshotCodec.encodeGzip(emptySnapshotParts(enderSlotCount)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 8, 10, 55, 63})
+    void invalidEnderSlotCountsAreRejectedOnDecode(int enderSlotCount) {
+        assertThrows(IOException.class, () -> SnapshotCodec.decodeGzip(encodeHeaderOnlySnapshot(enderSlotCount)));
+    }
+
     @Test
-    // 验证旧的带 schemaVersion 头部的快照数据
-    // 在当前固定格式下会被直接判定为无效
     void legacySchemaVersionedSnapshotsAreRejected() {
         assertThrows(IOException.class, () -> SnapshotCodec.decodeGzip(encodeLegacyVersionedHeader(1)));
         assertThrows(IOException.class, () -> SnapshotCodec.decodeGzip(encodeLegacyVersionedHeader(2)));
     }
 
     @Test
-    // 验证 magic 不匹配的快照数据
-    // 会在解码开始阶段直接抛出格式错误
     void invalidMagicIsRejected() {
         assertThrows(IOException.class, () -> SnapshotCodec.decodeGzip(encodeInvalidMagicSnapshot()));
     }
 
-    private static SnapshotParts sampleSnapshotParts() {
-        byte[][] inventory = new byte[SnapshotCodec.INVENTORY_SLOT_COUNT][];
-        inventory[0] = new byte[]{1, 2, 3};
-        inventory[40] = new byte[]{9, 8};
+    private static SnapshotParts sampleSnapshotParts(int enderSlotCount) {
+        SnapshotParts parts = emptySnapshotParts(enderSlotCount);
+        parts.inventorySlotBytes()[0] = new byte[]{1, 2, 3};
+        parts.inventorySlotBytes()[40] = new byte[]{9, 8};
+        if (enderSlotCount > 26) {
+            parts.enderChestSlotBytes()[26] = new byte[]{4, 5, 6};
+        }
+        parts.enderChestSlotBytes()[enderSlotCount - 1] = new byte[]{7, 6, 5};
+        return parts;
+    }
 
-        byte[][] ender = new byte[SnapshotCodec.ENDER_CHEST_SLOT_COUNT][];
-        ender[26] = new byte[]{7, 6, 5};
-
+    private static SnapshotParts emptySnapshotParts(int enderSlotCount) {
         return new SnapshotParts(
-                inventory,
-                ender,
+                new byte[SnapshotCodec.INVENTORY_SLOT_COUNT][],
+                new byte[enderSlotCount][],
                 true,
                 32,
                 0.75f,
@@ -100,6 +121,17 @@ class SnapshotCodecTest {
             data.writeInt(0x12345678);
             data.writeInt(SnapshotCodec.INVENTORY_SLOT_COUNT);
             data.writeInt(SnapshotCodec.ENDER_CHEST_SLOT_COUNT);
+        }
+        return out.toByteArray();
+    }
+
+    private static byte[] encodeHeaderOnlySnapshot(int enderSlotCount) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzip = new GZIPOutputStream(out);
+             DataOutputStream data = new DataOutputStream(gzip)) {
+            data.writeInt(MAGIC);
+            data.writeInt(SnapshotCodec.INVENTORY_SLOT_COUNT);
+            data.writeInt(enderSlotCount);
         }
         return out.toByteArray();
     }

@@ -1,5 +1,6 @@
 package org.playerinvbackup.backup.gui.preview;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,10 +54,30 @@ class PreviewSnapshotServiceTest {
         assertTrue(data.claimedEnder()[5]);
     }
 
+    @Test
+    void expandedEnderChestClaimMarkersUseSnapshotSlotCount() {
+        PreviewSnapshotService service = new PreviewSnapshotService();
+        SnapshotParts parts = emptySnapshot(54);
+        List<SlotClaim> claims = List.of(
+                new SlotClaim("b1", SlotType.ENDER, 53, UUID.randomUUID(), 2_000L)
+        );
+
+        PreviewSnapshotData data = service.build(parts, claims, false, true);
+
+        assertEquals(54, data.claimedEnder().length);
+        assertEquals(54, data.claimRecordEnder().length);
+        assertTrue(data.claimedEnder()[53]);
+        assertTrue(data.claimRecordEnder()[53]);
+    }
+
     private static SnapshotParts emptySnapshot() {
+        return emptySnapshot(SnapshotCodec.ENDER_CHEST_SLOT_COUNT);
+    }
+
+    private static SnapshotParts emptySnapshot(int enderSlotCount) {
         return new SnapshotParts(
                 new byte[SnapshotCodec.INVENTORY_SLOT_COUNT][],
-                new byte[SnapshotCodec.ENDER_CHEST_SLOT_COUNT][],
+                new byte[enderSlotCount][],
                 true,
                 0,
                 0.0f,

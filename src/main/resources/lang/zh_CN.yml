@@ -66,6 +66,7 @@ errors:
   lang-key-missing: "<prefix><#EF5350>✖ 语言文本缺失: <key></#EF5350>"
   restore-failed: "<prefix><#EF5350>✖ 恢复失败, 请查看控制台日志</#EF5350>"
   restore-incompatible-backup: "<prefix><#EF5350>✖ 该备份包含当前服务端无法恢复的物品, 已取消本次物品恢复</#EF5350>"
+  restore-ender-capacity-too-small: "<prefix><#EF5350>✖ 目标末影箱容量不足, 备份需要 <#FFCA28><snapshot_ender_slots></#FFCA28> 格, 当前只有 <#FFCA28><target_ender_slots></#FFCA28> 格</#EF5350>"
   restore-pre-backup-failed: "<prefix><#EF5350>✖ 恢复前自动备份失败, 为避免覆盖当前物品, 已取消恢复</#EF5350>"
   restore-experience-pre-backup-failed: "<prefix><#EF5350>✖ 恢复前自动备份失败, 为避免覆盖当前经验值, 已取消恢复</#EF5350>"
   backup-experience-unavailable: "<prefix><#EF5350>✖ 该备份不包含经验值数据, 无法单独恢复经验值</#EF5350>"
@@ -320,8 +321,26 @@ gui:
       lore:
         - "<#90A4AE>按当前视图导出背包或末影箱</#90A4AE>"
         - "<#90A4AE>已领取格子会被跳过</#90A4AE>"
+      inventory-box-single-name: "<target> 的背包"
       inventory-box-name: "<target> 的背包 (<part>/<total>)"
       ender-box-name: "<target> 的末影箱"
+      ender-box-part-name: "<target> 的末影箱 (<part>/<total>)"
+    ender-prev:
+      name: "<#4FC3F7>◀ 末影箱上一页</#4FC3F7>"
+      lore:
+        - "<#90A4AE>查看前一页末影箱槽位</#90A4AE>"
+    ender-prev-disabled:
+      name: "<#78909C>◀ 末影箱上一页</#78909C>"
+      lore:
+        - "<#90A4AE>已经是第一页</#90A4AE>"
+    ender-next:
+      name: "<#4FC3F7>末影箱下一页 ▶</#4FC3F7>"
+      lore:
+        - "<#90A4AE>查看后一页末影箱槽位</#90A4AE>"
+    ender-next-disabled:
+      name: "<#78909C>末影箱下一页 ▶</#78909C>"
+      lore:
+        - "<#90A4AE>没有下一页</#90A4AE>"
     lock:
       name: "<#FFCA28>📌 置顶显示</#FFCA28>"
       lore:
@@ -487,6 +506,7 @@ console:
     sha-mismatch: "备份校验失败 (sha256 不匹配): 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>, expected=<expected>, actual=<actual>"
     snapshot-invalid: "备份数据损坏/无法解析: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>"
     incompatible-backup: "恢复已被拦截: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>, 原因=<reason>"
+    ender-capacity-too-small: "恢复已被拦截: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>, 备份末影箱槽位=<snapshot_ender_slots>, 目标末影箱槽位=<target_ender_slots>"
     pre-backup-failed: "恢复已取消: 恢复前保底备份失败, 操作者=<actor>, 目标=<target>(<target_uuid>), 原始备份编号=<backup_id>, 保底备份编号=<pre_restore_backup_id>, 原因=<reason>"
     pre-backup-succeeded: "恢复前保底备份已创建成功: 操作者=<actor>, 目标=<target>(<target_uuid>), 原始备份编号=<backup_id>, 保底备份编号=<pre_restore_backup_id>"
     apply-failed: "恢复失败: 操作者=<actor>, 目标=<target>(<target_uuid>), 备份编号=<backup_id>"

@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.domain.SlotType;
+import org.playerinvbackup.backup.gui.GuiView;
 import org.playerinvbackup.backup.gui.InventoryUtil;
 import org.playerinvbackup.backup.gui.holder.BackupViewHolder;
 import org.playerinvbackup.backup.gui.platform.GuiPlatformBridge;
@@ -59,8 +60,11 @@ public final class SlotClaimService {
             return;
         }
 
-        inventory.setItem(slotIndex, itemFactory.processingItem());
-        platformBridge.syncIfViewing(admin, inventory);
+        int displaySlot = displaySlot(holder, slotType, slotIndex);
+        if (displaySlot >= 0) {
+            inventory.setItem(displaySlot, itemFactory.processingItem());
+            platformBridge.syncIfViewing(admin, inventory);
+        }
 
         UUID actorUuid = admin.getUniqueId();
         String actorName = admin.getName();
@@ -287,15 +291,18 @@ public final class SlotClaimService {
                 holder.claimRecordEnder()[slotIndex] = claimed;
             }
         }
-        inventory.setItem(
-                slotIndex,
-                itemFactory.namedItem(
-                        Material.BARRIER,
-                        plugin.lang().msg("gui.backup-view.claimed.name"),
-                        plugin.lang().msgList("gui.backup-view.claimed.lore")
-                )
-        );
-        platformBridge.syncIfViewing(admin, inventory);
+        int displaySlot = displaySlot(holder, slotType, slotIndex);
+        if (displaySlot >= 0) {
+            inventory.setItem(
+                    displaySlot,
+                    itemFactory.namedItem(
+                            Material.BARRIER,
+                            plugin.lang().msg("gui.backup-view.claimed.name"),
+                            plugin.lang().msgList("gui.backup-view.claimed.lore")
+                    )
+            );
+            platformBridge.syncIfViewing(admin, inventory);
+        }
     }
 
     private void restoreOriginalSlot(Player admin, BackupViewHolder holder, SlotType slotType, int slotIndex) {
@@ -308,8 +315,12 @@ public final class SlotClaimService {
             if (slotIndex < 0 || slotIndex >= holder.parts().inventorySlotBytes().length) {
                 return;
             }
+            int displaySlot = displaySlot(holder, slotType, slotIndex);
+            if (displaySlot < 0) {
+                return;
+            }
             byte[] itemBytes = holder.parts().inventorySlotBytes()[slotIndex];
-            inventory.setItem(slotIndex, itemFactory.previewSlotItem(holder, SlotType.INV, slotIndex, itemBytes));
+            inventory.setItem(displaySlot, itemFactory.previewSlotItem(holder, SlotType.INV, slotIndex, itemBytes));
             platformBridge.syncIfViewing(admin, inventory);
             return;
         }
@@ -317,9 +328,23 @@ public final class SlotClaimService {
         if (slotIndex < 0 || slotIndex >= holder.parts().enderChestSlotBytes().length) {
             return;
         }
+        int displaySlot = displaySlot(holder, slotType, slotIndex);
+        if (displaySlot < 0) {
+            return;
+        }
         byte[] itemBytes = holder.parts().enderChestSlotBytes()[slotIndex];
-        inventory.setItem(slotIndex, itemFactory.previewSlotItem(holder, SlotType.ENDER, slotIndex, itemBytes));
+        inventory.setItem(displaySlot, itemFactory.previewSlotItem(holder, SlotType.ENDER, slotIndex, itemBytes));
         platformBridge.syncIfViewing(admin, inventory);
+    }
+
+    private int displaySlot(BackupViewHolder holder, SlotType slotType, int slotIndex) {
+        if (slotType == SlotType.INV) {
+            return holder.view() == GuiView.INVENTORY && slotIndex >= 0 && slotIndex < 45 ? slotIndex : -1;
+        }
+        if (holder.view() != GuiView.ENDER_CHEST) {
+            return -1;
+        }
+        return holder.enderRealSlotToDisplaySlot(slotIndex);
     }
 
     private BackupStore resolveStoreOrError(Player player, boolean closeMenu) {

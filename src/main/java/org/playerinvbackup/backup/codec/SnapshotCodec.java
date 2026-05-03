@@ -18,6 +18,8 @@ import org.playerinvbackup.backup.domain.SnapshotParts;
 public final class SnapshotCodec {
     public static final int INVENTORY_SLOT_COUNT = 41;
     public static final int ENDER_CHEST_SLOT_COUNT = 27;
+    public static final int MIN_ENDER_CHEST_SLOT_COUNT = 9;
+    public static final int MAX_ENDER_CHEST_SLOT_COUNT = 54;
 
     private static final int MAGIC = 0x424D4255; // BMBU
 
@@ -28,7 +30,7 @@ public final class SnapshotCodec {
         if (parts.inventorySlotBytes().length != INVENTORY_SLOT_COUNT) {
             throw new IllegalArgumentException("背包槽位数量不合法: " + parts.inventorySlotBytes().length);
         }
-        if (parts.enderChestSlotBytes().length != ENDER_CHEST_SLOT_COUNT) {
+        if (!isValidEnderChestSlotCount(parts.enderChestSlotBytes().length)) {
             throw new IllegalArgumentException("末影箱槽位数量不合法: " + parts.enderChestSlotBytes().length);
         }
 
@@ -37,7 +39,7 @@ public final class SnapshotCodec {
              DataOutputStream data = new DataOutputStream(gzip)) {
             data.writeInt(MAGIC);
             data.writeInt(INVENTORY_SLOT_COUNT);
-            data.writeInt(ENDER_CHEST_SLOT_COUNT);
+            data.writeInt(parts.enderChestSlotBytes().length);
             writeSlots(data, parts.inventorySlotBytes());
             writeSlots(data, parts.enderChestSlotBytes());
             data.writeBoolean(parts.hasExperienceData());
@@ -57,7 +59,7 @@ public final class SnapshotCodec {
             }
             int invCount = data.readInt();
             int enderCount = data.readInt();
-            if (invCount != INVENTORY_SLOT_COUNT || enderCount != ENDER_CHEST_SLOT_COUNT) {
+            if (invCount != INVENTORY_SLOT_COUNT || !isValidEnderChestSlotCount(enderCount)) {
                 throw new IOException("快照数据格式无效: inv=" + invCount + ", ender=" + enderCount);
             }
 
@@ -77,6 +79,12 @@ public final class SnapshotCodec {
                     totalExperience
             );
         }
+    }
+
+    public static boolean isValidEnderChestSlotCount(int count) {
+        return count >= MIN_ENDER_CHEST_SLOT_COUNT
+                && count <= MAX_ENDER_CHEST_SLOT_COUNT
+                && count % 9 == 0;
     }
 
     private static void writeSlots(DataOutputStream data, byte[][] slots) throws IOException {
