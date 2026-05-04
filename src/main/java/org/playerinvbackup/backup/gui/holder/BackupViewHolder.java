@@ -43,6 +43,7 @@ public final class BackupViewHolder implements InventoryHolder {
     private final Double targetLocationZ;
     private final UUID killerPlayerUuid;
     private final String killerPlayerName;
+    private final boolean teleportButtonVisible;
     // GUI 内部状态需要原地更新, 所以这里不使用 final
     private boolean locked;
     private String note;
@@ -80,6 +81,72 @@ public final class BackupViewHolder implements InventoryHolder {
             boolean locked,
             String note
     ) {
+        this(
+                targetUuid,
+                targetName,
+                backupId,
+                serverId,
+                listPage,
+                listQuery,
+                guiMode,
+                view,
+                parts,
+                claimOnce,
+                claimedInv,
+                claimedEnder,
+                claimRecordInv,
+                claimRecordEnder,
+                incompatibleInv,
+                incompatibleEnder,
+                incompatibleClaimBlocksWholeBackup,
+                worldName,
+                locationX,
+                locationY,
+                locationZ,
+                targetWorldName,
+                targetLocationX,
+                targetLocationY,
+                targetLocationZ,
+                killerPlayerUuid,
+                killerPlayerName,
+                locked,
+                note,
+                false
+        );
+    }
+
+    public BackupViewHolder(
+            UUID targetUuid,
+            String targetName,
+            String backupId,
+            String serverId,
+            int listPage,
+            BackupQuery listQuery,
+            BackupGuiMode guiMode,
+            GuiView view,
+            SnapshotParts parts,
+            boolean claimOnce,
+            boolean[] claimedInv,
+            boolean[] claimedEnder,
+            boolean[] claimRecordInv,
+            boolean[] claimRecordEnder,
+            boolean[] incompatibleInv,
+            boolean[] incompatibleEnder,
+            boolean incompatibleClaimBlocksWholeBackup,
+            String worldName,
+            Double locationX,
+            Double locationY,
+            Double locationZ,
+            String targetWorldName,
+            Double targetLocationX,
+            Double targetLocationY,
+            Double targetLocationZ,
+            UUID killerPlayerUuid,
+            String killerPlayerName,
+            boolean locked,
+            String note,
+            boolean teleportButtonVisible
+    ) {
         this.targetUuid = targetUuid;
         this.targetName = targetName;
         this.backupId = backupId;
@@ -107,6 +174,7 @@ public final class BackupViewHolder implements InventoryHolder {
         this.targetLocationZ = targetLocationZ;
         this.killerPlayerUuid = killerPlayerUuid;
         this.killerPlayerName = killerPlayerName;
+        this.teleportButtonVisible = teleportButtonVisible;
         this.locked = locked;
         this.note = note == null ? "" : note;
     }
@@ -260,6 +328,10 @@ public final class BackupViewHolder implements InventoryHolder {
 
     public String killerPlayerName() {
         return killerPlayerName;
+    }
+
+    public boolean teleportButtonVisible() {
+        return teleportButtonVisible;
     }
 
     public boolean locked() {

@@ -3,6 +3,7 @@ package org.playerinvbackup.backup.gui;
 import java.util.UUID;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.gui.action.PendingDeliveryService;
+import org.playerinvbackup.backup.gui.action.BackupLocationTeleportService;
 import org.playerinvbackup.backup.gui.action.ShulkerExportService;
 import org.playerinvbackup.backup.gui.action.SlotClaimService;
 import org.playerinvbackup.backup.gui.confirm.RestoreConfirmActions;
@@ -73,6 +74,7 @@ public final class GuiService {
         this.pendingDeliveryService = new PendingDeliveryService(plugin);
         SlotClaimService slotClaimService = new SlotClaimService(plugin, platformBridge, itemFactory);
         ShulkerExportService shulkerExportService = new ShulkerExportService(plugin);
+        BackupLocationTeleportService teleportService = new BackupLocationTeleportService(plugin);
 
         this.backupIdSearchSessionService = new BackupIdSearchSessionService(
                 plugin,
@@ -97,7 +99,8 @@ public final class GuiService {
                 restoreConfirmRenderer,
                 pendingDeliveryService,
                 slotClaimService,
-                shulkerExportService
+                shulkerExportService,
+                teleportService
         );
         this.backupListActions = new BackupListActions(
                 plugin,

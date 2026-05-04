@@ -28,6 +28,7 @@ permissions:
       playerinvbackup.backup.bypass: true
       playerinvbackup.restore: true
       playerinvbackup.export: true
+      playerinvbackup.teleport: true
       playerinvbackup.pending: true
       playerinvbackup.status: true
       playerinvbackup.reload: true
@@ -69,6 +70,10 @@ permissions:
 
   playerinvbackup.export:
     description: 允许将备份预览内容导出到潜影盒
+    default: false
+
+  playerinvbackup.teleport:
+    description: 允许在备份预览 GUI 中执行传送到备份位置命令
     default: false
 
   playerinvbackup.pending:

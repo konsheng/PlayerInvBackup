@@ -10,6 +10,7 @@ import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.config.GuiSoundAction;
 import org.playerinvbackup.backup.domain.SlotType;
 import org.playerinvbackup.backup.gui.GuiView;
+import org.playerinvbackup.backup.gui.action.BackupLocationTeleportService;
 import org.playerinvbackup.backup.gui.action.PendingDeliveryService;
 import org.playerinvbackup.backup.gui.action.ShulkerExportService;
 import org.playerinvbackup.backup.gui.action.SlotClaimService;
@@ -40,6 +41,7 @@ public final class BackupViewActions {
     private final PendingDeliveryService pendingDeliveryService;
     private final SlotClaimService slotClaimService;
     private final ShulkerExportService shulkerExportService;
+    private final BackupLocationTeleportService teleportService;
 
     public BackupViewActions(
             PlayerInvBackupPlugin plugin,
@@ -50,7 +52,8 @@ public final class BackupViewActions {
             RestoreConfirmRenderer restoreConfirmRenderer,
             PendingDeliveryService pendingDeliveryService,
             SlotClaimService slotClaimService,
-            ShulkerExportService shulkerExportService
+            ShulkerExportService shulkerExportService,
+            BackupLocationTeleportService teleportService
     ) {
         this.plugin = plugin;
         this.platformBridge = platformBridge;
@@ -61,6 +64,7 @@ public final class BackupViewActions {
         this.pendingDeliveryService = pendingDeliveryService;
         this.slotClaimService = slotClaimService;
         this.shulkerExportService = shulkerExportService;
+        this.teleportService = teleportService;
     }
 
     public void handleClick(Player admin, BackupViewHolder holder, int slot) {
@@ -93,15 +97,26 @@ public final class BackupViewActions {
             });
             return;
         }
-        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_PREV_PAGE) {
+        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_PREV_PAGE
+                && holder.view() == GuiView.ENDER_CHEST
+                && holder.hasMultipleEnderPages()
+                && holder.enderPage() > 0) {
             handleEnderPageClick(admin, holder, -1);
             return;
         }
-        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_NEXT_PAGE) {
+        if (slot == BackupViewRenderer.SLOT_VIEW_ENDER_NEXT_PAGE
+                && holder.view() == GuiView.ENDER_CHEST
+                && holder.hasMultipleEnderPages()
+                && holder.enderPage() < holder.enderMaxPage()) {
             handleEnderPageClick(admin, holder, 1);
             return;
         }
         if (holder.viewOnly()) {
+            return;
+        }
+        if (BackupViewRenderer.isTeleportSlot(holder, slot)) {
+            playGuiSound(admin, GuiSoundAction.VIEW_TELEPORT);
+            teleportService.teleport(admin, holder);
             return;
         }
         if (slot == BackupViewRenderer.SLOT_VIEW_PENDING) {

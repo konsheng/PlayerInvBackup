@@ -66,6 +66,27 @@ audit:
   # Audit log retention in days, set to 0 to disable cleanup
   keep-days: 30
 
+# Backup location teleport command settings
+teleport:
+  # Enable the backup preview teleport button
+  enabled: true
+
+  # Command executed by console when clicking the teleport button
+  # Available variables
+  # <player> -> player who clicked the teleport button
+  # <player_uuid> -> UUID of the player who clicked the teleport button
+  # <target> -> backup owner name
+  # <target_uuid> -> backup owner UUID
+  # <server> -> source server ID saved in the backup
+  # <server_display> -> source server display name after server.aliases
+  # <world> -> world name saved in the backup
+  # <x> -> backup X coordinate
+  # <y> -> backup Y coordinate
+  # <z> -> backup Z coordinate
+  # <backup_id> -> current backup ID
+  # Cross-server or cross-world teleport should be handled by your own command/plugin
+  command: "tp <player> <x> <y> <z>"
+
 # bStats related settings
 bstats:
   # Enable bStats
@@ -345,6 +366,11 @@ sounds:
       # Export current preview view into shulker box
       export:
         name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # Execute backup location teleport command
+      teleport:
+        name: "ENTITY_EXPERIENCE_ORB_PICKUP"
         volume: 1.0
         pitch: 1.0
       # Open pending delivery list

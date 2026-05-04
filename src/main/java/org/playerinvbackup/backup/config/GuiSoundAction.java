@@ -24,6 +24,7 @@ public enum GuiSoundAction {
     VIEW_RESTORE("sounds.gui.backup-view.restore"),
     VIEW_LOCK("sounds.gui.backup-view.lock"),
     VIEW_EXPORT("sounds.gui.backup-view.export"),
+    VIEW_TELEPORT("sounds.gui.backup-view.teleport"),
     VIEW_PENDING("sounds.gui.backup-view.pending"),
     VIEW_CLAIM_SLOT("sounds.gui.backup-view.claim-slot"),
     RESTORE_CONFIRM_OK("sounds.gui.restore-confirm.confirm"),

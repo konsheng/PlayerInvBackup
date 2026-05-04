@@ -22,6 +22,7 @@ public final class BackupViewRenderer {
     public static final int SLOT_VIEW_TOGGLE = 46;
     public static final int SLOT_VIEW_RESTORE = 47;
     public static final int SLOT_VIEW_EXPERIENCE = 48;
+    public static final int SLOT_VIEW_TELEPORT = 49;
     public static final int SLOT_VIEW_ENDER_PREV_PAGE = 49;
     public static final int SLOT_VIEW_ENDER_NEXT_PAGE = 50;
     public static final int SLOT_VIEW_LOCK = 51;
@@ -76,6 +77,7 @@ public final class BackupViewRenderer {
                     lang.msg("gui.backup-view.export.name"),
                     lang.msgList("gui.backup-view.export.lore")
             ));
+            renderTeleportItem(inventory, holder);
         }
         renderEnderPageItems(inventory, holder);
         if (!holder.viewOnly()) {
@@ -90,18 +92,71 @@ public final class BackupViewRenderer {
         Lang lang = plugin.lang();
         boolean hasPrev = holder.enderPage() > 0;
         boolean hasNext = holder.enderPage() < holder.enderMaxPage();
-        inventory.setItem(
-                SLOT_VIEW_ENDER_PREV_PAGE,
-                hasPrev
-                        ? itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-prev.name"), lang.msgList("gui.backup-view.ender-prev.lore"))
-                        : itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-prev-disabled.name"), lang.msgList("gui.backup-view.ender-prev-disabled.lore"))
-        );
-        inventory.setItem(
-                SLOT_VIEW_ENDER_NEXT_PAGE,
-                hasNext
-                        ? itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-next.name"), lang.msgList("gui.backup-view.ender-next.lore"))
-                        : itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-next-disabled.name"), lang.msgList("gui.backup-view.ender-next-disabled.lore"))
-        );
+        if (hasPrev) {
+            inventory.setItem(
+                    SLOT_VIEW_ENDER_PREV_PAGE,
+                    itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-prev.name"), lang.msgList("gui.backup-view.ender-prev.lore"))
+            );
+        } else if (!holder.teleportButtonVisible()) {
+            inventory.setItem(
+                    SLOT_VIEW_ENDER_PREV_PAGE,
+                    itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-prev-disabled.name"), lang.msgList("gui.backup-view.ender-prev-disabled.lore"))
+            );
+        }
+        if (hasNext) {
+            inventory.setItem(
+                    SLOT_VIEW_ENDER_NEXT_PAGE,
+                    itemFactory.namedItem(Material.ARROW, lang.msg("gui.backup-view.ender-next.name"), lang.msgList("gui.backup-view.ender-next.lore"))
+            );
+        } else if (!holder.teleportButtonVisible()) {
+            inventory.setItem(
+                    SLOT_VIEW_ENDER_NEXT_PAGE,
+                    itemFactory.namedItem(Material.GRAY_DYE, lang.msg("gui.backup-view.ender-next-disabled.name"), lang.msgList("gui.backup-view.ender-next-disabled.lore"))
+            );
+        }
+    }
+
+    private void renderTeleportItem(Inventory inventory, BackupViewHolder holder) {
+        if (inventory == null || holder == null || !holder.teleportButtonVisible()) {
+            return;
+        }
+        Lang lang = plugin.lang();
+        inventory.setItem(teleportSlot(holder), itemFactory.namedItem(
+                Material.COMPASS,
+                lang.msg("gui.backup-view.teleport.name"),
+                lang.msgList(
+                        "gui.backup-view.teleport.lore",
+                        Placeholder.unparsed("server", displayServerName(holder.serverId())),
+                        Placeholder.unparsed("world", BackupLocationFormatter.displayWorld(
+                                plugin,
+                                holder.worldName(),
+                                null
+                        )),
+                        Placeholder.unparsed("position", BackupLocationFormatter.displayPosition(
+                                plugin,
+                                holder.locationX(),
+                                holder.locationY(),
+                                holder.locationZ(),
+                                null,
+                                null,
+                                null
+                        ))
+                )
+        ));
+    }
+
+    public static boolean isTeleportSlot(BackupViewHolder holder, int slot) {
+        return holder != null && holder.teleportButtonVisible() && slot == teleportSlot(holder);
+    }
+
+    private static int teleportSlot(BackupViewHolder holder) {
+        if (holder != null
+                && holder.view() == GuiView.ENDER_CHEST
+                && holder.hasMultipleEnderPages()
+                && holder.enderPage() > 0) {
+            return SLOT_VIEW_ENDER_NEXT_PAGE;
+        }
+        return SLOT_VIEW_TELEPORT;
     }
 
     public void renderLockItem(Inventory inventory, BackupViewHolder holder) {

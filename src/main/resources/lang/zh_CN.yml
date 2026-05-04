@@ -80,6 +80,11 @@ errors:
   export-failed: "<prefix><#EF5350>✖ 导出失败, 请查看控制台日志</#EF5350>"
   export-empty: "<prefix><#FFA726>⚠ 当前视图没有可导出的物品</#FFA726>"
   export-inventory-full: "<prefix><#FFA726>⚠ 背包空间不足, 需要至少 <#FFCA28><boxes></#FFCA28> 个空格</#FFA726>"
+  teleport-view-only: "<prefix><#EF5350>✖ 只读预览模式不允许传送</#EF5350>"
+  teleport-disabled: "<prefix><#EF5350>✖ 备份位置传送功能未启用</#EF5350>"
+  teleport-command-empty: "<prefix><#EF5350>✖ 备份位置传送命令未配置</#EF5350>"
+  teleport-location-unavailable: "<prefix><#EF5350>✖ 该备份没有可用的位置数据</#EF5350>"
+  teleport-command-failed: "<prefix><#EF5350>✖ 传送命令执行失败, 请查看控制台日志</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ 该物品已被领取</#FFA726>"
   preview-claim-inventory-full: "<prefix><#FFA726>⚠ 背包空间不足</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ 投递失败(数据库更新失败), 已回滚该物品, 请稍后重试</#EF5350>"
@@ -146,6 +151,7 @@ success:
   claim-success: "<prefix><#66BB6A>✔ 已领取该格物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   preview-claim-success: "<prefix><#66BB6A>✔ 已领取物品(数量: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   export-shulker: "<prefix><#66BB6A>✔ 已导出 <#FFCA28><boxes></#FFCA28> 个潜影盒, 共 <#FFCA28><items></#FFCA28> 个物品堆</#66BB6A>"
+  teleport-command-executed: "<prefix><#66BB6A>✔ 已执行备份位置传送命令</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ 已恢复玩家背包/末影箱(已扣除已领取格子)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ 已恢复玩家经验值</#66BB6A>"
 
@@ -346,6 +352,13 @@ gui:
       inventory-box-name: "<target> 的背包 (<part>/<total>)"
       ender-box-name: "<target> 的末影箱"
       ender-box-part-name: "<target> 的末影箱 (<part>/<total>)"
+    teleport:
+      name: "<#4FC3F7>🧭 传送到备份位置</#4FC3F7>"
+      lore:
+        - "<#90A4AE>服务器: </#90A4AE><white><server></white>"
+        - "<#90A4AE>世界: </#90A4AE><white><world></white>"
+        - "<#90A4AE>坐标: </#90A4AE><white><position></white>"
+        - "<#4FC3F7>▶ 点击执行传送命令</#4FC3F7>"
     ender-prev:
       name: "<#4FC3F7>◀ 末影箱上一页</#4FC3F7>"
       lore:
@@ -486,6 +499,7 @@ console:
     claim-failed: "领取失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>"
     claim-incompatible: "领取已被拦截: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 槽位=<slot>, 模式=<mode>, 原因=<reason>"
     export-failed: "导出潜影盒失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 原因=<reason>"
+    teleport-command-failed: "执行备份位置传送命令失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 备份编号=<backup_id>, 命令=<command>, 原因=<reason>"
 
   packet-gui:
     unsupported-size: "不支持的 GUI 大小: size=<size>, player=<player>"

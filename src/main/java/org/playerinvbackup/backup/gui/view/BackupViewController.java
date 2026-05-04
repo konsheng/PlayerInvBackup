@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.playerinvbackup.backup.Permissions;
 import org.playerinvbackup.backup.PlayerInvBackupPlugin;
 import org.playerinvbackup.backup.codec.SnapshotCodec;
 import org.playerinvbackup.backup.domain.BackupRecord;
@@ -210,6 +211,7 @@ public final class BackupViewController {
                         && plugin.pluginConfig().guiPreview().claimOnce();
                 boolean blockWhole = plugin.pluginConfig() != null
                         && plugin.pluginConfig().guiBackupViewBlockWholeBackupClaimOnIncompatible();
+                boolean teleportButtonVisible = canShowTeleportButton(admin, record, safeMode);
                 PreviewSnapshotData previewData = previewSnapshotService.build(parts, claims, blockWhole, claimOnce);
 
                 runOnPlayer(admin, () -> {
@@ -250,7 +252,8 @@ public final class BackupViewController {
                             record.meta().killerPlayerUuid(),
                             record.meta().killerPlayerName(),
                             record.meta().locked(),
-                            record.meta().note()
+                            record.meta().note(),
+                            teleportButtonVisible
                     );
                     viewHolder.setInventory(inventory);
                     finalListHolder.setViewHolder(viewHolder);
@@ -321,6 +324,20 @@ public final class BackupViewController {
             return DEFAULT_LOADING_INDICATOR_DELAY_SECONDS;
         }
         return Math.max(0L, config.guiLoadingIndicatorDelay().toSeconds());
+    }
+
+    private boolean canShowTeleportButton(Player admin, BackupRecord record, BackupGuiMode guiMode) {
+        if (admin == null || record == null || record.meta() == null || guiMode == null || guiMode.viewOnly()) {
+            return false;
+        }
+        var config = plugin.pluginConfig();
+        if (config == null || config.teleport() == null || !config.teleport().enabled()) {
+            return false;
+        }
+        if (!Permissions.has(admin, Permissions.TELEPORT)) {
+            return false;
+        }
+        return record.meta().hasLocation();
     }
 
     private static String scope(Player admin, UUID targetUuid) {

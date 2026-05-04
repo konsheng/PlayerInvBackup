@@ -66,6 +66,27 @@ audit:
   # 审计日志保留天数, 设为 0 表示不自动清理
   keep-days: 30
 
+# 备份位置传送命令设置
+teleport:
+  # 是否启用备份预览界面的传送按钮
+  enabled: true
+
+  # 点击传送按钮时由控制台执行的命令
+  # 可用变量
+  # <player> -> 点击传送按钮的玩家名
+  # <player_uuid> -> 点击传送按钮的玩家 UUID
+  # <target> -> 备份所属玩家名
+  # <target_uuid> -> 备份所属玩家 UUID
+  # <server> -> 备份中保存的来源服务器 ID
+  # <server_display> -> 经过 server.aliases 显示别名处理后的来源服务器名
+  # <world> -> 备份中保存的世界名
+  # <x> -> 备份 X 坐标
+  # <y> -> 备份 Y 坐标
+  # <z> -> 备份 Z 坐标
+  # <backup_id> -> 当前备份编号
+  # 跨服或跨世界传送请在这里接入你自己的传送插件命令
+  command: "tp <player> <x> <y> <z>"
+
 # bStats 统计相关配置
 bstats:
   # 是否启用 bStats
@@ -345,6 +366,11 @@ sounds:
       # 导出当前预览视图到潜影盒
       export:
         name: "INHERIT"
+        volume: 1.0
+        pitch: 1.0
+      # 执行备份位置传送命令
+      teleport:
+        name: "ENTITY_EXPERIENCE_ORB_PICKUP"
         volume: 1.0
         pitch: 1.0
       # 打开待投递列表

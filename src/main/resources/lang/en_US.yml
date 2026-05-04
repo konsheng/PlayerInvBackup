@@ -80,6 +80,11 @@ errors:
   export-failed: "<prefix><#EF5350>✖ Export failed, check console logs</#EF5350>"
   export-empty: "<prefix><#FFA726>⚠ Current view has no exportable items</#FFA726>"
   export-inventory-full: "<prefix><#FFA726>⚠ Inventory does not have enough space, requires at least <#FFCA28><boxes></#FFCA28> empty slot(s)</#FFA726>"
+  teleport-view-only: "<prefix><#EF5350>✖ Read-only preview mode does not allow teleport</#EF5350>"
+  teleport-disabled: "<prefix><#EF5350>✖ Backup location teleport is not enabled</#EF5350>"
+  teleport-command-empty: "<prefix><#EF5350>✖ Backup location teleport command is not configured</#EF5350>"
+  teleport-location-unavailable: "<prefix><#EF5350>✖ This backup has no usable location data</#EF5350>"
+  teleport-command-failed: "<prefix><#EF5350>✖ Teleport command failed, check console logs</#EF5350>"
   already-claimed: "<prefix><#FFA726>⚠ This item has already been claimed</#FFA726>"
   preview-claim-inventory-full: "<prefix><#FFA726>⚠ Inventory is full</#FFA726>"
   deliver-mark-failed-rollback: "<prefix><#EF5350>✖ Delivery failed (database update failed), item rolled back, try again later</#EF5350>"
@@ -146,6 +151,7 @@ success:
   claim-success: "<prefix><#66BB6A>✔ Claimed this slot (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   preview-claim-success: "<prefix><#66BB6A>✔ Item claimed (amount: <#FFCA28><amount></#FFCA28>)</#66BB6A>"
   export-shulker: "<prefix><#66BB6A>✔ Exported <#FFCA28><boxes></#FFCA28> shulker box(es), <#FFCA28><items></#FFCA28> item stack(s)</#66BB6A>"
+  teleport-command-executed: "<prefix><#66BB6A>✔ Backup location teleport command executed</#66BB6A>"
   restore-success: "<prefix><#66BB6A>✔ Player inventory and ender chest restored (claimed slots excluded)</#66BB6A>"
   restore-experience-success: "<prefix><#66BB6A>✔ Player experience restored</#66BB6A>"
 
@@ -346,6 +352,13 @@ gui:
       inventory-box-name: "<target>'s Inventory (<part>/<total>)"
       ender-box-name: "<target>'s Ender Chest"
       ender-box-part-name: "<target>'s Ender Chest (<part>/<total>)"
+    teleport:
+      name: "<#4FC3F7>🧭 Teleport to backup location</#4FC3F7>"
+      lore:
+        - "<#90A4AE>Server: </#90A4AE><white><server></white>"
+        - "<#90A4AE>World: </#90A4AE><white><world></white>"
+        - "<#90A4AE>Position: </#90A4AE><white><position></white>"
+        - "<#4FC3F7>▶ Click to run teleport command</#4FC3F7>"
     ender-prev:
       name: "<#4FC3F7>◀ Previous ender page</#4FC3F7>"
       lore:
@@ -485,6 +498,7 @@ console:
     claim-failed: "Claim failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>"
     claim-incompatible: "Claim blocked due to incompatible item: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, slot=<slot>, mode=<mode>, reason=<reason>"
     export-failed: "Shulker export failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, reason=<reason>"
+    teleport-command-failed: "Backup location teleport command failed: actor=<actor>(<actor_uuid>), target=<target_uuid>, backup_id=<backup_id>, command=<command>, reason=<reason>"
 
   packet-gui:
     unsupported-size: "Unsupported GUI size: size=<size>, player=<player>"

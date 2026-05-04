@@ -10,7 +10,7 @@ Paper / Folia `1.21.1+` player backup plugin, PlayerInvBackup stores player inve
 - Backup scope includes inventory storage, hotbar, armor, offhand, ender chest, and experience
 - Purpur expanded ender chest support: automatically detects 9-54 ender chest slots and works with `six-rows` and `use-permissions-for-rows`
 - GUI backup list with pagination, time filters, trigger filters, backup ID search, date/time range search, refresh, and fast page jumps
-- GUI backup preview with inventory / ender chest switching, slot claiming, restore confirmation, standalone experience restore, pending delivery, pin toggle, and shulker export
+- GUI backup preview with inventory / ender chest switching, slot claiming, restore confirmation, standalone experience restore, pending delivery, pin toggle, shulker export, and teleport to backup location
 - Shulker export for the current preview view, with separate inventory and ender chest exports
 - Pending-delivery queue for items that cannot fit into the operator's inventory during claiming
 - Pinned backups and notes; pinned backups are listed first and excluded from automatic cleanup
@@ -149,6 +149,9 @@ Command list:
 - **`playerinvbackup.export`**<br>
   Default: `false`<br>
   Export backup preview contents to shulker boxes
+- **`playerinvbackup.teleport`**<br>
+  Default: `false`<br>
+  Run the backup location teleport command from the backup preview GUI
 - **`playerinvbackup.pending`**<br>
   Default: `false`<br>
   Deliver pending items into your own inventory
