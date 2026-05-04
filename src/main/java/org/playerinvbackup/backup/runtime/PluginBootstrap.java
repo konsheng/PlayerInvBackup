@@ -39,6 +39,7 @@ public final class PluginBootstrap {
         }
 
         saveLocalizedDefaultConfig();
+        saveLocalizedDefaultSounds();
         Lang startupLang = initializeStartupLang();
         plugin.setBootstrapLang(startupLang);
         Chat.init(startupLang);
@@ -95,6 +96,43 @@ public final class PluginBootstrap {
         }
     }
 
+    private void saveLocalizedDefaultSounds() {
+        Path dataFolder = plugin.getDataFolder().toPath();
+        Path soundsFile = dataFolder.resolve("sounds.yml");
+        if (Files.exists(soundsFile)) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(dataFolder);
+        } catch (Exception ignored) {
+        }
+
+        String resourcePath = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage())
+                ? "sounds.zh_CN.yml"
+                : "sounds.yml";
+        try (InputStream in = plugin.getResource(resourcePath)) {
+            if (in != null) {
+                Files.copy(in, soundsFile);
+                return;
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    "Failed to save default sounds from " + resourcePath + ", falling back to bundled sounds.yml",
+                    e
+            );
+        }
+
+        try (InputStream in = plugin.getResource("sounds.yml")) {
+            if (in != null) {
+                Files.copy(in, soundsFile);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to save default sounds.yml", e);
+        }
+    }
+
     private boolean checkUnsupportedServerAndDisable() {
         String serverName = String.valueOf(Bukkit.getName());
         String versionText = String.valueOf(Bukkit.getVersion());
@@ -110,9 +148,10 @@ public final class PluginBootstrap {
             return false;
         }
 
+        boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
+        // 这里特意使用旧版字符串颜色输出, 让不兼容核心也能看到关闭提示
         String color = ChatColor.YELLOW.toString();
         String prefix = color + "[PlayerInvBackup] ";
-        boolean chinese = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage());
         if (chinese) {
             Bukkit.getConsoleSender().sendMessage(prefix + "========================================");
             Bukkit.getConsoleSender().sendMessage(prefix + "检测到不受支持的服务端");

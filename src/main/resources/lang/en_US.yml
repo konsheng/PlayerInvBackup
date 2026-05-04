@@ -486,6 +486,12 @@ console:
     autofill-added: "Auto filled config keys: file=<file>, added=<added>"
     autofill-failed: "Auto fill config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"
 
+  sounds:
+    defaults-resource-missing: "Default sound resource not found: <resource>"
+    autofill-added: "Auto filled sound config keys: file=<file>, added=<added>"
+    autofill-failed: "Auto fill sound config keys failed: file=<file>, defaults=<defaults>, reason=<reason>"
+    load-failed: "Failed to load sound config, using bundled default sounds: file=<file>, reason=<reason>"
+
   gui:
     init-failed: "ProtocolLib enabled, but Packet GUI init failed, falling back to Bukkit GUI: <reason>"
     list-load-failed: "Failed to load backup list: actor=<actor>(<actor_uuid>), target=<target_uuid>, page=<page>"

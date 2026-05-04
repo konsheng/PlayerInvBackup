@@ -53,8 +53,8 @@ Paper / Folia `1.21.1+` 玩家备份插件，PlayerInvBackup 会备份玩家物�
 - 安装或替换 jar 前先关闭服务端
 - 将 `PlayerInvBackup.jar` 放入服务端 `plugins` 目录
 - 如需使用 Packet GUI，可额外安装 `ProtocolLib`
-- 启动一次服务端，等待生成 `plugins/PlayerInvBackup/` 目录和默认文件
-- 按需修改 `plugins/PlayerInvBackup/config.yml`
+- 启动一次服务端，等待生成 `config.yml`、`sounds.yml` 和 `lang/`
+- 按需修改 `plugins/PlayerInvBackup/config.yml` 或 `plugins/PlayerInvBackup/sounds.yml`
 - 修改配置或语言文件后执行 `/pib reload`，也可以重启服务端
 - 给管理员或权限组分配需要的 `playerinvbackup.*` 权限
 

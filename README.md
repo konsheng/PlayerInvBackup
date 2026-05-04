@@ -53,8 +53,8 @@ Download: [GitHub Releases](https://github.com/konsheng/PlayerInvBackup/releases
 - Stop the server before replacing or installing the jar
 - Put `PlayerInvBackup.jar` into the server `plugins` directory
 - Optional: install `ProtocolLib` if you want packet GUI mode
-- Start the server once and wait for `plugins/PlayerInvBackup/` files to be generated
-- Edit `plugins/PlayerInvBackup/config.yml` as needed
+- Start the server once and wait for `config.yml`, `sounds.yml`, and `lang/` to be generated
+- Edit `plugins/PlayerInvBackup/config.yml` or `plugins/PlayerInvBackup/sounds.yml` as needed
 - Run `/pib reload` after editing config and language files, or restart the server
 - Grant the required `playerinvbackup.*` permissions to administrators or permission groups
 

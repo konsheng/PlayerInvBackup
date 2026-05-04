@@ -10,7 +10,7 @@ import org.bukkit.plugin.Plugin;
 /**
  * 声音效果配置
  *
- * <p>用于 GUI 按钮点击反馈等场景, 可在 {@code config.yml} 里关闭或自定义
+ * <p>用于 GUI 按钮点击反馈等场景, 可在 {@code sounds.yml} 里关闭或自定义
  */
 public record SoundEffect(
         Sound sound,

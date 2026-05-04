@@ -1,0 +1,168 @@
+# PlayerInvBackup 音效配置文件
+# 修改后请执行 /pib reload, 或重启服务器使配置生效
+
+# 命令交互音效配置
+command:
+  # 聊天中的 /pib help 提示
+  help-click:
+    name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    volume: 1.0
+    pitch: 1.0
+
+# GUI 交互音效配置
+gui:
+  # 是否启用 GUI 音效
+  enabled: true
+
+  # GUI 通用点击音效配置
+  click:
+    name: "UI_BUTTON_CLICK"
+    volume: 1.0
+    pitch: 1.0
+
+  # 点击不可操作槽位时的音效配置
+  barrier-slot:
+    name: "BLOCK_NOTE_BLOCK_BASS"
+    volume: 1.0
+    pitch: 1.0
+
+  # 音效名称支持以下特殊值
+  # INHERIT -> 继承 gui.click
+  # NONE -> 禁用该音效
+  # 其他值 -> 填写 Bukkit Sound 枚举名
+  # 备份列表界面的按钮音效
+  backup-list:
+    # 打开某份备份详情
+    entry-open:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 点击已禁用的翻页按钮
+    page-disabled:
+      name: "BLOCK_NOTE_BLOCK_BASS"
+      volume: 1.0
+      pitch: 1.0
+    # 上一页
+    prev-page:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 下一页
+    next-page:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 时间筛选切换
+    filter-time:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 触发器筛选切换
+    filter-trigger:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 打开搜索方式选择
+    search:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 清空筛选
+    clear-filters:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 快退多页
+    jump-back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 快进多页
+    jump-forward:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 刷新当前页
+    refresh:
+      name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 1.0
+      pitch: 1.0
+
+  # 搜索方式选择界面的按钮音效
+  search-mode:
+    # 开始按备份编号搜索
+    by-id:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 开始按时间搜索
+    by-time:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 返回备份列表
+    back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+
+  # 备份预览界面的按钮音效
+  backup-view:
+    # 返回备份列表
+    back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 背包 / 末影箱视图切换
+    toggle:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 恢复到玩家
+    restore:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 置顶显示切换
+    lock:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 导出当前预览视图到潜影盒
+    export:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 执行备份位置传送命令
+    teleport:
+      name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 1.0
+      pitch: 1.0
+    # 打开待投递列表
+    pending:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 领取单个槽位物品
+    claim-slot:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+
+  # 恢复确认界面的按钮音效
+  restore-confirm:
+    # 确认恢复
+    confirm:
+      name: "ENTITY_PLAYER_LEVELUP"
+      volume: 1.0
+      pitch: 1.0
+    # 查看确认信息
+    info:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # 取消恢复
+    cancel:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0

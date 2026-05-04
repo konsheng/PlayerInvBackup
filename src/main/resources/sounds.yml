@@ -1,0 +1,168 @@
+# PlayerInvBackup sound settings
+# After editing, run /pib reload, or restart the server to apply changes
+
+# Command interaction sound settings
+command:
+  # Chat /pib help hint
+  help-click:
+    name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    volume: 1.0
+    pitch: 1.0
+
+# GUI interaction sound settings
+gui:
+  # Enable GUI sounds
+  enabled: true
+
+  # GUI default click sound settings
+  click:
+    name: "UI_BUTTON_CLICK"
+    volume: 1.0
+    pitch: 1.0
+
+  # Sound settings when clicking a blocked slot
+  barrier-slot:
+    name: "BLOCK_NOTE_BLOCK_BASS"
+    volume: 1.0
+    pitch: 1.0
+
+  # Sound name special values
+  # INHERIT -> inherits gui.click
+  # NONE -> disables this sound
+  # Any other value, use a Bukkit Sound enum name
+  # Button sounds for the backup list screen
+  backup-list:
+    # Open a backup entry
+    entry-open:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Click a disabled page button
+    page-disabled:
+      name: "BLOCK_NOTE_BLOCK_BASS"
+      volume: 1.0
+      pitch: 1.0
+    # Previous page
+    prev-page:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Next page
+    next-page:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Time filter toggle
+    filter-time:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Trigger filter toggle
+    filter-trigger:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Open search mode selection
+    search:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Clear filters
+    clear-filters:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Jump back multiple pages
+    jump-back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Jump forward multiple pages
+    jump-forward:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Refresh current page
+    refresh:
+      name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 1.0
+      pitch: 1.0
+
+  # Button sounds for the search mode selection screen
+  search-mode:
+    # Start backup ID search
+    by-id:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Start time search
+    by-time:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Back to backup list
+    back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+
+  # Button sounds for the backup preview screen
+  backup-view:
+    # Back to backup list
+    back:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Inventory / ender chest view toggle
+    toggle:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Restore to player
+    restore:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Toggle pinned display
+    lock:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Export current preview view into shulker box
+    export:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Execute backup location teleport command
+    teleport:
+      name: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 1.0
+      pitch: 1.0
+    # Open pending delivery list
+    pending:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Claim a single slot item
+    claim-slot:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+
+  # Button sounds for the restore confirmation screen
+  restore-confirm:
+    # Confirm restore
+    confirm:
+      name: "ENTITY_PLAYER_LEVELUP"
+      volume: 1.0
+      pitch: 1.0
+    # View confirmation info
+    info:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0
+    # Cancel restore
+    cancel:
+      name: "INHERIT"
+      volume: 1.0
+      pitch: 1.0

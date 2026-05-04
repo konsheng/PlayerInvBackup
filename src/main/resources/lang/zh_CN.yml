@@ -487,6 +487,12 @@ console:
     autofill-added: "已自动补全配置键: file=<file>, added=<added>"
     autofill-failed: "自动补全配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"
 
+  sounds:
+    defaults-resource-missing: "音效默认资源不存在: <resource>"
+    autofill-added: "已自动补全音效配置键: file=<file>, added=<added>"
+    autofill-failed: "自动补全音效配置键失败: file=<file>, defaults=<defaults>, reason=<reason>"
+    load-failed: "加载音效配置失败, 已使用内置默认音效: file=<file>, reason=<reason>"
+
   gui:
     init-failed: "ProtocolLib 已启用, 但 Packet GUI 初始化失败, 已降级为原生 GUI: <reason>"
     list-load-failed: "加载备份列表失败: 操作者=<actor>(<actor_uuid>), 目标=<target_uuid>, 页码=<page>"

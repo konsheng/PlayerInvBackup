@@ -63,7 +63,7 @@ public record PluginConfig(
         GuiButtonSounds guiButtonSounds,
         SoundEffect helpCommandClickSound
 ) {
-    public static PluginConfig from(Plugin plugin, Lang lang, FileConfiguration config) {
+    public static PluginConfig from(Plugin plugin, Lang lang, FileConfiguration config, FileConfiguration soundsConfig) {
         var intervalMinutes = Math.max(0, config.getLong("backup.interval-minutes", 30));
         var jitterSeconds = Math.max(0, config.getLong("backup.jitter-seconds", 300));
         var manualSelfBackupCooldownSeconds = Math.max(0, config.getLong("backup.manual-self-cooldown-seconds", 5));
@@ -192,22 +192,22 @@ public record PluginConfig(
         }
         excludedWorlds = Set.copyOf(excludedWorlds);
 
-        boolean guiSoundsEnabled = config.getBoolean("sounds.gui.enabled", true);
+        boolean guiSoundsEnabled = soundsConfig.getBoolean("gui.enabled", true);
         SoundEffect guiClickSound = SoundEffect.fromConfig(
                 plugin,
                 lang,
-                config,
-                "sounds.gui.click",
+                soundsConfig,
+                "gui.click",
                 "UI_BUTTON_CLICK",
                 1.0f,
                 1.0f
         );
-        GuiButtonSounds guiButtonSounds = GuiButtonSounds.from(plugin, lang, config, guiClickSound);
+        GuiButtonSounds guiButtonSounds = GuiButtonSounds.from(plugin, lang, soundsConfig, guiClickSound);
         SoundEffect helpCommandClickSound = SoundEffect.fromConfig(
                 plugin,
                 lang,
-                config,
-                "sounds.command.help-click",
+                soundsConfig,
+                "command.help-click",
                 "ENTITY_EXPERIENCE_ORB_PICKUP",
                 1.0f,
                 1.0f

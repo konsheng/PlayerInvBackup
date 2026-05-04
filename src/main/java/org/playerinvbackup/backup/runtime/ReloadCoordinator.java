@@ -2,11 +2,13 @@ package org.playerinvbackup.backup.runtime;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.jar.JarEntry;
@@ -26,6 +28,7 @@ import org.playerinvbackup.backup.restore.RestoreService;
 import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.text.Chat;
 import org.playerinvbackup.backup.text.Lang;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
@@ -229,8 +232,68 @@ public final class ReloadCoordinator {
             plugin.reloadConfig();
         }
 
-        PluginConfig pluginConfig = PluginConfig.from(plugin, lang, plugin.getConfig());
+        YamlConfiguration soundsConfig = loadSoundsConfiguration(lang);
+        PluginConfig pluginConfig = PluginConfig.from(plugin, lang, plugin.getConfig(), soundsConfig);
         return new ReloadInputs(pluginConfig, lang);
+    }
+
+    private YamlConfiguration loadSoundsConfiguration(Lang lang) {
+        Path soundsFile = plugin.getDataFolder().toPath().resolve("sounds.yml");
+        saveLocalizedSoundsIfMissing(soundsFile);
+
+        ConfigAutoFillResult soundsAutoFill = autoFillMissingSoundsKeys(soundsFile);
+        if (soundsAutoFill.error != null) {
+            String reason = soundsAutoFill.error.getMessage();
+            if (reason == null || reason.isBlank()) {
+                reason = lang.plain(
+                        "console.sounds.defaults-resource-missing",
+                        Placeholder.unparsed("resource", soundsAutoFill.defaultsResourcePath)
+                );
+            }
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    lang.plain(
+                            "console.sounds.autofill-failed",
+                            Placeholder.unparsed("file", soundsFile.toString()),
+                            Placeholder.unparsed("defaults", soundsAutoFill.defaultsResourcePath),
+                            Placeholder.unparsed("reason", reason)
+                    ),
+                    soundsAutoFill.error
+            );
+        } else if (soundsAutoFill.added > 0) {
+            plugin.getLogger().info(lang.plain(
+                    "console.sounds.autofill-added",
+                    Placeholder.unparsed("file", soundsFile.toString()),
+                    Placeholder.unparsed("added", String.valueOf(soundsAutoFill.added))
+            ));
+        }
+
+        try {
+            return loadYamlFileStrict(soundsFile);
+        } catch (Exception e) {
+            plugin.getLogger().log(
+                    Level.WARNING,
+                    lang.plain(
+                            "console.sounds.load-failed",
+                            Placeholder.unparsed("file", soundsFile.toString()),
+                            Placeholder.unparsed("reason", String.valueOf(e.getMessage()))
+                    ),
+                    e
+            );
+            try {
+                return loadBundledYaml("sounds.yml");
+            } catch (Exception bundledError) {
+                plugin.getLogger().log(
+                        Level.WARNING,
+                        lang.plain(
+                                "console.sounds.defaults-resource-missing",
+                                Placeholder.unparsed("resource", "sounds.yml")
+                        ),
+                        bundledError
+                );
+                return new YamlConfiguration();
+            }
+        }
     }
 
     /**
@@ -395,6 +458,90 @@ public final class ReloadCoordinator {
         }
 
         return new ConfigAutoFillResult(added, null, resourcePath);
+    }
+
+    private ConfigAutoFillResult autoFillMissingSoundsKeys(Path file) {
+        if (file == null) {
+            return new ConfigAutoFillResult(0, null, "-");
+        }
+
+        String resourcePath = "sounds.yml";
+        InputStream stream = plugin.getResource(resourcePath);
+        if (stream == null) {
+            return new ConfigAutoFillResult(0, new IllegalStateException(), resourcePath);
+        }
+
+        int added = 0;
+        try (InputStream defaultsStream = stream;
+             InputStreamReader reader = new InputStreamReader(defaultsStream, StandardCharsets.UTF_8)) {
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(reader);
+            YamlConfiguration current = loadYamlFileStrict(file);
+            for (String key : defaults.getKeys(true)) {
+                if (defaults.isConfigurationSection(key)) {
+                    continue;
+                }
+                if (current.contains(key)) {
+                    continue;
+                }
+                current.set(key, defaults.get(key));
+                added++;
+            }
+            if (added > 0) {
+                current.save(file.toFile());
+            }
+        } catch (Exception e) {
+            return new ConfigAutoFillResult(added, e, resourcePath);
+        }
+
+        return new ConfigAutoFillResult(added, null, resourcePath);
+    }
+
+    private void saveLocalizedSoundsIfMissing(Path soundsFile) {
+        if (soundsFile == null || Files.exists(soundsFile)) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(soundsFile.getParent());
+        } catch (Exception ignored) {
+        }
+
+        String resourcePath = "zh".equalsIgnoreCase(Locale.getDefault().getLanguage())
+                ? "sounds.zh_CN.yml"
+                : "sounds.yml";
+        try (InputStream in = plugin.getResource(resourcePath)) {
+            if (in != null) {
+                Files.copy(in, soundsFile);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        try (InputStream in = plugin.getResource("sounds.yml")) {
+            if (in != null) {
+                Files.copy(in, soundsFile);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private YamlConfiguration loadYamlFileStrict(Path file) throws IOException, InvalidConfigurationException {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.load(file.toFile());
+        return yaml;
+    }
+
+    private YamlConfiguration loadBundledYaml(String resourcePath) {
+        InputStream stream = plugin.getResource(resourcePath);
+        if (stream == null) {
+            throw new IllegalStateException("Missing bundled resource: " + resourcePath);
+        }
+        try (InputStream in = stream;
+             InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+            return YamlConfiguration.loadConfiguration(reader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read bundled resource: " + resourcePath, e);
+        }
     }
 
     private void extractBundledLangFiles(Path langDir) {
