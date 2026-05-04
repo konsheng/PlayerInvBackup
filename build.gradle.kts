@@ -37,6 +37,8 @@ dependencies {
     implementation("com.h2database:h2:2.2.224")
     // HikariCP 连接池
     implementation("com.zaxxer:HikariCP:5.1.0")
+    // Gson, 用于解析 GitHub Releases API 响应
+    implementation("com.google.code.gson:gson:2.11.0")
 
     // JUnit 5
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
@@ -105,6 +107,8 @@ tasks.shadowJar {
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/INDEX.LIST")
     // 重定位 bStats
     relocate("org.bstats", "org.playerinvbackup.backup.libs.bstats")
+    // 重定位 Gson
+    relocate("com.google.gson", "org.playerinvbackup.backup.libs.gson")
 }
 
 tasks.build {

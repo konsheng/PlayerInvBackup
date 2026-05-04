@@ -17,6 +17,7 @@ Paper / Folia `1.21.1+` player backup plugin, PlayerInvBackup stores player inve
 - SHA-256 snapshot verification and pre-restore safety backup before restore
 - Incompatible item protection for claiming, exporting, and restoring old or cross-version data
 - Audit logs for sensitive operations such as backup, restore, slot claim, pending delivery, pin, note, and shulker export
+- Asynchronous GitHub Releases update checker with console and administrator join reminders
 - Storage backends: `SQLite`, `Local`, `MySQL`, `PostgreSQL`, and `H2`
 - Bukkit native GUI and optional ProtocolLib packet GUI with automatic fallback
 - Configurable GUI sounds, language files, time filters, retention, queue limits, and shulker box material

@@ -92,6 +92,17 @@ bstats:
   # Enable bStats
   enabled: true
 
+# Update checker settings
+update-checker:
+  # Check GitHub Releases asynchronously for new stable releases
+  enabled: true
+
+  # Check interval in hours
+  check-interval-hours: 24
+
+  # Notify players with playerinvbackup.admin when a new version is cached
+  notify-admins: true
+
 # Storage backend related settings
 storage:
   # Storage type, available values, local, sqlite, mysql, postgresql, h2

@@ -30,6 +30,9 @@ public final class PlayerLifecycleListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        if (plugin.updateCheckerService() != null) {
+            plugin.updateCheckerService().onPlayerQuit(player);
+        }
         if (plugin.backupScheduler() != null) {
             plugin.backupScheduler().onPlayerQuit(player.getUniqueId());
         }
@@ -50,6 +53,10 @@ public final class PlayerLifecycleListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
+        if (plugin.updateCheckerService() != null) {
+            plugin.updateCheckerService().onPlayerJoin(event.getPlayer());
+        }
+
         PluginConfig config = plugin.pluginConfig();
         if (config == null || !config.backupOnJoin()) {
             return;

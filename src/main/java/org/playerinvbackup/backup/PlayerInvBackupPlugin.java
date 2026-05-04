@@ -25,7 +25,7 @@ import org.playerinvbackup.backup.runtime.ReloadCoordinator;
 import org.playerinvbackup.backup.store.BackupStore;
 import org.playerinvbackup.backup.text.Chat;
 import org.playerinvbackup.backup.text.Lang;
-import org.bukkit.Bukkit;
+import org.playerinvbackup.backup.update.UpdateCheckerService;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -43,6 +43,7 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
     private GuiRuntimeManager guiRuntimeManager;
     private ReloadCoordinator reloadCoordinator;
     private PluginBootstrap pluginBootstrap;
+    private UpdateCheckerService updateCheckerService;
     private volatile int lastReloadCancelledBackupTargets;
     private volatile int lastReloadDiscardedIoTasks;
     private volatile String buildCommitShort;
@@ -70,6 +71,9 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         Lang currentLang = lang();
+        if (updateCheckerService != null) {
+            updateCheckerService.shutdown();
+        }
         if (runtime != null && guiRuntimeManager != null) {
             runtime.shutdown(guiRuntimeManager);
         }
@@ -160,6 +164,10 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         return runtime == null ? null : runtime.auditService();
     }
 
+    public UpdateCheckerService updateCheckerService() {
+        return updateCheckerService;
+    }
+
     public Lang lang() {
         return runtime == null ? bootstrapLang : runtime.lang();
     }
@@ -189,6 +197,9 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
         if (pluginBootstrap == null) {
             pluginBootstrap = new PluginBootstrap(this, reloadCoordinator);
         }
+        if (updateCheckerService == null) {
+            updateCheckerService = new UpdateCheckerService(this);
+        }
     }
 
     /**
@@ -209,6 +220,10 @@ public final class PlayerInvBackupPlugin extends JavaPlugin {
 
         backupCommand = new BackupCommand(this);
         registerCommandHandlers();
+
+        if (updateCheckerService != null) {
+            updateCheckerService.reload(pluginConfig());
+        }
     }
 
     /**

@@ -157,6 +157,7 @@ success:
 
 warn:
   auto-backup-before-restore-failed: "<prefix><#FFA726>⚠ 恢复前自动备份失败(队列满), 仍继续恢复</#FFA726>"
+  update-available: "<prefix><#FFA726>⚠ 检测到 PlayerInvBackup 新版本 <#FFCA28><latest></#FFCA28>, 当前版本 <#90A4AE><current></#90A4AE>, 下载地址: <#4FC3F7><url></#4FC3F7></#FFA726>"
   no-more-backups-back: "<prefix><#FFA726>⚠ 没有更多备份, 已返回上一页</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的背包/末影箱</#FFA726>"
   restored-experience-notify-target: "<prefix><#FFA726>⚠ 管理员已恢复你的经验值</#FFA726>"
@@ -515,6 +516,12 @@ console:
     storage: "存储后端: <storage>"
     schedule: "自动备份间隔: <interval> 分钟, 错峰: <jitter> 秒"
     retention: "保留策略: 每玩家保留最近 <keep> 份, 保留天数: <keep_days> 天, I/O 队列上限: <queue_limit>, 最大写入/秒: <max_writes>"
+
+  update-checker:
+    update-available: "检测到 PlayerInvBackup 新版本: 当前=<current>, 最新=<latest>, 标签=<tag>, 下载=<url>"
+    check-failed: "检查新版本失败: <reason>"
+    invalid-current-version: "当前插件版本号无法解析, 已跳过新版本比较: <version>"
+    invalid-remote-version: "GitHub Release 版本号无法解析, 已跳过新版本比较: <version>"
 
   backup:
     encode-failed: "编码备份快照失败: 玩家=<player>(<uuid>), 备份编号=<backup_id>, 原因=<reason>"

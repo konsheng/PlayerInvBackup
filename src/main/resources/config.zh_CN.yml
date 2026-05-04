@@ -92,6 +92,17 @@ bstats:
   # 是否启用 bStats
   enabled: true
 
+# 新版本检测配置
+update-checker:
+  # 是否异步检查 GitHub Releases 中的新正式版本
+  enabled: true
+
+  # 检查间隔, 单位为小时
+  check-interval-hours: 24
+
+  # 缓存中存在新版本时是否提醒拥有 playerinvbackup.admin 的玩家
+  notify-admins: true
+
 # 存储后端相关配置
 storage:
   # 存储类型, 可选 local, sqlite, mysql, postgresql, h2

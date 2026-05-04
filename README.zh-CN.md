@@ -17,6 +17,7 @@ Paper / Folia `1.21.1+` 玩家备份插件，PlayerInvBackup 会备份玩家物�
 - 恢复前自动创建保底备份，并校验备份快照 `SHA-256`
 - 对旧版本或跨版本不兼容物品提供领取、导出、恢复保护
 - 支持审计日志，记录备份、恢复、领取、待投递、置顶、备注、潜影盒导出等关键操作
+- 支持异步检查 GitHub Releases 新版本，并在控制台和管理员进服时提醒
 - 支持 `SQLite`、`Local`、`MySQL`、`PostgreSQL`、`H2` 五种存储后端
 - 支持 Bukkit 原生 GUI 与可选 ProtocolLib Packet GUI，并可自动回退
 - 支持自定义 GUI 音效、语言文件、时间筛选项、保留策略、队列限制和潜影盒材质

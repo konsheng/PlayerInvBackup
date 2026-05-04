@@ -33,6 +33,7 @@ public record PluginConfig(
         boolean auditConsole,
         int auditKeepDays,
         BackupLocationTeleportSettings teleport,
+        UpdateCheckerSettings updateChecker,
         StorageType storageType,
         Path localBasePath,
         Path sqliteFile,
@@ -76,6 +77,7 @@ public record PluginConfig(
         boolean auditConsole = config.getBoolean("audit.console", true);
         int auditKeepDays = Math.max(0, config.getInt("audit.keep-days", 30));
         BackupLocationTeleportSettings teleport = BackupLocationTeleportSettings.fromConfig(config);
+        UpdateCheckerSettings updateChecker = UpdateCheckerSettings.fromConfig(config);
 
         String languageFile = config.getString("language", "zh_CN.yml");
         if (languageFile == null || languageFile.isBlank()) {
@@ -223,6 +225,7 @@ public record PluginConfig(
                 auditConsole,
                 auditKeepDays,
                 teleport,
+                updateChecker,
                 storageType,
                 localBasePath,
                 sqliteFile,

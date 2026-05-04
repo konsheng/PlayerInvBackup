@@ -157,6 +157,7 @@ success:
 
 warn:
   auto-backup-before-restore-failed: "<prefix><#FFA726>⚠ Auto backup before restore failed (queue full), continuing restore</#FFA726>"
+  update-available: "<prefix><#FFA726>⚠ New PlayerInvBackup version available: <#FFCA28><latest></#FFCA28>, current <#90A4AE><current></#90A4AE>, download: <#4FC3F7><url></#4FC3F7></#FFA726>"
   no-more-backups-back: "<prefix><#FFA726>⚠ No more backups, returned to previous page</#FFA726>"
   restored-notify-target: "<prefix><#FFA726>⚠ An admin restored your inventory and ender chest</#FFA726>"
   restored-experience-notify-target: "<prefix><#FFA726>⚠ An admin restored your experience</#FFA726>"
@@ -514,6 +515,12 @@ console:
     storage: "Storage: <storage>"
     schedule: "Auto backup interval: <interval> min, jitter: <jitter> sec"
     retention: "Retention: keep last <keep> per player, keep days: <keep_days> days, queue limit: <queue_limit>, max writes/sec: <max_writes>"
+
+  update-checker:
+    update-available: "New PlayerInvBackup version detected: current=<current>, latest=<latest>, tag=<tag>, download=<url>"
+    check-failed: "Update check failed: <reason>"
+    invalid-current-version: "Current plugin version cannot be parsed, update comparison skipped: <version>"
+    invalid-remote-version: "GitHub Release version cannot be parsed, update comparison skipped: <version>"
 
   backup:
     encode-failed: "Failed to encode snapshot: player=<player>(<uuid>), backup_id=<backup_id>, reason=<reason>"
